@@ -1218,7 +1218,7 @@ serve(async (req) => {
       }
     };
 
-    // Start background processing immediately
+    // Start background processing immediately yessss
     // The function will return response but processing continues
     processQuestions().catch(async (error: any) => {
       console.error('Background processing failed:', error);
