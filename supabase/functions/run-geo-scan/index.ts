@@ -1210,7 +1210,7 @@ serve(async (req) => {
           .update({ 
             status: 'failed', 
             completed_at: new Date().toISOString(),
-            // Store error in ai_summary field if available, or we could add an error_message field
+            // Store error in aii_summary field if available, or we could add an error_message field
             ai_summary: `Scan failed: ${errorMessage}`
           })
           .eq('id', scan.id);
