@@ -36,12 +36,6 @@ export const HomeHeader = () => {
             <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               FAQ
             </a>
-            <a href="#waitlist" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-              Blog
-            </a>
-            <a href="#waitlist" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-              Docs
-            </a>
           </nav>
 
           {/* CTA Buttons */}
@@ -85,12 +79,6 @@ export const HomeHeader = () => {
               </a>
               <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 FAQ
-              </a>
-              <a href="#waitlist" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                Blog
-              </a>
-              <a href="#waitlist" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                Docs
               </a>
               <div className="flex flex-col gap-2 pt-2">
                 <Button 

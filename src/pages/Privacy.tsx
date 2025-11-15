@@ -1,10 +1,17 @@
 import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
+import { SEO } from "@/components/SEO";
 
 const Privacy = () => {
   return (
     <div className="bg-white min-h-screen">
+      <SEO
+        title="Privacy Policy - unifr | Data Protection & Privacy"
+        description="Read unifr's Privacy Policy. Learn how we collect, use, and protect your data when you use our AI visibility tracking platform. Your privacy is important to us."
+        keywords="unifr privacy policy, data protection, privacy, GDPR, data security, AI tracking privacy"
+        canonical="https://unifr.ai/privacy"
+      />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
         <div className="max-w-4xl mx-auto">

@@ -1,10 +1,17 @@
 import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
+import { SEO } from "@/components/SEO";
 
 const Terms = () => {
   return (
     <div className="bg-white min-h-screen">
+      <SEO
+        title="Terms & Conditions - unifr | Legal Terms of Service"
+        description="Read unifr's Terms & Conditions. Understand our service terms, user agreements, subscription policies, and acceptable use guidelines for our AI visibility tracking platform."
+        keywords="unifr terms, terms of service, legal terms, service agreement, AI tracking terms"
+        canonical="https://unifr.ai/terms"
+      />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
         <div className="max-w-4xl mx-auto">

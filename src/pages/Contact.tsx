@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
+import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +44,12 @@ const Contact = () => {
 
   return (
     <div className="bg-white min-h-screen">
+      <SEO
+        title="Contact unifr - Get in Touch | AI Visibility Tracking Support"
+        description="Have questions about unifr? Contact our team for support, sales inquiries, or enterprise solutions. We're here to help you optimize your brand's AI visibility."
+        keywords="contact unifr, unifr support, AI visibility help, GEO tracking support, unifr sales"
+        canonical="https://unifr.ai/contact"
+      />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
         <div className="max-w-4xl mx-auto">

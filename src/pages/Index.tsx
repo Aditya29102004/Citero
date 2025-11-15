@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { ArrowRight, TrendingUp, BarChart3, Users, Search, Lightbulb, Mail, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
+import { SEO } from "@/components/SEO";
 import { WaitlistForm } from "@/components/WaitlistForm";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useState, useEffect, useRef } from "react";
@@ -56,6 +57,12 @@ const Index = () => {
 
   return (
     <div className="bg-white overflow-x-hidden relative">
+      <SEO
+        title="unifr - Track & Optimize Your Brand's AI Visibility | GEO Tracking Platform"
+        description="Multiply your traffic from AI agents. Track how ChatGPT, Gemini, Claude, and Perplexity describe your brand. Get AI visibility insights, competitor analysis, and actionable recommendations to turn AI mentions into traffic and customers."
+        keywords="AI visibility tracking, GEO tracking, Generative Engine Optimization, AI search optimization, brand tracking, ChatGPT visibility, Gemini tracking, Claude tracking, Perplexity tracking, AI mentions, AI brand monitoring"
+        canonical="https://unifr.ai"
+      />
       <HomeHeader />
       <div 
         ref={scaledContentRef}

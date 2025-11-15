@@ -1,10 +1,17 @@
 import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
+import { SEO } from "@/components/SEO";
 
 const Refund = () => {
   return (
     <div className="bg-white min-h-screen">
+      <SEO
+        title="Refund Policy - unifr | 30-Day Money-Back Guarantee"
+        description="Learn about unifr's refund policy. We offer a 30-day money-back guarantee for new subscribers. Understand our refund eligibility, processing, and cancellation policies."
+        keywords="unifr refund policy, money back guarantee, refund, cancellation policy, subscription refund"
+        canonical="https://unifr.ai/refund"
+      />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
         <div className="max-w-4xl mx-auto">

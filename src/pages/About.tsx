@@ -1,11 +1,18 @@
 import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
+import { SEO } from "@/components/SEO";
 import { TrendingUp, Target, Zap, Users } from "lucide-react";
 
 const About = () => {
   return (
     <div className="bg-white min-h-screen">
+      <SEO
+        title="About unifr - AI Visibility Tracking Platform | Learn How We Help Brands"
+        description="Learn about unifr, the leading AI visibility tracking platform. We help brands understand and optimize how they appear in AI-generated responses across ChatGPT, Gemini, Claude, and Perplexity."
+        keywords="about unifr, AI visibility platform, GEO tracking company, AI brand monitoring, Generative Engine Optimization"
+        canonical="https://unifr.ai/about"
+      />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
         <div className="max-w-4xl mx-auto">
