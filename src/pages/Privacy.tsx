@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
 
@@ -166,7 +167,7 @@ const Privacy = () => {
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">11. Contact Us</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
                 If you have any questions about this Privacy Policy or our data practices, please contact us at{" "}
-                <a href="/contact" className="text-gray-900 underline hover:text-gray-700">our contact page</a>.
+                <Link to="/contact" className="text-gray-900 underline hover:text-gray-700">our contact page</Link>.
               </p>
             </section>
           </div>

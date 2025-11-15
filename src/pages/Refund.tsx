@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
 
@@ -57,7 +58,7 @@ const Refund = () => {
                 To request a refund, please:
               </p>
               <ol className="list-decimal list-inside text-gray-700 space-y-2 ml-4">
-                <li>Contact us through <a href="/contact" className="text-gray-900 underline hover:text-gray-700">our contact page</a> 
+                <li>Contact us through <Link to="/contact" className="text-gray-900 underline hover:text-gray-700">our contact page</Link> 
                 or email support</li>
                 <li>Include your account email and subscription details</li>
                 <li>Provide a brief explanation for the refund request</li>
@@ -114,7 +115,7 @@ const Refund = () => {
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Questions</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
                 If you have questions about our refund policy, please contact us at{" "}
-                <a href="/contact" className="text-gray-900 underline hover:text-gray-700">our contact page</a>.
+                <Link to="/contact" className="text-gray-900 underline hover:text-gray-700">our contact page</Link>.
               </p>
             </section>
           </div>

@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { TrendingUp } from "lucide-react";
 
 export const LandingFooter = () => {
@@ -24,24 +25,24 @@ export const LandingFooter = () => {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li><a href="#features" className="hover:text-foreground transition-colors">Features</a></li>
               <li><a href="#how-it-works" className="hover:text-foreground transition-colors">How It Works</a></li>
-              <li><a href="/dashboard" className="hover:text-foreground transition-colors">Dashboard</a></li>
+              <li><Link to="/dashboard" className="hover:text-foreground transition-colors">Dashboard</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold mb-4">Company</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/about" className="hover:text-foreground transition-colors">About</a></li>
-              <li><a href="/contact" className="hover:text-foreground transition-colors">Contact</a></li>
+              <li><Link to="/about" className="hover:text-foreground transition-colors">About</Link></li>
+              <li><Link to="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
             </ul>
           </div>
 
           <div>
             <h3 className="font-semibold mb-4">Legal</h3>
             <ul className="space-y-2 text-sm text-muted-foreground">
-              <li><a href="/privacy" className="hover:text-foreground transition-colors">Privacy</a></li>
-              <li><a href="/terms" className="hover:text-foreground transition-colors">Terms</a></li>
-              <li><a href="/refund" className="hover:text-foreground transition-colors">Refund Policy</a></li>
+              <li><Link to="/privacy" className="hover:text-foreground transition-colors">Privacy</Link></li>
+              <li><Link to="/terms" className="hover:text-foreground transition-colors">Terms</Link></li>
+              <li><Link to="/refund" className="hover:text-foreground transition-colors">Refund Policy</Link></li>
             </ul>
           </div>
         </div>

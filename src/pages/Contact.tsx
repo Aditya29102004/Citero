@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
 import { Button } from "@/components/ui/button";
@@ -92,24 +93,24 @@ const Contact = () => {
                 <h3 className="font-semibold text-gray-900 mb-4">Common Questions</h3>
                 <ul className="space-y-3 text-gray-600">
                   <li>
-                    <a href="/about" className="hover:text-gray-900 underline">
+                    <Link to="/about" className="hover:text-gray-900 underline">
                       Learn more about unifr
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="/terms" className="hover:text-gray-900 underline">
+                    <Link to="/terms" className="hover:text-gray-900 underline">
                       View our Terms & Conditions
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="/privacy" className="hover:text-gray-900 underline">
+                    <Link to="/privacy" className="hover:text-gray-900 underline">
                       Read our Privacy Policy
-                    </a>
+                    </Link>
                   </li>
                   <li>
-                    <a href="/refund" className="hover:text-gray-900 underline">
+                    <Link to="/refund" className="hover:text-gray-900 underline">
                       Check our Refund Policy
-                    </a>
+                    </Link>
                   </li>
                 </ul>
               </div>

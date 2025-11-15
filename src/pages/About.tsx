@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
 import { TrendingUp, Target, Zap, Users } from "lucide-react";
@@ -111,7 +112,7 @@ const About = () => {
                 tracking how AI models perceive your brand.
               </p>
               <p className="text-gray-700 leading-relaxed">
-                Have questions? <a href="/contact" className="text-gray-900 underline hover:text-gray-700">Contact us</a> — 
+                Have questions? <Link to="/contact" className="text-gray-900 underline hover:text-gray-700">Contact us</Link> — 
                 we'd love to hear from you.
               </p>
             </section>

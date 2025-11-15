@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { TrendingUp, Linkedin, Twitter } from "lucide-react";
 
 export const HomeFooter = () => {
@@ -22,8 +23,8 @@ export const HomeFooter = () => {
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-4 tracking-tight">Company</h3>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><a href="/about" className="hover:text-gray-900 transition-colors">About</a></li>
-              <li><a href="/contact" className="hover:text-gray-900 transition-colors">Contact</a></li>
+              <li><Link to="/about" className="hover:text-gray-900 transition-colors">About</Link></li>
+              <li><Link to="/contact" className="hover:text-gray-900 transition-colors">Contact</Link></li>
             </ul>
           </div>
 
@@ -41,9 +42,9 @@ export const HomeFooter = () => {
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-4 tracking-tight">Legal</h3>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><a href="/privacy" className="hover:text-gray-900 transition-colors">Privacy</a></li>
-              <li><a href="/terms" className="hover:text-gray-900 transition-colors">Terms</a></li>
-              <li><a href="/refund" className="hover:text-gray-900 transition-colors">Refund Policy</a></li>
+              <li><Link to="/privacy" className="hover:text-gray-900 transition-colors">Privacy</Link></li>
+              <li><Link to="/terms" className="hover:text-gray-900 transition-colors">Terms</Link></li>
+              <li><Link to="/refund" className="hover:text-gray-900 transition-colors">Refund Policy</Link></li>
             </ul>
           </div>
         </div>
