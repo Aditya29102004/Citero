@@ -1,0 +1,10 @@
+project_id = "fakhmxfxnszmvxihpann"
+
+[auth]
+enabled = true
+
+[functions.refresh-mentions]
+verify_jwt = true
+
+[functions.run-geo-scan]
+verify_jwt = true
