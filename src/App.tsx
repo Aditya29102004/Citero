@@ -17,6 +17,8 @@ import Refund from "./pages/Refund";
 import About from "./pages/About";
 import Privacy from "./pages/Privacy";
 import Contact from "./pages/Contact";
+import Payment from "./pages/Payment";
+import Profile from "./pages/Profile";
 
 const queryClient = new QueryClient();
 
@@ -39,6 +41,8 @@ const App = () => (
           <Route path="/about" element={<About />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/payment" element={<Payment />} />
+          <Route path="/profile" element={<Profile />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

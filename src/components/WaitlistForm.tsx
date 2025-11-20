@@ -21,14 +21,26 @@ export const WaitlistForm = () => {
     // Fetch waitlist count
     const fetchCount = async () => {
       try {
-        const { count } = await supabase
+        const { count, error } = await supabase
           .from("waitlist")
           .select("*", { count: "exact", head: true });
-        if (count) {
+        
+        if (error) {
+          // If 401/403 error, it's likely RLS blocking - use default count
+          if (error.code === 'PGRST301' || error.code === '42501') {
+            console.log("Waitlist count not available (RLS restriction), using default");
+            return; // Keep default count of 128
+          }
+          throw error;
+        }
+        
+        if (count !== null && count !== undefined) {
           setWaitlistCount(count);
         }
-      } catch (error) {
-        console.error("Error fetching waitlist count:", error);
+      } catch (error: any) {
+        // Silently fail - use default count
+        console.log("Error fetching waitlist count:", error?.message || "Unknown error");
+        // Keep default count of 128
       }
     };
     fetchCount();

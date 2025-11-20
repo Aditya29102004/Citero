@@ -19,7 +19,7 @@ const Privacy = () => {
             Privacy Policy
           </h1>
           <p className="text-sm text-gray-500 mb-12">
-            Last updated: November 16, 2025
+            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
 
           <div className="prose prose-gray max-w-none space-y-8">
@@ -43,7 +43,8 @@ const Privacy = () => {
                 <li>Email address</li>
                 <li>Encrypted password</li>
                 <li>Name and company details (optional)</li>
-                <li>Billing information (processed securely through third-party providers)</li>
+                <li>Billing information (processed securely through Razorpay, our payment gateway provider)</li>
+                <li>Payment card details are handled exclusively by Razorpay and are never stored on our servers</li>
               </ul>
 
               <h3 className="text-xl font-semibold text-gray-900 mb-3 mt-6">Brand & Project Data</h3>
@@ -93,11 +94,11 @@ const Privacy = () => {
                 We only share information in these cases:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-                <li><strong>Service Providers:</strong> Hosting, analytics, payment gateways, email systems</li>
-                <li><strong>AI Providers:</strong> When you run scans, relevant text queries may be sent to OpenAI, Google, 
-                Anthropic, DeepSeek, etc.</li>
-                <li><strong>Legal Requirements:</strong> When required to comply with laws or protect rights</li>
-                <li><strong>Business Events:</strong> Mergers, acquisitions, or asset transfers</li>
+                <li><strong>Payment Processors:</strong> We use Razorpay for payment processing. Razorpay collects and processes your payment information according to their privacy policy. We do not store your full payment card details.</li>
+                <li><strong>Service Providers:</strong> Hosting (Supabase), analytics, email systems, and other service providers necessary to operate the platform</li>
+                <li><strong>AI Providers:</strong> When you run scans, relevant text queries may be sent to OpenAI, Google Gemini, Anthropic Claude, DeepSeek, etc. These providers process queries according to their own privacy policies.</li>
+                <li><strong>Legal Requirements:</strong> When required to comply with laws, court orders, or protect our rights and safety</li>
+                <li><strong>Business Events:</strong> Mergers, acquisitions, or asset transfers (with notice to users)</li>
                 <li><strong>With Your Permission:</strong> When you explicitly authorize sharing</li>
               </ul>
             </section>
@@ -105,10 +106,18 @@ const Privacy = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Data Security</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                We implement strong administrative, technical, and physical safeguards.
+                We implement strong administrative, technical, and physical safeguards to protect your data:
               </p>
-              <p className="text-gray-700 leading-relaxed mb-4">
-                While we work to secure your data, no system is perfectly secure — we cannot guarantee absolute protection.
+              <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
+                <li>Encryption in transit (HTTPS/TLS) and at rest</li>
+                <li>Secure authentication and access controls</li>
+                <li>Regular security audits and monitoring</li>
+                <li>Payment data is processed through PCI-DSS compliant Razorpay infrastructure</li>
+                <li>Regular backups and disaster recovery procedures</li>
+              </ul>
+              <p className="text-gray-700 leading-relaxed mb-4 mt-4">
+                While we work to secure your data, no system is perfectly secure — we cannot guarantee absolute protection. 
+                We recommend using strong passwords and enabling two-factor authentication when available.
               </p>
             </section>
 

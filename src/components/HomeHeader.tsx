@@ -1,11 +1,31 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Menu, X } from "lucide-react";
-import { useState } from "react";
+import { TrendingUp, Menu, X, User } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const HomeHeader = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState<any>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+      setUser(session?.user);
+    };
+
+    checkAuth();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+      setUser(session?.user);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   return (
     <header className="fixed top-0 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md z-50 transition-shadow duration-300" 
@@ -40,22 +60,46 @@ export const HomeHeader = () => {
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
-            <Button 
-              variant="ghost"
-              onClick={() => navigate("/auth")}
-              className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
-            >
-              Login as Admin
-            </Button>
-            <Button 
-              onClick={() => {
-                const waitlistSection = document.getElementById('waitlist');
-                waitlistSection?.scrollIntoView({ behavior: 'smooth' });
-              }}
-              className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-6"
-            >
-              Join Waitlist
-            </Button>
+            {isLoggedIn ? (
+              <>
+                <Button 
+                  variant="ghost"
+                  onClick={() => navigate("/dashboard")}
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  variant="ghost"
+                  onClick={() => navigate("/profile")}
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  Profile
+                </Button>
+              </>
+            ) : (
+              <>
+                <Button 
+                  variant="ghost"
+                  onClick={() => {
+                    alert("⚠️ Website Under Construction\n\nPlease do not attempt to login at this time. Thank you for your patience!");
+                  }}
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
+                >
+                  Login
+                </Button>
+                <Button 
+                  onClick={() => {
+                    const waitlistSection = document.getElementById('waitlist');
+                    waitlistSection?.scrollIntoView({ behavior: 'smooth' });
+                  }}
+                  className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-6"
+                >
+                  Join Waitlist
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -81,22 +125,46 @@ export const HomeHeader = () => {
                 FAQ
               </a>
               <div className="flex flex-col gap-2 pt-2">
-                <Button 
-                  variant="ghost"
-                  onClick={() => navigate("/auth")}
-                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                >
-                  Login as Admin
-                </Button>
-                <Button 
-                  onClick={() => {
-                    const waitlistSection = document.getElementById('waitlist');
-                    waitlistSection?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="bg-gray-900 hover:bg-gray-800 text-white"
-                >
-                  Join Waitlist
-                </Button>
+                {isLoggedIn ? (
+                  <>
+                    <Button 
+                      variant="ghost"
+                      onClick={() => navigate("/dashboard")}
+                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    >
+                      Dashboard
+                    </Button>
+                    <Button 
+                      variant="ghost"
+                      onClick={() => navigate("/profile")}
+                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      variant="ghost"
+                      onClick={() => {
+                        alert("⚠️ Website Under Construction\n\nPlease do not attempt to login at this time. Thank you for your patience!");
+                      }}
+                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    >
+                      Login
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        const waitlistSection = document.getElementById('waitlist');
+                        waitlistSection?.scrollIntoView({ behavior: 'smooth' });
+                      }}
+                      className="bg-gray-900 hover:bg-gray-800 text-white"
+                    >
+                      Join Waitlist
+                    </Button>
+                  </>
+                )}
               </div>
             </nav>
           </div>

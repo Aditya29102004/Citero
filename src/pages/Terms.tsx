@@ -57,15 +57,23 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Subscription Plans and Billing</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                unifr offers various subscription plans (Basic, Pro, Enterprise) with different features and usage limits. 
-                By subscribing to a plan, you agree to:
+                unifr offers subscription plans with different features and usage limits:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-                <li>Pay all fees associated with your selected plan</li>
-                <li>Automatic renewal of your subscription unless cancelled</li>
+                <li><strong>Normal Plans:</strong> Basic (₹7,999/month), Pro (₹14,999/month)</li>
+                <li><strong>Founder Circle Plans:</strong> Basic Founder (₹2,999/month), Pro Founder (₹6,999/month) - Limited to first 10 subscribers</li>
+                <li>All plans are billed monthly and automatically renew unless cancelled</li>
+                <li>Payments are processed securely through Razorpay, our payment gateway partner</li>
+                <li>By subscribing, you agree to pay all fees associated with your selected plan</li>
                 <li>Price changes will be communicated with at least 30 days notice</li>
                 <li>Usage limits are enforced per billing cycle</li>
+                <li>Subscriptions can be cancelled at any time through your account settings</li>
+                <li>Cancellation takes effect at the end of your current billing period</li>
               </ul>
+              <p className="text-gray-700 leading-relaxed mb-4 mt-4">
+                <strong>Refund Policy:</strong> We offer a 30-day money-back guarantee for new subscribers. See our 
+                <Link to="/refund" className="text-gray-900 underline hover:text-gray-700 ml-1">Refund Policy</Link> for details.
+              </p>
             </section>
 
             <section>
@@ -144,10 +152,33 @@ const Terms = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Contact Information</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">13. Payment Processing</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                If you have any questions about these Terms, please contact us at{" "}
-                <Link to="/contact" className="text-gray-900 underline hover:text-gray-700">our contact page</Link>.
+                Payments are processed through Razorpay, a PCI-DSS compliant payment gateway. By using our Service, you agree to:
+              </p>
+              <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
+                <li>Provide accurate payment information</li>
+                <li>Authorize us to charge your payment method for subscription fees</li>
+                <li>Comply with Razorpay's terms of service</li>
+                <li>Understand that payment processing is subject to Razorpay's privacy policy and security standards</li>
+              </ul>
+              <p className="text-gray-700 leading-relaxed mb-4 mt-4">
+                We do not store your full payment card details. All payment data is handled securely by Razorpay.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">14. Contact Information</h2>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                If you have any questions about these Terms, please contact us at:
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                <a href="mailto:hertofhelp@gmail.com" className="text-gray-900 underline hover:text-gray-700">
+                  📧 hertofhelp@gmail.com
+                </a>
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                Or visit <Link to="/contact" className="text-gray-900 underline hover:text-gray-700">our contact page</Link>.
               </p>
             </section>
           </div>

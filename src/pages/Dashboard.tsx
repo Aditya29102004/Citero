@@ -13,19 +13,82 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
+    const checkAuthAndPayment = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
       if (!session) {
         navigate("/auth");
+        setLoading(false);
+        return;
       }
-      setLoading(false);
-    });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      // Check if user has active subscription
+      const { data: activeSubscriptions, error: subError } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "active")
+        .limit(1);
+
+      if (subError && subError.code !== 'PGRST116') {
+        console.error("Error checking subscription:", subError);
+      }
+
+      if (activeSubscriptions && activeSubscriptions.length > 0) {
+        const activeSubscription = activeSubscriptions[0];
+        const periodEnd = new Date(activeSubscription.current_period_end);
+        const now = new Date();
+        
+        if (periodEnd <= now) {
+          // Subscription expired, redirect to payment
+          navigate("/payment");
+          return;
+        }
+      } else {
+        // No active subscription, redirect to payment
+        navigate("/payment");
+        return;
+      }
+
       setSession(session);
+      setLoading(false);
+    };
+
+    checkAuthAndPayment();
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!session) {
         navigate("/auth");
+        return;
       }
+
+      // Check subscription on auth state change
+      const { data: activeSubscriptions, error: subError } = await supabase
+        .from("subscriptions")
+        .select("*")
+        .eq("user_id", session.user.id)
+        .eq("status", "active")
+        .limit(1);
+
+      if (subError && subError.code !== 'PGRST116') {
+        console.error("Error checking subscription:", subError);
+      }
+
+      if (!activeSubscriptions || activeSubscriptions.length === 0) {
+        navigate("/payment");
+        return;
+      }
+
+      const activeSubscription = activeSubscriptions[0];
+      const periodEnd = new Date(activeSubscription.current_period_end);
+      const now = new Date();
+      
+      if (periodEnd <= now) {
+        navigate("/payment");
+        return;
+      }
+
+      setSession(session);
     });
 
     return () => subscription.unsubscribe();

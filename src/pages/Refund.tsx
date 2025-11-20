@@ -18,7 +18,7 @@ const Refund = () => {
             Refund Policy
           </h1>
           <p className="text-sm text-gray-500 mb-12">
-            Last updated: November 16, 2025
+            Last updated: {new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
 
           <div className="prose prose-gray max-w-none space-y-8">
@@ -129,18 +129,31 @@ const Refund = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Founder Circle Offer</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Lifetime "Founder Circle" pricing is offered at a significant discount.
+                Founder Circle plans (Basic Founder: ₹2,999/month, Pro Founder: ₹6,999/month) are offered at a significant discount 
+                and are limited to the first 10 subscribers.
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">
-                These plans follow the same 30-day guarantee.
+                These plans follow the same 30-day money-back guarantee as regular plans.
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">
-                After the first 30 days, all Founder Circle purchases are final and non-refundable.
+                After the first 30 days, all Founder Circle subscriptions are final and non-refundable, except in cases of service 
+                interruption or billing errors as outlined above.
               </p>
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Changes to This Policy</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Payment Processing</h2>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                Refunds are processed through Razorpay, our payment gateway partner. Refunds will be issued to the original payment 
+                method used for the transaction.
+              </p>
+              <p className="text-gray-700 leading-relaxed mb-4">
+                Processing times may vary depending on your bank or payment provider. International refunds may take additional time.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Changes to This Policy</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
                 We may update this Refund Policy from time to time. Changes take effect immediately upon posting to this page.
               </p>
@@ -150,7 +163,7 @@ const Refund = () => {
             </section>
 
             <section>
-              <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Questions</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 mb-4">10. Questions</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
                 If you have any questions about our refund policy, contact us at:
               </p>

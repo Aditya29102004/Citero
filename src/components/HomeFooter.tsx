@@ -38,10 +38,16 @@ export const HomeFooter = () => {
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-4 tracking-tight">Legal</h3>
             <ul className="space-y-3 text-sm text-gray-600">
-              <li><Link to="/privacy" className="hover:text-gray-900 transition-colors">Privacy</Link></li>
-              <li><Link to="/terms" className="hover:text-gray-900 transition-colors">Terms</Link></li>
+              <li><Link to="/privacy" className="hover:text-gray-900 transition-colors">Privacy Policy</Link></li>
+              <li><Link to="/terms" className="hover:text-gray-900 transition-colors">Terms of Service</Link></li>
               <li><Link to="/refund" className="hover:text-gray-900 transition-colors">Refund Policy</Link></li>
             </ul>
+            <p className="text-xs text-gray-500 mt-4">
+              Payments powered by{" "}
+              <a href="https://razorpay.com" target="_blank" rel="noopener noreferrer" className="underline hover:text-gray-700">
+                Razorpay
+              </a>
+            </p>
           </div>
         </div>
 
