@@ -39,6 +39,7 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [subscriptionVerified, setSubscriptionVerified] = useState(false);
   const [dashboardData, setDashboardData] = useState<any>(null);
   const [brands, setBrands] = useState<any[]>([]);
   const [selectedBrandId, setSelectedBrandId] = useState<string>("");
@@ -92,29 +93,33 @@ const Dashboard = () => {
         const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
         const hasActiveSubscription = subscriptionLimits.planType !== null;
         
+        // If no subscription, redirect immediately and don't render anything
+        if (!hasActiveSubscription) {
+          navigate("/pricing", { replace: true });
+          setLoading(false);
+          return;
+        }
+        
+        // Subscription verified - mark as verified before proceeding
+        setSubscriptionVerified(true);
+        setSubscriptionLimits(subscriptionLimits);
+        
         // Only check onboarding if user has a subscription
-        if (hasActiveSubscription) {
-          let onboardingComplete = false;
-          try {
-            onboardingComplete = await Promise.race([
-              checkOnboardingComplete(),
-              new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
-            ]);
-            
-            if (!onboardingComplete) {
-              navigate("/onboarding/website");
-              setLoading(false);
-              return;
-            }
-          } catch (onboardingError) {
-            console.error("Error checking onboarding:", onboardingError);
-            navigate("/onboarding/website");
+        let onboardingComplete = false;
+        try {
+          onboardingComplete = await Promise.race([
+            checkOnboardingComplete(),
+            new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
+          ]);
+          
+          if (!onboardingComplete) {
+            navigate("/onboarding/website", { replace: true });
             setLoading(false);
             return;
           }
-        } else {
-          // No subscription - redirect to pricing
-          navigate("/pricing");
+        } catch (onboardingError) {
+          console.error("Error checking onboarding:", onboardingError);
+          navigate("/onboarding/website", { replace: true });
           setLoading(false);
           return;
         }
@@ -132,6 +137,25 @@ const Dashboard = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
+        // Check subscription status on auth state change
+        try {
+          const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
+          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+          const hasActiveSubscription = subscriptionLimits.planType !== null;
+          
+          if (!hasActiveSubscription) {
+            navigate("/pricing", { replace: true });
+            return;
+          }
+          
+          setSubscriptionLimits(subscriptionLimits);
+          setSubscriptionVerified(true);
+        } catch (error) {
+          console.error("Error checking subscription on auth change:", error);
+          navigate("/pricing", { replace: true });
+          return;
+        }
+        
         await ensureProfile(
           session.user.id,
           session.user.email || undefined,
@@ -141,6 +165,9 @@ const Dashboard = () => {
         if (selectedBrandId) {
           await fetchDashboardData(session.user.id);
         }
+      } else {
+        // No session - redirect to auth
+        navigate("/auth", { replace: true });
       }
       setSession(session);
     });
@@ -1109,9 +1136,9 @@ const Dashboard = () => {
     return null;
   };
 
-  // Only show loading screen if we don't have session yet or if we're checking subscription
+  // Only show loading screen if we don't have session yet, subscription not verified, or if we're checking subscription
   // Don't block UI if we have a running scan - let it show progress
-  if (loading && (!session || (!currentScan && !selectedBrandId))) {
+  if (loading || !subscriptionVerified) {
     return (
       <SidebarProvider>
         <div className="flex min-h-screen w-full bg-white">
