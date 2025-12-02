@@ -7,6 +7,7 @@ interface SEOProps {
   canonical?: string;
   ogImage?: string;
   ogType?: string;
+  structuredData?: object;
 }
 
 export const SEO = ({
@@ -16,6 +17,7 @@ export const SEO = ({
   canonical,
   ogImage = "https://unifr.ai/og-image.png",
   ogType = "website",
+  structuredData,
 }: SEOProps) => {
   useEffect(() => {
     // Update document title
@@ -41,11 +43,20 @@ export const SEO = ({
     updateMetaTag("og:description", description, "property");
     updateMetaTag("og:image", ogImage, "property");
     updateMetaTag("og:type", ogType, "property");
+    updateMetaTag("og:url", canonical || window.location.href, "property");
+    updateMetaTag("og:site_name", "unifr", "property");
 
     // Update Twitter tags
+    updateMetaTag("twitter:card", "summary_large_image");
     updateMetaTag("twitter:title", title);
     updateMetaTag("twitter:description", description);
     updateMetaTag("twitter:image", ogImage);
+
+    // Add viewport and other important meta tags
+    updateMetaTag("viewport", "width=device-width, initial-scale=1.0");
+    updateMetaTag("theme-color", "#111827");
+    updateMetaTag("author", "unifr");
+    updateMetaTag("robots", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
 
     // Update canonical URL
     if (canonical) {
@@ -57,7 +68,18 @@ export const SEO = ({
       }
       canonicalLink.setAttribute("href", canonical);
     }
-  }, [title, description, keywords, canonical, ogImage, ogType]);
+
+    // Add structured data (JSON-LD)
+    if (structuredData) {
+      let scriptTag = document.querySelector('script[type="application/ld+json"]');
+      if (!scriptTag) {
+        scriptTag = document.createElement("script");
+        scriptTag.setAttribute("type", "application/ld+json");
+        document.head.appendChild(scriptTag);
+      }
+      scriptTag.textContent = JSON.stringify(structuredData);
+    }
+  }, [title, description, keywords, canonical, ogImage, ogType, structuredData]);
 
   return null;
 };

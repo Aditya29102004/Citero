@@ -214,31 +214,79 @@ serve(async (req) => {
     const razorpaySubscription = await razorpayResponse.json();
 
     // Determine seats_allowed based on plan
-    const seatsAllowed = plan.includes("pro") ? 5 : 1;
+    // Pro and Enterprise get 5 seats, Basic gets 1, Enterprise can be unlimited but we'll use 5 as default
+    const seatsAllowed = plan.includes("pro") || plan.includes("enterprise") ? 5 : 1;
 
-    // Store subscription record in database (pending status)
-    const { error: subscriptionError } = await supabaseClient
+    // Store subscription record in database
+    // Use 'pending' status initially - will be updated to 'active' when payment succeeds
+    const subscriptionInsertData: any = {
+      user_id: user.id,
+      razorpay_subscription_id: razorpaySubscription.id,
+      subscription_id: razorpaySubscription.id, // Store in both columns for compatibility
+      plan_type: plan.includes("basic") ? "basic" : plan.includes("pro") ? "pro" : "enterprise",
+      status: "pending", // Start as pending, will be updated to active when payment succeeds
+      current_period_start: new Date().toISOString(),
+      current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
+      amount_paid: 0, // Will be updated when payment is captured
+      currency: "INR",
+    };
+
+    // Only add columns that exist in the base table schema
+    // Check if plan_id column exists by trying to add it (will be ignored if column doesn't exist)
+    // For now, only add columns that are guaranteed to exist
+    
+    // Try to insert with optional columns, but handle errors gracefully
+    const { data: insertedSubscription, error: subscriptionError } = await supabaseClient
       .from("subscriptions")
-      .insert({
-        user_id: user.id,
-        subscription_id: razorpaySubscription.id,
-        plan_id: planId,
-        plan_type: plan.includes("basic") ? "basic" : plan.includes("pro") ? "pro" : "enterprise",
-        status: "pending",
-        is_founder: isFounder,
-        seats_allowed: seatsAllowed,
-        current_period_start: new Date().toISOString(),
-        current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days
-        amount_paid: 0, // Will be updated when payment is captured
-        currency: "INR",
-        metadata: {
-          razorpay_subscription: razorpaySubscription,
-        },
-      });
+      .insert(subscriptionInsertData)
+      .select()
+      .single();
 
     if (subscriptionError) {
-      console.error("Error storing subscription:", subscriptionError);
+      // If error is due to missing columns, try without them
+      if (subscriptionError.code === 'PGRST204' || subscriptionError.message?.includes('column') || subscriptionError.message?.includes('does not exist')) {
+        console.log("Retrying insert without optional columns...");
+        // Remove optional columns and try again
+        const basicInsertData: any = {
+          user_id: user.id,
+          razorpay_subscription_id: razorpaySubscription.id,
+          plan_type: plan.includes("basic") ? "basic" : plan.includes("pro") ? "pro" : "enterprise",
+          status: "pending", // Start as pending
+          current_period_start: new Date().toISOString(),
+          current_period_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          amount_paid: 0,
+          currency: "INR",
+        };
+        
+        // Try to add subscription_id if column exists
+        try {
+          basicInsertData.subscription_id = razorpaySubscription.id;
+        } catch (e) {
+          // Column might not exist, that's okay
+        }
+        
+        const { data: retryInsert, error: retryError } = await supabaseClient
+          .from("subscriptions")
+          .insert(basicInsertData)
+          .select()
+          .single();
+          
+        if (retryError) {
+          console.error("Error storing subscription (retry failed):", retryError);
+          console.error("Basic subscription data:", basicInsertData);
+        } else {
+          console.log("Subscription successfully created (basic columns only):", retryInsert?.id);
+        }
+      } else {
+        console.error("Error storing subscription:", subscriptionError);
+        console.error("Subscription data attempted:", subscriptionInsertData);
+      }
       // Continue anyway - subscription is created in Razorpay
+    } else {
+      console.log("Subscription successfully created in database:", insertedSubscription?.id);
+      
+      // Try to update with optional columns if they exist (using raw SQL or separate update)
+      // For now, we'll let the webhook or migration handle adding optional fields
     }
 
     return new Response(

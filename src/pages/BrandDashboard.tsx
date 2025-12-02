@@ -7,7 +7,7 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { ArrowLeft, RefreshCw, TrendingUp, CheckCircle2, Sparkles, Lightbulb, TrendingDown, TrendingUp as TrendingUpIcon, Info, X, Download, Target, Users, ArrowRight } from "lucide-react";
+import { ArrowLeft, RefreshCw, TrendingUp, CheckCircle2, Sparkles, Lightbulb, TrendingDown, TrendingUp as TrendingUpIcon, Info, X, Download, Target, Users, ArrowRight, AlertCircle } from "lucide-react";
 import { toast } from "sonner";
 import { SentimentChart } from "@/components/SentimentChart";
 import { VisibilityTrendChart } from "@/components/VisibilityTrendChart";
@@ -21,6 +21,8 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { canRunScan, isAIProviderAllowed, getUserSubscriptionLimits, getUserScanUsage, SubscriptionLimits } from "@/lib/subscriptionLimits";
+import { AIProviderSelect } from "@/components/AIProviderSelect";
 
 const BrandDashboard = () => {
   const navigate = useNavigate();
@@ -32,6 +34,8 @@ const BrandDashboard = () => {
   const [latestScore, setLatestScore] = useState<any>(null);
   const [latestScan, setLatestScan] = useState<any>(null);
   const [aiProvider, setAiProvider] = useState<'openai' | 'gemini' | 'deepseek' | 'openrouter'>('openai');
+  const [subscriptionLimits, setSubscriptionLimits] = useState<SubscriptionLimits | null>(null);
+  const [scanUsage, setScanUsage] = useState<number>(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -51,12 +55,41 @@ const BrandDashboard = () => {
   useEffect(() => {
     if (brandId && session) {
       fetchBrandData();
+      fetchSubscriptionLimits();
       // Poll more frequently when scan is running
       const pollInterval = latestScan?.status === 'running' ? 2000 : 5000;
       const interval = setInterval(fetchBrandData, pollInterval);
       return () => clearInterval(interval);
     }
   }, [brandId, session, latestScan?.status]);
+
+  const fetchSubscriptionLimits = async () => {
+    if (!session?.user?.id) return;
+    
+    try {
+      const limits = await getUserSubscriptionLimits(session.user.id);
+      console.log("Fetched subscription limits:", limits);
+      setSubscriptionLimits(limits);
+      
+      // Fetch current usage
+      const usage = await getUserScanUsage(session.user.id);
+      console.log("Current scan usage:", usage);
+      setScanUsage(usage);
+      
+      // If user has Basic plan and current provider is not allowed, switch to allowed one
+      if (limits.planType === 'basic' && !limits.allowedAIProviders.includes(aiProvider)) {
+        setAiProvider(limits.allowedAIProviders[0] as 'openai' | 'gemini');
+        if (brand) {
+          await supabase
+            .from('brands')
+            .update({ ai_provider: limits.allowedAIProviders[0] })
+            .eq('id', brand.id);
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching subscription limits:", error);
+    }
+  };
 
   const fetchBrandData = async () => {
     try {
@@ -109,6 +142,22 @@ const BrandDashboard = () => {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error("Not authenticated");
 
+      // Check scan limits
+      const scanCheck = await canRunScan(session.user.id);
+      if (!scanCheck.allowed) {
+        toast.error(scanCheck.reason || "Cannot run scan");
+        setScanning(false);
+        return;
+      }
+
+      // Check AI provider is allowed
+      const providerCheck = await isAIProviderAllowed(session.user.id, aiProvider);
+      if (!providerCheck.allowed) {
+        toast.error(providerCheck.reason || "AI provider not allowed");
+        setScanning(false);
+        return;
+      }
+
       toast.info("Starting GEO scan...");
       
       const { data, error } = await supabase.functions.invoke('run-geo-scan', {
@@ -118,6 +167,9 @@ const BrandDashboard = () => {
       if (error) throw error;
 
       toast.success("GEO scan started! This will take a few minutes...");
+      
+      // Update usage
+      await fetchSubscriptionLimits();
       
       // Immediately fetch to show the scan record
       await fetchBrandData();
@@ -311,9 +363,18 @@ const BrandDashboard = () => {
                       <Label htmlFor="ai-provider" className="text-xs text-gray-600 font-semibold uppercase tracking-wide">
                         AI Provider
                       </Label>
-                      <Select
+                      <AIProviderSelect
                         value={aiProvider}
-                        onValueChange={async (value: 'openai' | 'gemini' | 'deepseek' | 'openrouter') => {
+                        onValueChange={async (value) => {
+                          if (!session?.user?.id) return;
+                          
+                          // Check if provider is allowed
+                          const providerCheck = await isAIProviderAllowed(session.user.id, value);
+                          if (!providerCheck.allowed) {
+                            toast.error(providerCheck.reason || "AI provider not available on your plan");
+                            return;
+                          }
+                          
                           setAiProvider(value);
                           if (brand) {
                             try {
@@ -329,18 +390,10 @@ const BrandDashboard = () => {
                             }
                           }
                         }}
+                        subscriptionLimits={subscriptionLimits}
                         disabled={scanning || latestScan?.status === 'running'}
-                      >
-                        <SelectTrigger id="ai-provider" className="w-full bg-white border-gray-300 text-sm h-10">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="openai">ChatGPT (OpenAI)</SelectItem>
-                          <SelectItem value="gemini">Gemini (Google)</SelectItem>
-                          <SelectItem value="deepseek">DeepSeek</SelectItem>
-                          <SelectItem value="openrouter">OpenRouter</SelectItem>
-                        </SelectContent>
-                      </Select>
+                        className="w-full bg-white border-gray-300 text-sm h-10"
+                      />
                     </div>
                     <div className="flex items-center gap-3">
                       {latestScan?.status === 'running' && (
@@ -365,15 +418,35 @@ const BrandDashboard = () => {
                           Export PDF
                         </Button>
                       )}
-                      <Button
-                        onClick={handleRunScan}
-                        disabled={scanning || latestScan?.status === 'running'}
-                        size="lg"
-                        className="bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700 text-white shadow-sm hover:shadow-md transition-all duration-200 rounded-lg px-6 h-11 font-medium text-sm"
-                      >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${scanning || latestScan?.status === 'running' ? 'animate-spin' : ''}`} />
-                        {latestScan?.status === 'running' ? 'Scanning...' : 'Run GEO Scan'}
-                      </Button>
+                      <div className="flex flex-col gap-2">
+                        {subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && (
+                          <div className="text-xs text-gray-500 text-right">
+                            {scanUsage} / {subscriptionLimits.scansPerMonth} scans this month
+                          </div>
+                        )}
+                        <Button
+                          onClick={handleRunScan}
+                          disabled={scanning || latestScan?.status === 'running' || (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth)}
+                          size="lg"
+                          className="bg-gradient-to-r from-indigo-600 to-cyan-600 hover:from-indigo-700 hover:to-cyan-700 text-white shadow-sm hover:shadow-md transition-all duration-200 rounded-lg px-6 h-11 font-medium text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <RefreshCw className={`h-4 w-4 mr-2 ${scanning || latestScan?.status === 'running' ? 'animate-spin' : ''}`} />
+                          {latestScan?.status === 'running' ? 'Scanning...' : 
+                           (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth) ? 'Limit Reached' : 'Run GEO Scan'}
+                        </Button>
+                        {subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth && (
+                          <div className="flex items-center gap-1 text-xs text-amber-600">
+                            <AlertCircle className="h-3 w-3" />
+                            <span>Monthly limit reached. Upgrade to Pro for more scans.</span>
+                          </div>
+                        )}
+                        {subscriptionLimits && (!subscriptionLimits.planType || subscriptionLimits.scansPerMonth === 0) && (
+                          <div className="flex items-center gap-1 text-xs text-amber-600">
+                            <AlertCircle className="h-3 w-3" />
+                            <span>No active subscription. Please subscribe to run scans.</span>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -569,8 +642,8 @@ const BrandDashboard = () => {
               </Card>
             )}
 
-              {/* Simple Deep Insight Analysis */}
-              {latestScan?.deep_insight_analysis && (
+              {/* Simple Deep Insight Analysis - Pro/Enterprise only */}
+              {latestScan?.deep_insight_analysis && subscriptionLimits?.hasAdvancedGEOInsights && (
                 <Card className="border border-gray-200 bg-white shadow-sm rounded-lg">
                   <div className="p-6">
                     <h3 className="text-lg font-semibold text-gray-900 mb-4 pb-4 border-b border-gray-200">

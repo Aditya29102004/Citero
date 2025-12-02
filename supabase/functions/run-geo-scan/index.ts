@@ -1,1268 +1,1046 @@
-// Deno is available in Supabase Edge Functions runtime
-declare const Deno: {
-  env: {
-    get(key: string): string | undefined;
-  };
-};
-
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 
 const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-// AI Provider API Keys
-const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
-const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
-const DEEPSEEK_API_KEY = Deno.env.get('DEEPSEEK_API_KEY');
-const OPENROUTER_API_KEY = Deno.env.get('OPENROUTER_API_KEY');
+// API Keys
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY") ?? "";
+// Support both GOOGLE_API_KEY and GEMINI_API_KEY (GOOGLE_API_KEY takes precedence per Gemini docs)
+const GEMINI_API_KEY = Deno.env.get("GOOGLE_API_KEY") ?? Deno.env.get("GEMINI_API_KEY") ?? "";
+const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
-// Question templates organized by dimension
-const QUESTION_TEMPLATES = [
-  // Awareness (Presence) - Checks if brand is known at all
-  { category: 'awareness', template: "What are the most talked-about {product_type} helping {target_audience}?" },
-  { category: 'awareness', template: "Which {product_type} platforms or brands are gaining attention in {industry}?" },
-  { category: 'awareness', template: "What are the top brands in {industry} that people discuss online?" },
+// Cache for selected Gemini model (tested once, reused for all questions)
+let cachedGeminiModel: string | null = null;
+
+// Competitor cleaning utilities (inline version for edge function)
+const STOPWORDS = new Set([
+  "for", "this", "that", "the", "its", "it's", "their", "they", "them", "these", "those",
+  "other", "some", "while", "recently", "however", "october", "november", "december",
+  "january", "february", "march", "april", "may", "june", "july", "august", "september",
+  "india", "know", "your", "brand", "platforms", "startup", "startups", "founders",
+  "companies", "ecosystem", "also", "including", "such", "like", "similar", "alternatives",
+  "competitors", "competitor", "and", "or", "but", "with", "from", "into", "onto", "upon"
+]);
+
+function cleanCompetitorName(name: string): string | null {
+  if (!name || typeof name !== 'string') return null;
   
-  // Reputation (Tone) - Measures trust and credibility
-  { category: 'reputation', template: "Is {brand_name} considered reliable or effective?" },
-  { category: 'reputation', template: "What do users say about the quality of {brand_name}?" },
-  { category: 'reputation', template: "Is {brand_name} trusted by {target_audience}?" },
+  let cleaned = name.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]/gu, '');
+  cleaned = cleaned.replace(/[^\w\s-]/g, ' ').trim();
+  cleaned = cleaned.replace(/\s+/g, ' ').trim();
   
-  // Differentiation (Positioning) - How AI distinguishes the brand
-  { category: 'differentiation', template: "How is {brand_name} different from other {product_type} platforms?" },
-  { category: 'differentiation', template: "What makes {brand_name} unique compared to competitors in {industry}?" },
-  { category: 'differentiation', template: "What are the key differences between {brand_name} and its main competitors?" },
+  if (cleaned.length < 3) return null;
   
-  // Authority (Thought leadership) - Perceived expertise
-  { category: 'authority', template: "Which platforms are most trusted for {niche} advice and education?" },
-  { category: 'authority', template: "What brands are considered experts in {industry}?" },
-  { category: 'authority', template: "Which companies lead innovation and thought leadership in {industry}?" },
+  const lower = cleaned.toLowerCase();
+  if (STOPWORDS.has(lower)) return null;
+  if (/^\d+$/.test(cleaned)) return null;
   
-  // Momentum (Trend) - Growth perception
-  { category: 'momentum', template: "Which new {product_type} platforms are gaining popularity among {target_audience}?" },
-  { category: 'momentum', template: "What are the fastest-growing brands in {industry} right now?" },
-  { category: 'momentum', template: "Which {product_type} companies are trending or getting more attention recently?" },
-];
-
-async function callOpenAI(prompt: string): Promise<string> {
-  if (!OPENAI_API_KEY) {
-    throw new Error('OPENAI_API_KEY is not set in Edge Function secrets');
-  }
-
-  const response = await fetch(
-    'https://api.openai.com/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENAI_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'gpt-4o-mini',
-        temperature: 0.4,
-        max_tokens: 256,
-        messages: [
-          {
-            role: 'system',
-            content: 'Answer briefly (2-3 sentences).',
-          },
-          { role: 'user', content: prompt },
-        ],
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    let errorMessage = 'Unknown error';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || JSON.stringify(errorData);
-    } catch {
-      try {
-        errorMessage = await response.text();
-      } catch {
-        errorMessage = `HTTP ${response.status}`;
-      }
-    }
-    console.error('OpenAI API error:', errorMessage);
-    throw new Error(`OpenAI API failed: ${response.status} - ${errorMessage}`);
-  }
-
-  const data = await response.json();
-  const text = data?.choices?.[0]?.message?.content ?? '';
-  return (typeof text === 'string' ? text : String(text)).trim();
+  cleaned = cleaned
+    .split(/\s+/)
+    .map(word => {
+      if (word.length === 0) return word;
+      if (/^[A-Z][a-z]+[A-Z]/.test(word)) return word;
+      return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+    })
+    .join(' ');
+  
+  return cleaned;
 }
 
-async function callGemini(prompt: string, retryCount = 0, modelIndex = 0): Promise<string> {
-  if (!GEMINI_API_KEY) {
-    throw new Error('GEMINI_API_KEY is not set in Edge Function secrets');
-  }
+function extractCompetitorsFromResponse(response: string, competitorNames: string[], brandName: string): string[] {
+  if (!response || !competitorNames.length) return [];
+  
+  const found: string[] = [];
+  const responseLower = response.toLowerCase();
+  const brandLower = brandName.toLowerCase();
+  
+  competitorNames.forEach(compName => {
+    if (!compName || compName.toLowerCase() === brandLower) return;
+    
+    const compLower = compName.toLowerCase();
+    const regex = new RegExp(`\\b${compLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    
+    if (regex.test(response)) {
+      found.push(compName);
+    }
+  });
+  
+  return found;
+}
 
-  // Use the working model: gemini-2.0-flash-exp (confirmed working)
-  // Keep fallbacks in case the experimental model becomes unavailable
-  // Note: gemini-1.0-pro is not available in v1beta, removed from fallbacks
-  const attempts = [
-    { version: 'v1beta', model: 'gemini-2.0-flash-exp' }, // Primary - confirmed working
-    { version: 'v1beta', model: 'gemini-1.5-flash' },     // Fallback 1
-    { version: 'v1beta', model: 'gemini-1.5-pro' },       // Fallback 2
-  ];
+function mergeCompetitors(initial: string[], aiExtracted: string[]): string[] {
+  const merged = new Set<string>();
   
-  let lastError: Error | null = null;
+  initial.forEach(comp => {
+    const cleaned = cleanCompetitorName(comp);
+    if (cleaned) merged.add(cleaned);
+  });
   
-  // Start from the specified model index (for retries, continue with the same model)
-  for (let i = modelIndex; i < attempts.length; i++) {
-    const attempt = attempts[i];
-    try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/${attempt.version}/models/${attempt.model}:generateContent?key=${GEMINI_API_KEY}`,
-        {
-          method: 'POST',
+  aiExtracted.forEach(comp => {
+    const cleaned = cleanCompetitorName(comp);
+    if (cleaned) {
+      const lower = cleaned.toLowerCase();
+      const isDuplicate = Array.from(merged).some(existing => existing.toLowerCase() === lower);
+      if (!isDuplicate) {
+        merged.add(cleaned);
+      }
+    }
+  });
+  
+  return Array.from(merged);
+}
+
+async function callAI(prompt: string, provider: string = "openai"): Promise<string> {
+  if (provider === "openai" || provider === "chatgpt") {
+    if (!OPENAI_API_KEY) {
+      throw new Error("OPENAI_API_KEY is not set");
+    }
+
+    const response = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${OPENAI_API_KEY}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+        max_tokens: 2000,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`);
+    }
+
+    const data = await response.json();
+    return data.choices?.[0]?.message?.content || "";
+  } else if (provider === "gemini") {
+    if (!GEMINI_API_KEY) {
+      throw new Error("GEMINI_API_KEY or GOOGLE_API_KEY is not set. Please set one of these environment variables in Supabase Edge Functions secrets.");
+    }
+
+    // Use cached model if available (tested once, reused for all questions)
+    if (cachedGeminiModel) {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedGeminiModel}:generateContent?key=${GEMINI_API_KEY}`;
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt
+            }]
+          }],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        let errorMessage = "";
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.error?.message || errorText;
+        } catch {
+          errorMessage = errorText;
+        }
+        throw new Error(`Gemini error: ${errorMessage}`);
+      }
+
+      const data = await response.json();
+      if (data.error) {
+        throw new Error(`Gemini error: ${data.error.message || JSON.stringify(data.error)}`);
+      }
+
+      const result = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+      if (!result) {
+        throw new Error("Gemini error: Model returned empty result");
+      }
+
+      return result;
+    }
+
+    // First time: Test model availability and cache the selected model
+    // CRITICAL: Google changed their API routing in mid-2024
+    // Gemini 2.x works ONLY with v1beta endpoint - v1 is deprecated and will return 404
+    // The ONLY valid endpoint format is: https://generativelanguage.googleapis.com/v1beta/models/{MODEL}:generateContent
+    // 
+    // ONLY valid models (from /models API response):
+    // - gemini-2.0-flash (🔥 Best Fast Model - Use This)
+    // - gemini-2.5-pro (🧠 Best Quality Model)
+    // 
+    // DO NOT use: gemini-pro, gemini-1.5-pro, gemini-1.5-flash, or any deprecated models
+
+    async function testModelAvailability(modelName: string): Promise<boolean> {
+      try {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${GEMINI_API_KEY}`;
+        const response = await fetch(url, {
+          method: "POST",
           headers: {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            contents: [{
-              parts: [{
-                text: "Answer briefly (2-3 sentences). " + prompt
-              }]
-            }],
-            generationConfig: {
-              temperature: 0.4,
-              maxOutputTokens: 256,
-            },
+            contents: [{ parts: [{ text: "test" }] }],
           }),
-        }
-      );
-
-      if (response.ok) {
-        const data = await response.json();
-        const text = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-        
-        if (text && text.trim().length > 0) {
-          return (typeof text === 'string' ? text : String(text)).trim();
-        }
-      } else {
-        const errorText = await response.text().catch(() => `HTTP ${response.status}`);
-        const errorData = errorText.includes('{') ? JSON.parse(errorText) : { message: errorText };
-        
-        // Handle 429 rate limit errors with retry
-        if (response.status === 429) {
-          // Check if it's a quota/billing issue (not just rate limiting)
-          const errorMessage = (errorData.error?.message || errorData.message || errorText).toLowerCase();
-          const isQuotaExceeded = errorMessage.includes('billing') || 
-                                  errorMessage.includes('quota') || 
-                                  errorMessage.includes('rate limit') && errorMessage.includes('increase');
-          
-          if (isQuotaExceeded) {
-            // This is a quota/billing limit, not just temporary rate limiting
-            throw new Error(`Gemini API quota exceeded. The free tier has been reached. Please set up billing at https://aistudio.google.com/app/apikey to increase limits, or switch to OpenAI/DeepSeek provider in settings.`);
-          }
-          
-          const maxRetries = 5; // Increased retries
-          if (retryCount < maxRetries) {
-            // Exponential backoff with jitter: 10s, 20s, 40s, 80s, 160s (much longer for Gemini)
-            const baseDelay = Math.pow(2, retryCount + 3) * 1000; // 10s, 20s, 40s, 80s, 160s
-            const jitter = Math.random() * 5000; // Add up to 5s random jitter
-            const delay = baseDelay + jitter;
-            console.log(`Rate limited (429). Retrying in ${Math.round(delay/1000)}s... (attempt ${retryCount + 1}/${maxRetries})`);
-            await new Promise(resolve => setTimeout(resolve, delay));
-            // Retry with the same model index
-            return await callGemini(prompt, retryCount + 1, i);
-          }
-          // If we've exhausted retries for this model, try next model
-          if (i < attempts.length - 1) {
-            console.log(`Rate limit retries exhausted for ${attempt.model}, trying next model...`);
-            // Add a longer delay before trying next model
-            await new Promise(resolve => setTimeout(resolve, 10000));
-            continue; // Try next model
-          }
-          throw new Error(`Gemini API rate limited (429). Please wait and try again later.`);
-        }
-        
-        // Check for quota/billing errors in any error response (not just 429)
-        const errorMessage = (errorData.error?.message || errorData.message || errorText).toLowerCase();
-        const isQuotaExceeded = errorMessage.includes('billing') || 
-                                errorMessage.includes('quota') || 
-                                (errorMessage.includes('rate limit') && errorMessage.includes('increase')) ||
-                                errorMessage.includes('resource exhausted');
-        
-        if (isQuotaExceeded || response.status === 403) {
-          throw new Error(`Gemini API quota exceeded. The free tier has been reached. Please set up billing at https://aistudio.google.com/app/apikey to increase limits, or switch to OpenAI/DeepSeek provider in settings.`);
-        }
-        
-        lastError = new Error(`Gemini API ${attempt.version}/${attempt.model}: ${response.status} - ${errorData.error?.message || errorData.message || errorText}`);
-        
-        // Only try next if this one failed with 404
-        if (response.status === 404) {
-          continue; // Try next model
-        }
-        // For other errors, throw immediately
-        throw lastError;
-      }
-    } catch (error: any) {
-      // If it's our thrown error, re-throw it
-      if (error.message && error.message.includes('Gemini API')) {
-        throw error;
-      }
-      lastError = error instanceof Error ? error : new Error(String(error));
-      // Continue to next attempt for network/parsing errors
-    }
-  }
-  
-  // If all failed, throw the last error
-  if (lastError) {
-    throw new Error(`Gemini API failed: ${lastError.message}`);
-  }
-  
-  throw new Error('Gemini API: All attempts failed. Check your API key at https://aistudio.google.com/app/apikey');
-}
-
-async function callDeepSeek(prompt: string): Promise<string> {
-  if (!DEEPSEEK_API_KEY) {
-    throw new Error('DEEPSEEK_API_KEY is not set in Edge Function secrets');
-  }
-
-  const response = await fetch(
-    'https://api.deepseek.com/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
-      },
-      body: JSON.stringify({
-        model: 'deepseek-chat',
-        temperature: 0.4,
-        max_tokens: 256,
-        messages: [
-          {
-            role: 'system',
-            content: 'Answer briefly (2-3 sentences).',
-          },
-          { role: 'user', content: prompt },
-        ],
-      }),
-    }
-  );
-
-  if (!response.ok) {
-    let errorMessage = 'Unknown error';
-    try {
-      const errorData = await response.json();
-      errorMessage = errorData.message || JSON.stringify(errorData);
-    } catch {
-      try {
-        errorMessage = await response.text();
+        });
+        return response.ok || response.status === 400;
       } catch {
-        errorMessage = `HTTP ${response.status}`;
+        return false;
       }
     }
-    console.error('DeepSeek API error:', errorMessage);
-    throw new Error(`DeepSeek API failed: ${response.status} - ${errorMessage}`);
-  }
 
-  const data = await response.json();
-  const text = data?.choices?.[0]?.message?.content ?? '';
-  return (typeof text === 'string' ? text : String(text)).trim();
-}
+    // Models to try in priority order - ONLY these models are valid as of Gemini 2.x
+    const modelsToTry = [
+      "gemini-2.0-flash",        // 🔥 Best Fast Model (Use This) - PRIMARY
+      "gemini-2.5-pro",          // 🧠 Best Quality Model - FALLBACK
+    ];
 
-async function callOpenRouter(prompt: string, retryCount = 0): Promise<string> {
-  if (!OPENROUTER_API_KEY) {
-    throw new Error('OPENROUTER_API_KEY is not set in Edge Function secrets');
-  }
+    // Test model availability in parallel
+    const availabilityTests = await Promise.all(
+      modelsToTry.map(async (model) => ({
+        model,
+        available: await testModelAvailability(model),
+      }))
+    );
 
-  const response = await fetch(
-    'https://openrouter.ai/api/v1/chat/completions',
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://unifr.com',
-        'X-Title': 'Uni Brand Tracker',
-      },
-      body: JSON.stringify({
-        model: 'qwen/qwen3-4b:free', // Free model - can be changed to paid models like 'openai/gpt-4o-mini'
-        temperature: 0.4,
-        max_tokens: 256,
-        messages: [
-          {
-            role: 'system',
-            content: 'Answer briefly (2-3 sentences).',
-          },
-          { role: 'user', content: prompt },
-        ],
-      }),
-    }
-  );
+    // Find first available model
+    const selectedModel = availabilityTests.find((test) => test.available)?.model || modelsToTry[0];
 
-  if (!response.ok) {
-    let errorMessage = 'Unknown error';
-    let errorData: any = {};
-    try {
-      errorData = await response.json();
-      errorMessage = errorData.error?.message || errorData.message || JSON.stringify(errorData);
-    } catch {
-      try {
-        errorMessage = await response.text();
-      } catch {
-        errorMessage = `HTTP ${response.status}`;
-      }
-    }
-    
-    // Handle specific OpenRouter errors
-    if (response.status === 402) {
-      const creditError = errorData.error?.message || errorMessage;
-      throw new Error(`OpenRouter account has insufficient credits. Please purchase credits at https://openrouter.ai/settings/credits. Error: ${creditError}`);
-    }
-    
-    // Handle rate limiting (429) with retry logic
-    if (response.status === 429) {
-      const maxRetries = 5;
-      if (retryCount < maxRetries) {
-        // Exponential backoff: 5s, 10s, 20s, 40s, 80s
-        const baseDelay = Math.pow(2, retryCount) * 5000; // 5s, 10s, 20s, 40s, 80s
-        const jitter = Math.random() * 2000; // Add up to 2s random jitter
-        const delay = baseDelay + jitter;
-        console.log(`OpenRouter rate limited (429). Retrying in ${Math.round(delay/1000)}s... (attempt ${retryCount + 1}/${maxRetries})`);
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return await callOpenRouter(prompt, retryCount + 1);
-      }
-      throw new Error(`OpenRouter API rate limited (429). Please wait and try again later. Free models have strict rate limits.`);
-    }
-    
-    console.error('OpenRouter API error:', errorMessage);
-    throw new Error(`OpenRouter API failed: ${response.status} - ${errorMessage}`);
-  }
-
-  const data = await response.json();
-  const text = data?.choices?.[0]?.message?.content ?? '';
-  return (typeof text === 'string' ? text : String(text)).trim();
-}
-
-async function callAI(prompt: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter' = 'openai'): Promise<string> {
-  if (provider === 'gemini') {
-    return await callGemini(prompt);
-  } else if (provider === 'deepseek') {
-    return await callDeepSeek(prompt);
-  } else if (provider === 'openrouter') {
-    return await callOpenRouter(prompt);
-  } else {
-    return await callOpenAI(prompt);
-  }
-}
-
-function analyzeSentiment(text: string, brandName: string): string | null {
-  const lowerText = text.toLowerCase();
-  const lowerBrand = brandName.toLowerCase();
-
-  if (!lowerText.includes(lowerBrand)) {
-    return null;
-  }
-
-  const positiveWords = ['best', 'excellent', 'great', 'top', 'leading', 'innovative', 'trusted', 'quality', 'recommended', 'popular'];
-  const negativeWords = ['poor', 'worst', 'bad', 'lacking', 'issues', 'problems', 'unreliable', 'disappointing'];
-
-  let positiveCount = 0;
-  let negativeCount = 0;
-
-  positiveWords.forEach(word => {
-    if (lowerText.includes(word)) positiveCount++;
-  });
-
-  negativeWords.forEach(word => {
-    if (lowerText.includes(word)) negativeCount++;
-  });
-
-  if (positiveCount > negativeCount) return 'positive';
-  if (negativeCount > positiveCount) return 'negative';
-  return 'neutral';
-}
-
-function extractMentionedBrands(text: string): string[] {
-  const brands: string[] = [];
-  const sentences = text.split(/[.!?]/);
-  
-  sentences.forEach(sentence => {
-    const words = sentence.split(/\s+/);
-    words.forEach(word => {
-      const cleaned = word.replace(/[^a-zA-Z0-9]/g, '');
-      if (cleaned.length > 2 && /^[A-Z]/.test(cleaned)) {
-        brands.push(cleaned);
-      }
+    // Log availability results
+    availabilityTests.forEach((test) => {
+      console.log(`${test.available ? "✓" : "✗"} Model ${test.model} is ${test.available ? "available" : "not available"}`);
     });
-  });
 
-  return [...new Set(brands)];
-}
+    // Cache the selected model for reuse
+    cachedGeminiModel = selectedModel;
+    console.log(`Using Gemini model: ${cachedGeminiModel}`);
 
-async function generateAISummary(responses: any[], brandName: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter' = 'openai'): Promise<string> {
-  if (!responses || responses.length === 0) {
-    return 'No AI responses were generated for this scan. Try running the scan again.';
-  }
+    // Now use the cached model for this request
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedGeminiModel}:generateContent?key=${GEMINI_API_KEY}`;
+    
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: prompt
+          }]
+        }],
+      }),
+    });
 
-  // Limit to first 8 responses and truncate
-  const limitedResponses = responses.slice(0, 8)
-    .map(r => `Q: ${r.question_text}\nA: ${r.ai_response.substring(0, 120)}`)
-    .join('\n\n');
-
-  const summaryPrompt = `Brand: ${brandName}\nResponses: ${limitedResponses}\n\nSummarize in 2-3 sentences: tone, topics, visibility gaps.`;
-
-  return await callAI(summaryPrompt, provider);
-}
-
-async function generateMetaAnalysis(responses: any[], brandName: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter' = 'openai'): Promise<{
-  strengths: string[];
-  weaknesses: string[];
-  recommendations: string[];
-}> {
-  if (!responses || responses.length === 0) {
-    return {
-      strengths: [],
-      weaknesses: ['No scan data available'],
-      recommendations: ['Run a GEO scan to gather insights']
-    };
-  }
-
-  // Limit to first 8 responses and truncate
-  const limitedResponses = responses.slice(0, 8)
-    .map(r => `[${r.question_category}] ${r.ai_response.substring(0, 100)}`)
-    .join('\n');
-
-  const analysisPrompt = `Brand: ${brandName}\nResponses: ${limitedResponses}\n\nOutput JSON: {"strengths": ["s1", "s2", "s3"], "weaknesses": ["w1", "w2", "w3"], "recommendations": ["r1", "r2", "r3"]}`;
-
-  try {
-    const response = await callAI(analysisPrompt, provider);
-    // Try to extract JSON from the response
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return {
-        strengths: parsed.strengths || [],
-        weaknesses: parsed.weaknesses || [],
-        recommendations: parsed.recommendations || []
-      };
+    if (!response.ok) {
+      const errorText = await response.text();
+      let errorMessage = "";
+      try {
+        const errorData = JSON.parse(errorText);
+        errorMessage = errorData.error?.message || errorText;
+      } catch {
+        errorMessage = errorText;
+      }
+      throw new Error(`Gemini error: ${errorMessage}`);
     }
-    throw new Error('No valid JSON found in response');
-  } catch (error) {
-    console.error('Error parsing meta-analysis:', error);
-    return {
-      strengths: ['Brand has some visibility in AI search results'],
-      weaknesses: ['Limited detailed insights available', 'Analysis needs more data'],
-      recommendations: ['Run more scans to build better insights', 'Increase content marketing efforts']
-    };
+
+    const data = await response.json();
+    if (data.error) {
+      throw new Error(`Gemini error: ${data.error.message || JSON.stringify(data.error)}`);
+    }
+
+    const result = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    if (!result) {
+      throw new Error("Gemini error: Model returned empty result");
+    }
+
+    return result;
+  } else {
+    throw new Error(`Unsupported provider: ${provider}`);
   }
 }
 
-function calculateVisibilityScore(responses: any[]): number {
-  const totalQuestions = responses.length;
-  if (totalQuestions === 0) return 0;
-
-  const mentionedCount = responses.filter(r => r.brand_mentioned).length;
-  const positiveCount = responses.filter(r => r.sentiment === 'positive').length;
-  const neutralCount = responses.filter(r => r.sentiment === 'neutral').length;
-
-  const mentionRate = (mentionedCount / totalQuestions) * 100;
-  const sentimentBonus = (positiveCount * 10) + (neutralCount * 5);
-  const base = (mentionRate * 0.7) + (sentimentBonus / totalQuestions);
-  const score = Math.round(base);
-  return Math.min(Math.max(score, 0), 100);
+// Helper function to reset Gemini model cache (useful for testing or if model changes)
+function resetGeminiModelCache() {
+  cachedGeminiModel = null;
 }
 
-// ============================================
-// AI INSIGHT ENGINE - Step 1: Perception Summary
-// ============================================
-async function generatePerceptionSummary(responses: any[], brandName: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter'): Promise<any> {
-  const responsesText = responses
-    .map(r => `Q: ${r.question_text}\nA: ${r.ai_response}`)
-    .join('\n\n');
-
-  // Limit responses text to avoid token limits
-  const limitedResponses = responses.slice(0, 10).map(r => `Q: ${r.question_text}\nA: ${r.ai_response.substring(0, 150)}`).join('\n\n');
+function generateQuestions(brandName: string, description: string, topics: string[]): string[] {
+  // Generate 15 questions focused on comparisons, alternatives, trust, top brands, reliability, growth, popularity, credibility
+  const baseQuestions = [
+    `Who are the most credible alternatives to ${brandName}?`,
+    `Which platforms compete with ${brandName} for emerging founders?`,
+    `How does ${brandName} compare to other startup discovery tools?`,
+    `What are the top brands in the ${topics[0] || 'startup'} space?`,
+    `Which platforms are considered the most reliable alternatives to ${brandName}?`,
+    `What are the fastest-growing brands in the ${topics[0] || 'startup'} ecosystem right now?`,
+    `How trustworthy is ${brandName} compared to competitors?`,
+    `What brands are considered experts in ${topics[0] || 'startup networking'}?`,
+    `Which platforms offer similar features to ${brandName}?`,
+    `What makes ${brandName} unique compared to competitors?`,
+    `Who are the leading players in the ${topics[0] || 'startup'} market?`,
+    `What are users saying about ${brandName} vs other platforms?`,
+    `Which brands have the best reputation in ${topics[0] || 'startup networking'}?`,
+    `How popular is ${brandName} compared to other solutions?`,
+    `What are the most recommended platforms for ${topics[0] || 'startup founders'}?`,
+  ];
   
-  const prompt = `Analyze brand ${brandName} from these responses:\n\n${limitedResponses}\n\nOutput JSON: {"summary": "2-3 sentences", "tone": "positive/neutral/negative", "visibility_tier": "Tier 1/2/3", "visibility_score": 0-100, "drivers": ["reason1", "reason2", "reason3"]}`;
-
-  try {
-    const response = await callAI(prompt, provider);
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch (error) {
-    console.error('Error generating perception summary:', error);
-  }
-
-  // Fallback
-  return {
-    summary: 'Unable to generate perception summary.',
-    tone: 'neutral',
-    visibility_tier: 'Tier 3',
-    visibility_score: 0,
-    drivers: ['Analysis unavailable']
-  };
-}
-
-// ============================================
-// AI INSIGHT ENGINE - Step 2: Deep Insight Analysis
-// ============================================
-async function generateDeepInsights(perceptionSummary: any, sentimentStats: any, brandName: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter'): Promise<any> {
-  const prompt = `Brand: ${brandName}\nPerception: ${JSON.stringify(perceptionSummary)}\nSentiment: ${JSON.stringify(sentimentStats)}\n\nOutput JSON: {"insight_summary": "1-2 sentences", "competitive_gap": "1 sentence", "narrative_gap": "1 sentence", "visibility_levers": ["lever1", "lever2", "lever3"]}`;
-
-  try {
-    const response = await callAI(prompt, provider);
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch (error) {
-    console.error('Error generating deep insights:', error);
-  }
-
-  return {
-    insight_summary: 'Analysis unavailable',
-    competitive_gap: 'Unable to determine',
-    narrative_gap: 'Unable to determine',
-    visibility_levers: []
-  };
-}
-
-// ============================================
-// AI INSIGHT ENGINE - Step 3: Strengths & Gaps
-// ============================================
-async function generateStrengthsAndGaps(responses: any[], brandName: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter'): Promise<any> {
-  // Limit to first 8 responses and truncate each
-  const limitedResponses = responses.slice(0, 8)
-    .map(r => `[${r.question_category}] ${r.ai_response.substring(0, 100)}`)
-    .join('\n');
-
-  const prompt = `Brand: ${brandName}\nResponses: ${limitedResponses}\n\nOutput JSON: {"strengths": ["s1", "s2", "s3"], "gaps": ["g1", "g2", "g3"], "opportunity_topic": "topic"}`;
-
-  try {
-    const response = await callAI(prompt, provider);
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch (error) {
-    console.error('Error generating strengths and gaps:', error);
-  }
-
-  return {
-    strengths: [],
-    gaps: [],
-    opportunity_topic: ''
-  };
-}
-
-// ============================================
-// AI INSIGHT ENGINE - Step 4: Actionable Recommendations
-// ============================================
-async function generateRecommendations(perceptionSummary: any, gaps: any, brandName: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter'): Promise<any> {
-  const prompt = `Brand: ${brandName}\nPerception: ${JSON.stringify(perceptionSummary)}\nGaps: ${JSON.stringify(gaps)}\n\nOutput JSON array: [{"action": "1 sentence", "priority": "Urgent/Moderate/Low", "focus_area": "Content/PR/SEO/Product"}]`;
-
-  try {
-    const response = await callAI(prompt, provider);
-    const jsonMatch = response.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch (error) {
-    console.error('Error generating recommendations:', error);
-  }
-
-  return [];
-}
-
-// ============================================
-// AI INSIGHT ENGINE - Step 5: Content Ideas
-// ============================================
-async function generateContentIdeas(gaps: any, brandName: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter'): Promise<any> {
-  const prompt = `Brand: ${brandName}\nGaps: ${JSON.stringify(gaps)}\n\nOutput JSON array: [{"title": "idea", "description": "1 sentence", "improves_topic": "topic", "impact": "impact"}]`;
-
-  try {
-    const response = await callAI(prompt, provider);
-    const jsonMatch = response.match(/\[[\s\S]*\]/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch (error) {
-    console.error('Error generating content ideas:', error);
-  }
-
-  return [];
-}
-
-// ============================================
-// AI INSIGHT ENGINE - Step 6: Week-over-Week Change
-// ============================================
-async function generateWeekOverWeekChange(currentSummary: any, previousSummary: any, brandName: string, provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter'): Promise<any> {
-  if (!previousSummary) {
-    return {
-      change_summary: 'This is the first scan. No previous data to compare.',
-      gained_topics: [],
-      lost_topics: [],
-      competitor_change: 'N/A',
-      main_cause: 'First scan'
-    };
-  }
-
-  const prompt = `Brand: ${brandName}\nPrevious: ${JSON.stringify(previousSummary)}\nCurrent: ${JSON.stringify(currentSummary)}\n\nOutput JSON: {"change_summary": "1-2 sentences", "gained_topics": ["t1", "t2"], "lost_topics": ["t1", "t2"], "competitor_change": "1 sentence", "main_cause": "1 sentence"}`;
-
-  try {
-    const response = await callAI(prompt, provider);
-    const jsonMatch = response.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch (error) {
-    console.error('Error generating week-over-week change:', error);
-  }
-
-  return {
-    change_summary: 'Unable to compare scans',
-    gained_topics: [],
-    lost_topics: [],
-    competitor_change: 'Unable to determine',
-    main_cause: 'Analysis unavailable'
-  };
+  return baseQuestions.slice(0, 15);
 }
 
 serve(async (req) => {
-  if (req.method === 'OPTIONS') {
-    return new Response(null, { 
-      status: 200,
-      headers: corsHeaders 
-    });
+  if (req.method === "OPTIONS") {
+    return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    const supabase = createClient(
-      Deno.env.get('SUPABASE_URL') ?? '',
-      Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''
-    );
-
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      throw new Error('No authorization header');
-    }
-
-    const { data: { user }, error: authError } = await supabase.auth.getUser(
-      authHeader.replace('Bearer ', '')
-    );
-
-    if (authError || !user) {
-      throw new Error('Unauthorized');
-    }
-
-    // Parse request body safely
-    let requestBody: any = {};
+    let requestBody;
     try {
-      const bodyText = await req.text();
-      if (bodyText) {
-        requestBody = JSON.parse(bodyText);
-      }
-    } catch (e) {
-      console.error('Error parsing request body:', e);
+      requestBody = await req.json();
+    } catch (parseError) {
+      console.error("Failed to parse request body:", parseError);
       return new Response(
-        JSON.stringify({ error: 'Invalid request body' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        JSON.stringify({ error: "Invalid request body", details: String(parseError) }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
 
-    const { brandId, aiProvider } = requestBody;
-    
+    const { brandId, aiProvider = "openai" } = requestBody;
+    console.log("GEO scan request:", { brandId, aiProvider });
+
     if (!brandId) {
       return new Response(
-        JSON.stringify({ error: 'brandId is required' }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-    
-    // Determine which AI provider to use
-    let provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter' = 'openai';
-    
-    if (aiProvider && (aiProvider === 'openai' || aiProvider === 'gemini' || aiProvider === 'deepseek' || aiProvider === 'openrouter')) {
-      provider = aiProvider;
-    } else {
-      // Get provider from brand settings (if field exists)
-      try {
-        const { data: brand } = await supabase
-          .from('brands')
-          .select('ai_provider')
-          .eq('id', brandId)
-          .single();
-        
-        if (brand?.ai_provider && (brand.ai_provider === 'openai' || brand.ai_provider === 'gemini' || brand.ai_provider === 'deepseek' || brand.ai_provider === 'openrouter')) {
-          provider = brand.ai_provider;
-        }
-      } catch (e) {
-        // Field might not exist if migration hasn't been run - use default
-        console.log('Could not fetch ai_provider from brand, using default:', e);
-      }
-    }
-    
-    // Check if required API key is set
-    if (provider === 'gemini' && !GEMINI_API_KEY) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'GEMINI_API_KEY is not configured. Please set it in Edge Function secrets. Get your key from https://aistudio.google.com/app/apikey' 
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-    
-    if (provider === 'openai' && !OPENAI_API_KEY) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'OPENAI_API_KEY is not configured. Please set it in Edge Function secrets. Get your key from https://platform.openai.com/api-keys' 
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-    
-    if (provider === 'deepseek' && !DEEPSEEK_API_KEY) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'DEEPSEEK_API_KEY is not configured. Please set it in Edge Function secrets. Get your key from https://platform.deepseek.com/api_keys' 
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
-      );
-    }
-    
-    if (provider === 'openrouter' && !OPENROUTER_API_KEY) {
-      return new Response(
-        JSON.stringify({ 
-          error: 'OPENROUTER_API_KEY is not configured. Please set it in Edge Function secrets. Get your key from https://openrouter.ai/keys' 
-        }),
-        {
-          status: 500,
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        }
+        JSON.stringify({ error: "brandId is required" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }
 
-    // Fetch brand details
+    // Create Supabase client with service role
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    if (!supabaseUrl) {
+      console.error("SUPABASE_URL environment variable is not set");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: SUPABASE_URL not set" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+
+    if (!SUPABASE_SERVICE_ROLE_KEY) {
+      console.error("SUPABASE_SERVICE_ROLE_KEY environment variable is not set");
+      return new Response(
+        JSON.stringify({ error: "Server configuration error: SUPABASE_SERVICE_ROLE_KEY not set" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
+    }
+
+    const supabase = createClient(
+      supabaseUrl,
+      SUPABASE_SERVICE_ROLE_KEY,
+      {
+        auth: {
+          autoRefreshToken: false,
+          persistSession: false,
+        },
+      }
+    );
+
+    // Get brand data
     const { data: brand, error: brandError } = await supabase
-      .from('brands')
-      .select('*')
-      .eq('id', brandId)
-      .eq('user_id', user.id)
+      .from("brands")
+      .select("*")
+      .eq("id", brandId)
       .single();
 
     if (brandError || !brand) {
-      throw new Error('Brand not found');
+      return new Response(
+        JSON.stringify({ error: "Brand not found" }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 404 }
+      );
     }
 
-    console.log('Starting GEO scan for brand:', brand.name);
+    // Get initial competitors
+    let initialCompetitors: string[] = [];
+    if (brand.primary_competitors && Array.isArray(brand.primary_competitors)) {
+      initialCompetitors = brand.primary_competitors.filter((c: any) => typeof c === 'string');
+    } else if (brand.competitors) {
+      try {
+        const competitors = typeof brand.competitors === 'string' 
+          ? JSON.parse(brand.competitors) 
+          : brand.competitors;
+        if (Array.isArray(competitors)) {
+          initialCompetitors = competitors
+            .map((c: any) => typeof c === 'string' ? c : (c?.name || ''))
+            .filter((name: string) => name.length > 0);
+        }
+      } catch (e) {
+        console.warn('Failed to parse competitors:', e);
+      }
+    }
+
+    // Generate questions
+    const topics = (brand.topics as string[]) || [];
+    const questions = generateQuestions(brand.name, brand.description || "", topics);
 
     // Create scan record
+    console.log("Creating scan record for brand:", brandId, "with", questions.length, "questions");
     const { data: scan, error: scanError } = await supabase
-      .from('scans')
+      .from("scans")
       .insert({
         brand_id: brandId,
-        user_id: user.id,
-        status: 'running',
-        total_questions: QUESTION_TEMPLATES.length,
+        user_id: brand.user_id, // Add user_id which is required
+        status: "running",
+        total_questions: questions.length,
         completed_questions: 0,
+        started_at: new Date().toISOString(),
       })
       .select()
       .single();
 
     if (scanError || !scan) {
-      throw new Error('Failed to create scan');
+      console.error("Failed to create scan:", scanError);
+      return new Response(
+        JSON.stringify({ error: "Failed to create scan", details: scanError }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
+      );
     }
 
-    // Process questions - we'll do this synchronously to avoid shutdown issues
-    // But return response immediately and process in background
-    const processQuestions = async () => {
-      console.log('Starting background processing for scan:', scan.id);
-      console.log(`Using provider: ${provider}`);
-      const responses: any[] = [];
-      let stoppedEarlyDueToQuota = false;
+    const scanId = scan.id;
+    console.log("Scan created successfully:", scanId);
+
+    // Process questions
+    console.log("Starting to process", questions.length, "questions");
+    const responses: any[] = [];
+    let completedQuestions = 0;
+
+    for (let i = 0; i < questions.length; i++) {
+      console.log(`Processing question ${i + 1}/${questions.length}`);
+      // Check if scan was cancelled
+      const { data: scanCheck } = await supabase
+        .from("scans")
+        .select("status")
+        .eq("id", scanId)
+        .single();
+
+      if (scanCheck?.status === "cancelled") {
+        await supabase
+          .from("scans")
+          .update({ status: "cancelled", completed_at: new Date().toISOString() })
+          .eq("id", scanId);
+        return new Response(
+          JSON.stringify({ message: "Scan cancelled", scanId }),
+          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+        );
+      }
+
+      const question = questions[i];
       
       try {
-        // Add initial delay for Gemini to avoid immediate rate limiting
-        if (provider === 'gemini') {
-          console.log('Waiting 10 seconds before starting questions (rate limit protection)...');
-          await new Promise(resolve => setTimeout(resolve, 10000));
-        }
+        // Build prompt with improved source extraction
+        const prompt = `You are analyzing search results for: "${question}"
+
+Brand Context:
+- Name: ${brand.name}
+${brand.description ? `- Description: ${brand.description}` : ''}
+${brand.website_url ? `- Website: ${brand.website_url}` : ''}
+${brand.country ? `- Location: ${brand.country}` : ''}
+
+Please provide a comprehensive answer to the question. In your response, please:
+1. Mention if ${brand.name} appears in your answer (yes/no)
+2. List any competitors or alternative solutions mentioned
+3. Indicate the sentiment towards ${brand.name} if mentioned (positive/neutral/negative)
+4. Include any sources, links, or citations you reference
+
+At the end of your response, provide a JSON object with sources you cited:
+{
+  "sources": [
+    {
+      "name": "Source Name",
+      "domain": "domain.com"
+    }
+  ]
+}
+
+Answer:`;
+
+        const aiResponse = await callAI(prompt, aiProvider);
         
-        for (let i = 0; i < QUESTION_TEMPLATES.length; i++) {
-          const questionItem = QUESTION_TEMPLATES[i];
-          const questionText = questionItem.template
-            .replace('{brand_name}', brand.name)
-            .replace('{industry}', brand.description || 'technology')
-            .replace('{product_type}', brand.description || 'products')
-            .replace('{target_audience}', 'professionals')
-            .replace('{niche}', brand.description || 'innovation');
+        // Extract data from response
+        const lowerResponse = aiResponse.toLowerCase();
+        const lowerBrandName = brand.name.toLowerCase();
+        const brandMentioned = lowerResponse.includes(lowerBrandName);
+        
+        // Extract sentiment
+        let sentiment: 'positive' | 'neutral' | 'negative' = 'neutral';
+        if (brandMentioned) {
+          const positiveWords = ['great', 'excellent', 'best', 'recommended', 'top', 'leading', 'popular', 'successful', 'innovative', 'outstanding'];
+          const negativeWords = ['poor', 'bad', 'limited', 'lacks', 'issues', 'problems', 'concerns', 'disappointing', 'weak'];
+          
+          const positiveCount = positiveWords.filter(word => lowerResponse.includes(word)).length;
+          const negativeCount = negativeWords.filter(word => lowerResponse.includes(word)).length;
 
-          console.log(`Processing question ${i + 1}/${QUESTION_TEMPLATES.length}:`, questionText);
+          if (positiveCount > negativeCount) {
+            sentiment = 'positive';
+          } else if (negativeCount > positiveCount) {
+            sentiment = 'negative';
+          }
+        }
 
-          try {
-            const aiResponse = await callAI(questionText, provider);
-            
-            if (!aiResponse || aiResponse.trim().length === 0) {
-              console.error(`Empty response from API for question ${i + 1}`);
-              continue;
-            }
-            
-            const sentiment = analyzeSentiment(aiResponse, brand.name);
-            const mentionedBrands = extractMentionedBrands(aiResponse);
-            const brandMentioned = sentiment !== null;
-
-            const { data: responseData, error: responseError } = await supabase
-              .from('scan_responses')
-              .insert({
-                scan_id: scan.id,
-                brand_id: brandId,
-                user_id: user.id,
-                question_template: questionItem.template,
-                question_text: questionText,
-                question_category: questionItem.category,
-                ai_response: aiResponse,
-                mentioned_brands: mentionedBrands,
-                brand_mentioned: brandMentioned,
-                sentiment: sentiment,
-              })
-              .select()
-              .single();
-
-            if (responseError) {
-              console.error(`Error saving response for question ${i + 1}:`, responseError);
-              console.error('Response data that failed:', { questionText, aiResponse: aiResponse.substring(0, 100) });
-            } else if (responseData) {
-              responses.push(responseData);
-              console.log(`Question ${i + 1} completed. Brand mentioned:`, brandMentioned);
-            } else {
-              console.error(`No data returned after insert for question ${i + 1}`);
-            }
-
-            // Update progress
-            const { error: updateError } = await supabase
-              .from('scans')
-              .update({ completed_questions: i + 1 })
-              .eq('id', scan.id);
-
-            if (updateError) {
-              console.error('Error updating progress:', updateError);
-            }
-
-            // Rate limiting - aggressive delays for Gemini and OpenRouter to avoid 429 errors
-            // Gemini free tier: ~15 requests per minute = 4 seconds per request minimum
-            // OpenRouter free models: Rate limits vary, using 5 seconds base to be safe
-            // Using longer delays with exponential backoff to be very safe
-            // Each question waits longer to avoid hitting limits
-            const baseDelay = provider === 'gemini' ? 15000 : (provider === 'openrouter' ? 5000 : 1000); // 15s for Gemini, 5s for OpenRouter, 1s for others
-            const exponentialDelay = (provider === 'gemini' || provider === 'openrouter') ? (i * 1000) : 0; // Add 1s per question for Gemini/OpenRouter
-            const jitter = (provider === 'gemini' || provider === 'openrouter') ? (Math.random() * 3000) : 0; // Add up to 3s random jitter
-            const delay = baseDelay + exponentialDelay + jitter;
-            
-            if (provider === 'gemini' || provider === 'openrouter') {
-              console.log(`Waiting ${Math.round(delay/1000)}s before next question (rate limit protection for ${provider})...`);
-            }
-            await new Promise(resolve => setTimeout(resolve, delay));
-          } catch (error: any) {
-            console.error(`Error processing question ${i + 1}:`, error);
-            console.error(`Error details:`, {
-              message: error?.message,
-              stack: error?.stack,
-              provider: provider
-            });
-            
-            // Check if this is a quota exceeded error - if so, stop processing early
-            const isQuotaExceeded = error?.message && (
-              error.message.includes('quota exceeded') || 
-              error.message.includes('billing') ||
-              error.message.includes('free tier has been reached') ||
-              error.message.includes('insufficient credits') ||
-              error.message.includes('never purchased credits') ||
-              error.message.includes('Insufficient credits')
-            );
-            
-            if (isQuotaExceeded) {
-              console.error(`Quota exceeded detected. Stopping scan early. Processed ${responses.length}/${i + 1} questions successfully.`);
-              
-              // Update scan to show partial completion
-              await supabase
-                .from('scans')
-                .update({ 
-                  completed_questions: responses.length,
-                  status: 'failed',
-                  completed_at: new Date().toISOString(),
-                  ai_summary: `Scan stopped early: ${error.message}. Only ${responses.length} of ${QUESTION_TEMPLATES.length} questions were completed before quota was reached.`
-                })
-                .eq('id', scan.id);
-              
-              // If we have some responses, try to generate a partial summary
-              if (responses.length > 0) {
-                console.log(`Attempting to generate partial summary with ${responses.length} responses...`);
-                try {
-                  const partialSummary = await generateAISummary(responses, brand.name, provider);
-                  const visibilityScore = calculateVisibilityScore(responses);
-                  
-                  await supabase
-                    .from('scans')
-                    .update({
-                      visibility_score: visibilityScore,
-                      ai_summary: `Partial scan results (${responses.length}/${QUESTION_TEMPLATES.length} questions): ${partialSummary}\n\nNote: Scan stopped early due to API quota limit.`
-                    })
-                    .eq('id', scan.id);
-                } catch (summaryError) {
-                  console.error('Failed to generate partial summary:', summaryError);
+        // Extract sources using improved prompt response
+        const sources: Array<{ name: string; domain: string }> = [];
+        try {
+          // Try to extract JSON sources from response
+          const jsonMatch = aiResponse.match(/\{[\s\S]*"sources"[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            if (parsed.sources && Array.isArray(parsed.sources)) {
+              parsed.sources.forEach((source: any) => {
+                if (source.domain) {
+                  // Normalize domain
+                  let domain = source.domain.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split('?')[0];
+                  if (domain.includes('.')) {
+                    const parts = domain.split('.');
+                    if (parts.length >= 2) {
+                      domain = parts.slice(-2).join('.');
+                    }
+                    sources.push({
+                      name: source.name || domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
+                      domain: domain,
+                    });
+                  }
                 }
+              });
+            }
+          }
+        } catch (e) {
+          // Fallback: extract URLs from response
+          const urlRegex = /(https?:\/\/[^\s\)]+)/g;
+          const urlMatches = aiResponse.matchAll(urlRegex);
+          for (const match of urlMatches) {
+            if (match[1]) {
+              try {
+                const urlObj = new URL(match[1]);
+                let domain = urlObj.hostname.replace('www.', '').toLowerCase();
+                const parts = domain.split('.');
+                if (parts.length >= 2) {
+                  domain = parts.slice(-2).join('.');
+                }
+                if (domain.includes('.')) {
+                  sources.push({
+                    name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
+                    domain: domain,
+                  });
+                }
+              } catch {
+                // Invalid URL, skip
               }
-              
-              // Break out of the loop - don't continue processing
-              stoppedEarlyDueToQuota = true;
-              break;
             }
-            
-            // If rate limited (but not quota), wait longer before continuing
-            if (error?.message && (error.message.includes('rate limit') || error.message.includes('429')) && !isQuotaExceeded) {
-              const errorDelay = provider === 'gemini' ? 30000 : (provider === 'openrouter' ? 20000 : 5000); // 30s for Gemini, 20s for OpenRouter, 5s for others
-              console.log(`Rate limit error detected (429). Waiting ${errorDelay/1000}s before continuing...`);
-              await new Promise(resolve => setTimeout(resolve, errorDelay));
-            }
-            // Continue with next question for other errors
           }
         }
-
-        console.log(`All questions processed. Total responses saved: ${responses.length}/${QUESTION_TEMPLATES.length}`);
-        console.log(`Provider used: ${provider}`);
-        console.log(`API keys available: OPENAI=${!!OPENAI_API_KEY}, GEMINI=${!!GEMINI_API_KEY}, DEEPSEEK=${!!DEEPSEEK_API_KEY}, OPENROUTER=${!!OPENROUTER_API_KEY}`);
-
-        // If we stopped early due to quota, skip the rest of processing
-        if (stoppedEarlyDueToQuota) {
-          console.log('Scan stopped early due to quota limit. Skipping insight generation.');
-          return; // Exit early - scan already marked as failed with partial results
-        }
-
-        if (responses.length === 0) {
-          let errorMsg = `No responses were saved! Provider: ${provider}`;
-          
-          // Add provider-specific guidance
-          if (provider === 'openrouter') {
-            errorMsg += `. OPENROUTER_KEY: ${OPENROUTER_API_KEY ? 'set' : 'missing'}. `;
-            errorMsg += `OpenRouter requires credits to be purchased. If you see "insufficient credits" errors, please purchase credits at https://openrouter.ai/settings/credits`;
-          } else {
-            errorMsg += `, OPENAI_KEY: ${OPENAI_API_KEY ? 'set' : 'missing'}, GEMINI_KEY: ${GEMINI_API_KEY ? 'set' : 'missing'}, DEEPSEEK_KEY: ${DEEPSEEK_API_KEY ? 'set' : 'missing'}`;
-          }
-          
-          errorMsg += `. Check Edge Function logs above for API errors.`;
-          console.error(errorMsg);
-          throw new Error(errorMsg);
-        }
-
-        // Generate AI summary and meta-analysis
-        const aiSummary = await generateAISummary(responses, brand.name, provider);
-        const metaAnalysis = await generateMetaAnalysis(responses, brand.name, provider);
-        const visibilityScore = calculateVisibilityScore(responses);
-
-        // Calculate sentiment counts
-        const positiveMentions = responses.filter(r => r.sentiment === 'positive').length;
-        const neutralMentions = responses.filter(r => r.sentiment === 'neutral').length;
-        const negativeMentions = responses.filter(r => r.sentiment === 'negative').length;
-        const totalMentions = responses.filter(r => r.brand_mentioned).length;
-
-        console.log('Scan results:', { visibilityScore, positiveMentions, neutralMentions, negativeMentions, totalMentions });
-
-        // ============================================
-        // AI INSIGHT ENGINE - Generate all insights
-        // ============================================
-        console.log('Starting AI Insight Engine...');
         
-        // Add delay before starting insights to avoid rate limits
-        // (We just made 15 API calls for questions, need to space out the insight calls)
-        if (provider === 'gemini') {
-          console.log('Waiting 60 seconds before generating insights (rate limit protection)...');
-          await new Promise(resolve => setTimeout(resolve, 60000));
-        }
-        
-        // Step 1: Perception Summary
-        console.log('Step 1: Generating perception summary...');
-        let perceptionSummary: any = null;
-        try {
-          perceptionSummary = await generatePerceptionSummary(responses, brand.name, provider);
-          if (provider === 'gemini') {
-            console.log('Waiting 15 seconds before next insight step...');
-            await new Promise(resolve => setTimeout(resolve, 15000));
-          } else if (provider === 'deepseek') await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-          console.error('Failed to generate perception summary, using fallback:', error);
-          perceptionSummary = {
-            summary: aiSummary,
-            tone: positiveMentions > negativeMentions ? 'positive' : negativeMentions > positiveMentions ? 'negative' : 'neutral',
-            visibility_tier: visibilityScore >= 70 ? 'Tier 1' : visibilityScore >= 40 ? 'Tier 2' : 'Tier 3',
-            visibility_score: visibilityScore,
-            drivers: ['Analysis unavailable due to rate limits']
-          };
-        }
-        
-        // Step 2: Deep Insight Analysis
-        console.log('Step 2: Generating deep insights...');
-        const sentimentStats = {
-          positive: positiveMentions,
-          neutral: neutralMentions,
-          negative: negativeMentions,
-          total: totalMentions
-        };
-        let deepInsights: any = null;
-        try {
-          deepInsights = await generateDeepInsights(perceptionSummary, sentimentStats, brand.name, provider);
-          if (provider === 'gemini') {
-            console.log('Waiting 15 seconds before next insight step...');
-            await new Promise(resolve => setTimeout(resolve, 15000));
-          } else if (provider === 'deepseek') await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-          console.error('Failed to generate deep insights, using fallback:', error);
-          deepInsights = {
-            insight_summary: 'Analysis temporarily unavailable due to rate limits.',
-            competitive_gap: 'Unable to determine',
-            narrative_gap: 'Unable to determine',
-            visibility_levers: []
-          };
-        }
-        
-        // Step 3: Strengths & Gaps
-        console.log('Step 3: Generating strengths and gaps...');
-        let strengthsAndGaps: any = null;
-        try {
-          strengthsAndGaps = await generateStrengthsAndGaps(responses, brand.name, provider);
-          if (provider === 'gemini') {
-            console.log('Waiting 15 seconds before next insight step...');
-            await new Promise(resolve => setTimeout(resolve, 15000));
-          } else if (provider === 'deepseek') await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-          console.error('Failed to generate strengths and gaps, using fallback:', error);
-          strengthsAndGaps = {
-            strengths: metaAnalysis.strengths || [],
-            gaps: metaAnalysis.weaknesses || [],
-            opportunity_topic: ''
-          };
-        }
-        
-        // Step 4: Actionable Recommendations
-        console.log('Step 4: Generating recommendations...');
-        let recommendations: any = [];
-        try {
-          recommendations = await generateRecommendations(perceptionSummary, strengthsAndGaps, brand.name, provider);
-          if (provider === 'gemini') {
-            console.log('Waiting 15 seconds before next insight step...');
-            await new Promise(resolve => setTimeout(resolve, 15000));
-          } else if (provider === 'deepseek') await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-          console.error('Failed to generate recommendations, using fallback:', error);
-          // Convert old format recommendations to new format
-          recommendations = (metaAnalysis.recommendations || []).map((rec: string) => ({
-            action: rec,
-            priority: 'Moderate',
-            focus_area: 'General'
-          }));
-        }
-        
-        // Step 5: Content Ideas
-        console.log('Step 5: Generating content ideas...');
-        let contentIdeas: any = [];
-        try {
-          contentIdeas = await generateContentIdeas(strengthsAndGaps, brand.name, provider);
-          if (provider === 'gemini') {
-            console.log('Waiting 15 seconds before next insight step...');
-            await new Promise(resolve => setTimeout(resolve, 15000));
-          } else if (provider === 'deepseek') await new Promise(resolve => setTimeout(resolve, 1000));
-        } catch (error) {
-          console.error('Failed to generate content ideas, using fallback:', error);
-          contentIdeas = [];
-        }
-        
-        // Step 6: Week-over-Week Change
-        console.log('Step 6: Generating week-over-week comparison...');
-        // Get previous scan for comparison
-        const { data: previousScans } = await supabase
-          .from('scans')
-          .select('ai_perception_summary, visibility_score, completed_at')
-          .eq('brand_id', brandId)
-          .eq('status', 'completed')
-          .neq('id', scan.id)
-          .order('completed_at', { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        const previousSummary = previousScans?.ai_perception_summary || null;
-        let weekOverWeekChange: any = null;
-        try {
-          weekOverWeekChange = await generateWeekOverWeekChange(perceptionSummary, previousSummary, brand.name, provider);
-        } catch (error) {
-          console.error('Failed to generate week-over-week change, using fallback:', error);
-          weekOverWeekChange = {
-            change_summary: previousSummary ? 'Unable to compare due to rate limits.' : 'This is the first scan.',
-            gained_topics: [],
-            lost_topics: [],
-            competitor_change: 'Unable to determine',
-            main_cause: 'Analysis unavailable'
-          };
-        }
-        
-        console.log('AI Insight Engine completed!');
+        // Deduplicate sources by domain
+        const seenDomains = new Set<string>();
+        const uniqueSources = sources.filter(s => {
+          if (seenDomains.has(s.domain)) return false;
+          seenDomains.add(s.domain);
+          return true;
+        }).slice(0, 15); // Max 15 sources per response
 
-        // Update scan with all results including insights
-        const { error: scanUpdateError } = await supabase
-          .from('scans')
-          .update({
-            status: 'completed',
-            completed_at: new Date().toISOString(),
-            visibility_score: visibilityScore,
-            ai_summary: aiSummary,
-            strengths: metaAnalysis.strengths,
-            weaknesses: metaAnalysis.weaknesses,
-            recommendations: metaAnalysis.recommendations,
-            // AI Insight Engine fields
-            ai_perception_summary: perceptionSummary,
-            deep_insight_analysis: deepInsights,
-            strengths_and_gaps: strengthsAndGaps,
-            actionable_recommendations: recommendations,
-            content_ideas: contentIdeas,
-            week_over_week_change: weekOverWeekChange,
-          })
-          .eq('id', scan.id);
-
-        if (scanUpdateError) {
-          console.error('Error updating scan:', scanUpdateError);
-          throw scanUpdateError;
-        }
-
-        // Store visibility score
-        const { error: scoreError } = await supabase
-          .from('brand_visibility_scores')
+        // Store response
+        const { error: responseError } = await supabase
+          .from("scan_responses")
           .insert({
+            scan_id: scanId,
             brand_id: brandId,
-            user_id: user.id,
-            scan_id: scan.id,
-            score: visibilityScore,
-            positive_mentions: positiveMentions,
-            neutral_mentions: neutralMentions,
-            negative_mentions: negativeMentions,
-            total_mentions: totalMentions,
+            user_id: brand.user_id,
+            question_template: question,
+            question_text: question,
+            ai_response: aiResponse,
+            brand_mentioned: brandMentioned,
+            sentiment: sentiment,
+            mentioned_brands: [], // Will be populated after competitor extraction
+            created_at: new Date().toISOString(),
           });
 
-        if (scoreError) {
-          console.error('Error storing visibility score:', scoreError);
-          throw scoreError;
+        if (responseError) {
+          console.error("Error storing response:", responseError);
         }
 
-        console.log('GEO scan completed successfully for scan:', scan.id);
+        responses.push({
+          question,
+          response: aiResponse,
+          brandMentioned,
+          sentiment,
+          sources,
+        });
+
+        completedQuestions++;
         
-        // ============================================
-        // Send Email Notification (Optional)
-        // ============================================
-        try {
-          // Get user email for notification
-          const { data: userProfile } = await supabase
-            .from('profiles')
-            .select('email')
-            .eq('id', user.id)
-            .single();
-          
-          if (userProfile?.email) {
-            // Note: Supabase doesn't have built-in email sending
-            // You can integrate with SendGrid, Resend, or other email services
-            // For now, we'll just log it - you can add email service integration later
-            console.log(`Email notification would be sent to: ${userProfile.email}`);
-            console.log(`Subject: GEO Scan Complete - ${brand.name}`);
-            console.log(`Visibility Score: ${visibilityScore}`);
-            console.log(`Top Recommendations:`, recommendations.slice(0, 2).map((r: any) => r.action || r));
-          }
-        } catch (emailError) {
-          // Email notification is optional, don't fail the scan if it errors
-          console.log('Email notification skipped:', emailError);
-        }
-      } catch (error: any) {
-        console.error('Fatal error in background processing:', error);
-        // Extract helpful error message
-        let errorMessage = error?.message || 'Unknown error occurred';
-        
-        // Provide specific guidance for quota/billing errors
-        if (errorMessage.includes('quota exceeded') || errorMessage.includes('billing')) {
-          errorMessage = 'Gemini API quota exceeded. Free tier limit reached. Please set up billing at https://aistudio.google.com/app/apikey or switch to OpenAI/DeepSeek provider.';
-        }
-        
-        // Mark scan as failed with error message
+        // Update scan progress
         await supabase
-          .from('scans')
-          .update({ 
-            status: 'failed', 
-            completed_at: new Date().toISOString(),
-            // Store error in aii_summary field if available, or we could add an error_message field
-            ai_summary: `Scan failed: ${errorMessage}`
-          })
-          .eq('id', scan.id);
-        throw error;
+          .from("scans")
+          .update({ completed_questions: completedQuestions })
+          .eq("id", scanId);
+
+      } catch (error: any) {
+        console.error(`Error processing question ${i + 1}:`, error);
+        console.error(`Error details:`, {
+          message: error.message,
+          stack: error.stack,
+          name: error.name,
+        });
+        // Continue with next question
       }
+    }
+
+    console.log(`Completed processing ${completedQuestions}/${questions.length} questions`);
+
+    // ONLY use competitors from onboarding (primary_competitors) - don't extract from AI responses
+    // AI extraction pulls out random words like "Sentiment", "Sources", "Yes", etc.
+    // We only track competitors that the user explicitly added during onboarding
+    const finalCompetitors = initialCompetitors.filter(name => {
+      // Validate competitor names - filter out nonsense
+      if (!name || typeof name !== 'string') return false;
+      if (name.length < 3 || name.length > 100) return false;
+      // Filter out common stopwords and nonsense
+      const lowerName = name.toLowerCase();
+      const stopwords = ['sentiment', 'sources', 'yes', 'tech', 'non', 'specific', 'positive', 'include', 'neutral', 'meetup', 'object', 'here', 'users', 'focused', 'does', 'various', 'offers', 'primarily', 'knowledge', 'niche', 'focus', 'overall', 'list', 'known', 'gust', 'indicate', 'support', 'indian', 'combinator', 'focuses', 'comprehensive', 'answer', 'user', 'reviews', 'indie'];
+      if (stopwords.includes(lowerName)) return false;
+      return true;
+    });
+
+    // Calculate competitor metrics
+    interface CompetitorMetric {
+      mentions: number;
+      citations: number;
+      positive: number;
+      neutral: number;
+      negative: number;
+    }
+    
+    const competitorMetrics: Record<string, CompetitorMetric> = {};
+
+    finalCompetitors.forEach(compName => {
+      competitorMetrics[compName] = {
+        mentions: 0,
+        citations: 0,
+        positive: 0,
+        neutral: 0,
+        negative: 0,
+      };
+    });
+
+    let totalMentionsAcrossAllCompetitors = 0;
+
+    responses.forEach(r => {
+      const foundCompetitors = extractCompetitorsFromResponse(r.response, finalCompetitors, brand.name);
+      
+      foundCompetitors.forEach(compName => {
+        if (competitorMetrics[compName]) {
+          competitorMetrics[compName].mentions++;
+          totalMentionsAcrossAllCompetitors++;
+          
+          if (r.brandMentioned) {
+            competitorMetrics[compName].citations++;
+          }
+          
+          if (r.sentiment === 'positive') competitorMetrics[compName].positive++;
+          else if (r.sentiment === 'neutral') competitorMetrics[compName].neutral++;
+          else if (r.sentiment === 'negative') competitorMetrics[compName].negative++;
+        }
+      });
+    });
+
+    // Build competitor_scores JSONB
+    const competitorScores: Record<string, any> = {};
+    Object.entries(competitorMetrics).forEach(([name, metrics]: [string, CompetitorMetric]) => {
+      const visibilityScore = totalMentionsAcrossAllCompetitors > 0
+        ? (metrics.mentions / totalMentionsAcrossAllCompetitors) * 100
+        : 0;
+      
+      competitorScores[name] = {
+        visibility: visibilityScore,
+        mentions: metrics.mentions,
+        citations: metrics.citations,
+      };
+    });
+
+    // Calculate brand visibility - compare brand mentions vs total mentions (brand + competitors)
+    const brandMentions = responses.filter(r => r.brandMentioned).length;
+    const totalMentions = brandMentions + totalMentionsAcrossAllCompetitors;
+    // If brand is mentioned more than competitors, visibility is high
+    // If competitors dominate, visibility is lower
+    const brandVisibility = totalMentions > 0 
+      ? Math.min(100, Math.max(0, (brandMentions / totalMentions) * 100))
+      : (responses.length > 0 ? (brandMentions / responses.length) * 100 : 0);
+
+    // Calculate citation share
+    const totalCitations = responses.reduce((sum, r) => sum + r.sources.length, 0);
+    const brandCitations = responses.filter(r => r.brandMentioned).reduce((sum, r) => sum + r.sources.length, 0);
+    const citationShare = totalCitations > 0 ? (brandCitations / totalCitations) * 100 : 0;
+
+    // Calculate sentiment counts
+    const sentimentPositive = responses.filter(r => r.sentiment === 'positive').length;
+    const sentimentNeutral = responses.filter(r => r.sentiment === 'neutral').length;
+    const sentimentNegative = responses.filter(r => r.sentiment === 'negative').length;
+
+    // Aggregate sources from all responses
+    const sourceMentions: Record<string, { count: number; firstSeen: Date; lastSeen: Date }> = {};
+    responses.forEach(r => {
+      r.sources.forEach((source: { name: string; domain: string }) => {
+        if (source.domain) {
+          const domain = source.domain.toLowerCase();
+          if (!sourceMentions[domain]) {
+            sourceMentions[domain] = {
+              count: 0,
+              firstSeen: new Date(),
+              lastSeen: new Date(),
+            };
+          }
+          sourceMentions[domain].count++;
+          sourceMentions[domain].lastSeen = new Date();
+        }
+      });
+    });
+
+    // Store sources in source_citations table
+    for (const [domain, data] of Object.entries(sourceMentions)) {
+      try {
+        // Check if source already exists
+        const { data: existingSource } = await supabase
+          .from("source_citations")
+          .select("id, mention_count")
+          .eq("brand_id", brandId)
+          .eq("domain", domain)
+          .single();
+
+        if (existingSource) {
+          // Update existing source
+          await supabase
+            .from("source_citations")
+            .update({
+              mention_count: existingSource.mention_count + data.count,
+              last_seen: data.lastSeen.toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", existingSource.id);
+        } else {
+          // Insert new source
+          const sourceName = domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1);
+          let category = 'general source';
+          if (domain.includes('.edu')) category = 'educational';
+          else if (domain.includes('medium.com') || domain.includes('blog')) category = 'blog';
+          else if (domain.includes('news') || domain.includes('times') || domain.includes('forbes')) category = 'news';
+          else if (domain.includes('youtube')) category = 'video';
+          else if (domain.includes('crunchbase') || domain.includes('angel.co')) category = 'business directory';
+
+          await supabase
+            .from("source_citations")
+            .insert({
+              brand_id: brandId,
+              domain: domain,
+              name: sourceName,
+              mention_count: data.count,
+              first_seen: data.firstSeen.toISOString(),
+              last_seen: data.lastSeen.toISOString(),
+              category: category,
+            });
+        }
+
+        // Store in history table
+        await supabase
+          .from("source_citations_history")
+          .insert({
+            brand_id: brandId,
+            domain: domain,
+            scan_id: scanId,
+            daily_mentions: data.count,
+          });
+      } catch (error) {
+        console.error(`Error storing source ${domain}:`, error);
+      }
+    }
+
+    // Build citation_sources JSONB for backward compatibility
+    const citationSourcesMap: Record<string, number> = {};
+    Object.entries(sourceMentions).forEach(([domain, data]) => {
+      citationSourcesMap[domain] = data.count;
+    });
+
+    const citationSources = Object.entries(citationSourcesMap)
+      .map(([domain, count]) => ({ domain, citations: count }))
+      .sort((a, b) => b.citations - a.citations)
+      .slice(0, 20);
+
+    // Get scan number
+    let scanNumber = 1;
+    try {
+      const { data: maxScan, error: scanNumberError } = await supabase
+        .from("ai_scan_results")
+        .select("scan_number")
+        .eq("brand_id", brandId)
+        .order("scan_number", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (scanNumberError && scanNumberError.code !== 'PGRST116') {
+        console.error("Error fetching max scan_number:", scanNumberError);
+      } else {
+        scanNumber = (maxScan?.scan_number || 0) + 1;
+      }
+    } catch (e) {
+      console.warn("Error calculating scan_number, defaulting to 1:", e);
+    }
+
+    // Map provider to platform name
+    const platformName = aiProvider === "openai" || aiProvider === "chatgpt" ? "openai" : aiProvider;
+
+    // Insert into ai_scan_results
+    // Only use fields that exist in the schema (no total_prompts or total_citations)
+    console.log("Inserting ai_scan_results:", {
+      brand_id: brandId,
+      scan_number: scanNumber,
+      visibility_score: brandVisibility,
+      citation_share: citationShare,
+      platform: platformName,
+    });
+
+    const insertData: any = {
+      brand_id: brandId,
+      scan_number: scanNumber,
+      visibility_score: brandVisibility,
+      citation_share: citationShare,
+      sentiment_positive: sentimentPositive,
+      sentiment_neutral: sentimentNeutral,
+      sentiment_negative: sentimentNegative,
+      competitor_scores: competitorScores,
+      citation_sources: citationSources,
+      platform: platformName,
     };
 
-    // Start background processing immediately yessss
-    // The function will return response but processing continues
-    processQuestions().catch(async (error: any) => {
-      console.error('Background processing failed:', error);
-      // Ensure scan is marked as failed if processing fails
+    const { data: scanResult, error: insertError } = await supabase
+      .from("ai_scan_results")
+      .insert(insertData)
+      .select()
+      .single();
+
+    if (insertError) {
+      console.error("Insert failed:", insertError.message);
+      // Try RPC function as fallback
+      console.log("Trying RPC function as fallback");
       try {
-        let errorMessage = error?.message || 'Unknown error occurred';
-        
-        // Provide specific guidance for quota/billing errors
-        if (errorMessage.includes('quota exceeded') || errorMessage.includes('billing')) {
-          errorMessage = 'Gemini API quota exceeded. Free tier limit reached. Please set up billing at https://aistudio.google.com/app/apikey or switch to OpenAI/DeepSeek provider.';
+        const { data: rpcResult, error: rpcError } = await supabase.rpc('insert_ai_scan_result', {
+          p_brand_id: brandId,
+          p_scan_number: scanNumber,
+          p_visibility_score: brandVisibility,
+          p_citation_share: citationShare,
+          p_sentiment_positive: sentimentPositive,
+          p_sentiment_neutral: sentimentNeutral,
+          p_sentiment_negative: sentimentNegative,
+          p_competitor_scores: competitorScores,
+          p_citation_sources: citationSources,
+          p_platform: platformName,
+        });
+
+        if (rpcError) {
+          console.error("RPC insert also failed:", rpcError);
+          console.warn("WARNING: Could not insert scan results into ai_scan_results table. Scan completed but results may not be visible in dashboard.");
+        } else {
+          console.log("Successfully inserted ai_scan_results via RPC:", rpcResult);
         }
-        
-        const { error: updateError } = await supabase
-          .from('scans')
-          .update({ 
-            status: 'failed', 
-            completed_at: new Date().toISOString(),
-            ai_summary: `Scan failed: ${errorMessage}`
-          })
-          .eq('id', scan.id);
-        if (updateError) {
-          console.error('Failed to update scan status:', updateError);
-        }
-      } catch (err) {
-        console.error('Error updating scan status:', err);
+      } catch (rpcErr: any) {
+        console.error("RPC call failed:", rpcErr);
+        console.warn("WARNING: Could not insert scan results. Scan completed but results may not be visible in dashboard.");
       }
+    } else {
+      console.log("Successfully inserted ai_scan_results:", scanResult);
+    }
+
+    // Store competitor visibility history
+    Object.entries(competitorMetrics).forEach(async ([name, metrics]: [string, CompetitorMetric]) => {
+      const visibilityScore = totalMentionsAcrossAllCompetitors > 0
+        ? (metrics.mentions / totalMentionsAcrossAllCompetitors) * 100
+        : 0;
+      
+      const citationShareComp = responses.length > 0
+        ? (metrics.citations / responses.length) * 100
+        : 0;
+      
+      const sentimentWeighted = ((metrics.positive * 1 + metrics.neutral * 0.5 + metrics.negative * -1) / (metrics.mentions || 1) + 1) * 50;
+
+      await supabase
+        .from("competitor_visibility_history")
+        .insert({
+          brand_id: brandId,
+          competitor_name: name,
+          scan_id: scanId,
+          visibility_score: visibilityScore,
+          citation_share: citationShareComp,
+          sentiment_weighted_score: sentimentWeighted,
+          mentions: metrics.mentions,
+          positive_mentions: metrics.positive,
+          neutral_mentions: metrics.neutral,
+          negative_mentions: metrics.negative,
+        });
     });
+
+    // Generate AI insights based on scan results
+    console.log("Generating AI insights...");
+    let insights: any = {};
+    
+    try {
+      const insightsPrompt = `You are analyzing AI visibility scan results for ${brand.name}.
+
+Scan Results Summary:
+- Brand Visibility: ${brandVisibility.toFixed(1)}%
+- Citation Share: ${citationShare.toFixed(1)}%
+- Total Responses Analyzed: ${responses.length}
+- Brand Mentions: ${brandMentions} out of ${responses.length} responses
+- Competitors Found: ${Object.keys(competitorScores).length}
+- Sentiment: ${sentimentPositive} positive, ${sentimentNeutral} neutral, ${sentimentNegative} negative
+
+Top Competitors Mentioned:
+${Object.entries(competitorScores).slice(0, 5).map(([name, data]: [string, any]) => `- ${name}: ${data.mentions} mentions, ${data.visibility?.toFixed(1) || 0}% visibility`).join('\n')}
+
+Based on this data, provide actionable insights in JSON format:
+{
+  "actionable_recommendations": [
+    {
+      "action": "Specific actionable step to improve visibility",
+      "priority": "Urgent" | "High" | "Moderate",
+      "focus_area": "Content" | "SEO" | "PR" | "Partnerships" | "Branding" | "General"
+    }
+  ],
+  "strengths_and_gaps": {
+    "strengths": ["List 3-5 key strengths identified"],
+    "gaps": ["List 3-5 visibility gaps or weaknesses"],
+    "opportunity_topic": "Main topic/area with highest improvement potential"
+  },
+  "content_ideas": [
+    {
+      "title": "Content topic title",
+      "description": "Why this content would help improve visibility"
+    }
+  ]
+}
+
+Be specific and actionable. Focus on improving AI visibility and brand perception.`;
+
+      const insightsResponse = await callAI(insightsPrompt, aiProvider);
+      
+      // Try to extract JSON from response
+      try {
+        const jsonMatch = insightsResponse.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          insights = JSON.parse(jsonMatch[0]);
+          console.log("Successfully parsed insights:", Object.keys(insights));
+        } else {
+          console.warn("Could not extract JSON from insights response");
+        }
+      } catch (parseError) {
+        console.error("Failed to parse insights JSON:", parseError);
+        // Fallback: generate basic insights from data
+        insights = {
+          actionable_recommendations: [
+            {
+              action: brandVisibility < 50 
+                ? `Increase brand mentions in AI responses. Currently mentioned in ${brandMentions} out of ${responses.length} queries.`
+                : `Maintain and improve brand visibility. Currently at ${brandVisibility.toFixed(1)}% visibility.`,
+              priority: brandVisibility < 30 ? "Urgent" : brandVisibility < 50 ? "High" : "Moderate",
+              focus_area: "Content"
+            },
+            {
+              action: citationShare < 50
+                ? `Improve citation share. Currently ${citationShare.toFixed(1)}% of citations mention your brand.`
+                : `Maintain strong citation presence. Currently ${citationShare.toFixed(1)}% citation share.`,
+              priority: citationShare < 30 ? "High" : "Moderate",
+              focus_area: "PR"
+            }
+          ],
+          strengths_and_gaps: {
+            strengths: brandMentions > responses.length * 0.7 
+              ? [`Strong brand recognition - mentioned in ${((brandMentions/responses.length)*100).toFixed(0)}% of queries`]
+              : [`Brand visibility at ${brandVisibility.toFixed(1)}%`],
+            gaps: brandMentions < responses.length * 0.5
+              ? [`Low brand mention rate - only ${brandMentions} out of ${responses.length} queries`]
+              : [`Opportunity to increase visibility from ${brandVisibility.toFixed(1)}%`],
+            opportunity_topic: topics[0] || "General"
+          },
+          content_ideas: [
+            {
+              title: `Content about ${brand.name} in ${topics[0] || 'your industry'}`,
+              description: `Create content that positions ${brand.name} as a leader in ${topics[0] || 'your industry'} to improve AI visibility`
+            }
+          ]
+        };
+      }
+    } catch (insightsError) {
+      console.error("Error generating insights:", insightsError);
+      // Use fallback insights
+      insights = {
+        actionable_recommendations: [
+          {
+            action: `Improve brand visibility - currently at ${brandVisibility.toFixed(1)}%`,
+            priority: brandVisibility < 50 ? "High" : "Moderate",
+            focus_area: "Content"
+          }
+        ],
+        strengths_and_gaps: {
+          strengths: [`Brand mentioned in ${brandMentions} queries`],
+          gaps: [`Visibility can be improved from ${brandVisibility.toFixed(1)}%`],
+          opportunity_topic: topics[0] || "General"
+        },
+        content_ideas: []
+      };
+    }
+
+    // Update scan to completed with insights
+    await supabase
+      .from("scans")
+      .update({
+        status: "completed",
+        completed_questions: completedQuestions,
+        completed_at: new Date().toISOString(),
+        visibility_score: brandVisibility,
+        actionable_recommendations: insights.actionable_recommendations || null,
+        strengths_and_gaps: insights.strengths_and_gaps || null,
+        content_ideas: insights.content_ideas || null,
+      })
+      .eq("id", scanId);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'GEO scan started successfully',
-        scanId: scan.id,
+        scanId,
+        scanNumber,
+        totalQuestions: questions.length,
+        completedQuestions,
+        brandVisibility,
+        citationShare,
       }),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
+
   } catch (error: any) {
-    console.error('Error in run-geo-scan:', error);
+    console.error("Error in run-geo-scan:", error);
+    console.error("Error stack:", error.stack);
+    console.error("Error details:", {
+      message: error.message,
+      name: error.name,
+      cause: error.cause,
+    });
     return new Response(
-      JSON.stringify({ error: error?.message || 'Unknown error' }),
-      {
-        status: 400,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
+      JSON.stringify({ 
+        error: error.message || "Internal server error",
+        details: error.stack || String(error),
+      }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
     );
   }
 });

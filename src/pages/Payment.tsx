@@ -51,54 +51,10 @@ const Payment = () => {
   const [error, setError] = useState<string | null>(null);
   const [razorpayLoaded, setRazorpayLoaded] = useState(false);
 
-  // Check if user is authenticated and has active subscription
   useEffect(() => {
-    const checkAuthAndSubscription = async () => {
-      try {
-        const { data: { user }, error } = await supabase.auth.getUser();
-        
-        if (error || !user) {
-          console.log("Payment page: No user found, redirecting to login");
-          const currentUrl = window.location.pathname + window.location.search;
-          navigate(`/auth?redirect=${encodeURIComponent(currentUrl)}`);
-          return;
-        }
-        
-        // User is authenticated - check if they already have an active subscription
-        const { data: activeSubscriptions, error: subError } = await supabase
-          .from("subscriptions")
-          .select("*")
-          .eq("user_id", user.id)
-          .eq("status", "active")
-          .limit(1);
-        
-        // Handle 406 error gracefully (no rows found)
-        if (subError && subError.code !== 'PGRST116') {
-          console.error("Error checking subscription:", subError);
-        }
-        
-        if (activeSubscriptions && activeSubscriptions.length > 0) {
-          const activeSubscription = activeSubscriptions[0];
-          const periodEnd = new Date(activeSubscription.current_period_end);
-          const now = new Date();
-          
-          if (periodEnd > now) {
-            toast.info("You already have an active subscription!");
-            navigate("/dashboard");
-            return;
-          }
-        }
-        
-        setCheckingAuth(false);
-        setLoading(false);
-      } catch (err) {
-        console.error("Auth check error:", err);
-        const currentUrl = window.location.pathname + window.location.search;
-        navigate(`/auth?redirect=${encodeURIComponent(currentUrl)}`);
-      }
-    };
-    checkAuthAndSubscription();
-  }, [navigate]);
+    setCheckingAuth(false);
+    setLoading(false);
+  }, []);
 
   useEffect(() => {
     // Load Razorpay script
@@ -116,17 +72,6 @@ const Payment = () => {
   }, []);
 
   const initiateSubscription = async () => {
-    // Show under construction notice
-    toast.error("Website Under Construction", {
-      description: "Please do not attempt to make payments at this time. Thank you for your patience!",
-      duration: 5000,
-    });
-    setError("Website is under construction. Payments are currently disabled.");
-    setLoading(false);
-    return;
-    
-    // Disabled code below - uncomment when site is ready
-    /*
     if (!planType || !PLAN_CONFIGS[planType]) {
       setError("Invalid plan selected");
       return;
@@ -162,6 +107,7 @@ const Payment = () => {
       );
 
       console.log("Edge Function response:", { subscriptionData, subscriptionError });
+      console.log("Full subscriptionData:", JSON.stringify(subscriptionData, null, 2));
 
       if (subscriptionError) {
         console.error("Edge Function error:", subscriptionError);
@@ -173,12 +119,17 @@ const Payment = () => {
         throw new Error(subscriptionData.error);
       }
 
-      if (!subscriptionData?.subscription) {
+      if (!subscriptionData?.subscription && !subscriptionData?.success) {
         console.error("No subscription data in response:", subscriptionData);
         throw new Error("Failed to create subscription. Please try again.");
       }
 
-      const { subscription, keyId } = subscriptionData;
+      // Handle both response formats
+      const subscription = subscriptionData?.subscription || subscriptionData;
+      const keyId = subscriptionData?.keyId || razorpayKeyId;
+      
+      console.log("Using subscription:", subscription);
+      console.log("Using keyId:", keyId);
 
       // Get Razorpay Key ID from environment or use the one from response
       const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || keyId;
@@ -200,26 +151,57 @@ const Payment = () => {
         theme: {
           color: "#675FFF",
         },
-        handler: async function (response: any) {
+        handler: async function (razorpayResponse: any) {
           // Subscription activated - notify backend
+          console.log("Razorpay payment success response:", razorpayResponse);
+          console.log("Response type:", typeof razorpayResponse);
+          console.log("Response keys:", Object.keys(razorpayResponse || {}));
+          console.log("razorpay_subscription_id:", razorpayResponse?.razorpay_subscription_id);
+          console.log("subscription_id:", razorpayResponse?.subscription_id);
+          
+          // Store the subscription ID from the created subscription as fallback
+          const subscriptionIdFromCreated = subscription.id;
+          console.log("Subscription ID from created subscription:", subscriptionIdFromCreated);
+          
           try {
-            const { error: successError } = await supabase.functions.invoke(
+            // Get the current session to pass auth token
+            const { data: { session: currentSession } } = await supabase.auth.getSession();
+            if (!currentSession) {
+              throw new Error("No active session");
+            }
+            
+            // Prepare the body with subscription ID fallback
+            const requestBody = {
+              ...razorpayResponse,
+              // Add subscription_id if not present
+              razorpay_subscription_id: razorpayResponse?.razorpay_subscription_id || subscriptionIdFromCreated,
+              subscription_id: razorpayResponse?.subscription_id || subscriptionIdFromCreated,
+            };
+            
+            console.log("Sending to subscription-success:", requestBody);
+            
+            const { data: successData, error: successError } = await supabase.functions.invoke(
               "subscription-success",
               {
-                body: response,
+                body: requestBody,
               }
             );
 
+            console.log("subscription-success function response:", { successData, successError });
+
             if (successError) {
               console.error("Error notifying subscription success:", successError);
+              toast.error(`Error activating subscription: ${successError.message || 'Unknown error'}`);
+            } else {
+              console.log("Subscription successfully activated in database");
             }
 
             setPaymentStatus("success");
             toast.success("Subscription activated! Your subscription is now active.");
             
-            // Redirect to dashboard after 3 seconds
+            // Redirect to onboarding after 3 seconds (since they just purchased)
             setTimeout(() => {
-              navigate("/dashboard");
+              navigate("/onboarding/website");
             }, 3000);
           } catch (err: any) {
             console.error("Subscription success handler error:", err);
@@ -251,7 +233,6 @@ const Payment = () => {
       setLoading(false);
       toast.error("Failed to start subscription");
     }
-    */
   };
 
   // Show loading while checking auth
@@ -279,7 +260,7 @@ const Payment = () => {
             <CardDescription>Please select a valid plan to proceed.</CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate("/#pricing")} className="w-full">
+            <Button onClick={() => navigate("/pricing")} className="w-full">
               View Plans
             </Button>
           </CardContent>
@@ -337,7 +318,7 @@ const Payment = () => {
               )}
             </Button>
             <Button
-              onClick={() => navigate("/#pricing")}
+              onClick={() => navigate("/pricing")}
               variant="outline"
               className="w-full"
             >
@@ -354,17 +335,6 @@ const Payment = () => {
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <Card className="w-full max-w-md">
         <CardHeader>
-          <div className="mb-4 p-4 bg-amber-50 border-2 border-amber-200 rounded-lg">
-            <div className="flex items-start gap-2">
-              <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-semibold text-amber-900 mb-1">Website Under Construction</p>
-                <p className="text-xs text-amber-800">
-                  Please do not attempt to make payments at this time.
-                </p>
-              </div>
-            </div>
-          </div>
           <CardTitle>Complete Your Subscription</CardTitle>
           <CardDescription>Review your plan details and proceed to subscription</CardDescription>
         </CardHeader>
@@ -406,7 +376,7 @@ const Payment = () => {
             <Button
               onClick={initiateSubscription}
               className="w-full"
-              disabled={true}
+              disabled={loading}
               size="lg"
             >
               {loading ? (
@@ -415,11 +385,11 @@ const Payment = () => {
                   Processing...
                 </>
               ) : (
-                "Website Under Construction - Payments Disabled"
+                "Subscribe Now"
               )}
             </Button>
             <Button
-              onClick={() => navigate("/#pricing")}
+              onClick={() => navigate("/pricing")}
               variant="outline"
               className="w-full"
             >

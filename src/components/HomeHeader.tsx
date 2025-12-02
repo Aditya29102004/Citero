@@ -9,6 +9,7 @@ export const HomeHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -27,9 +28,18 @@ export const HomeHeader = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <header className="fixed top-0 w-full border-b border-gray-200 bg-white/80 backdrop-blur-md z-50 transition-shadow duration-300" 
-            style={{ boxShadow: '0 1px 3px 0 rgba(0, 0, 0, 0.05)' }}>
+    <header className={`fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 transition-all duration-300 ${isScrolled ? 'border-b border-gray-200' : ''}`} 
+            style={{ boxShadow: isScrolled ? '0 1px 3px 0 rgba(0, 0, 0, 0.05)' : 'none' }}>
       <div className="max-w-7xl mx-auto px-3 lg:px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -50,9 +60,15 @@ export const HomeHeader = () => {
             <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               Features
             </a>
-            <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <a href="/pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               Pricing
             </a>
+            <button
+              onClick={() => navigate("/blog")}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              Blog
+            </button>
             <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               FAQ
             </a>
@@ -65,40 +81,27 @@ export const HomeHeader = () => {
                 <Button 
                   variant="ghost"
                   onClick={() => navigate("/dashboard")}
-                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
                 >
                   Dashboard
                 </Button>
                 <Button 
                   variant="ghost"
                   onClick={() => navigate("/profile")}
-                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
                 >
                   <User className="h-4 w-4 mr-2" />
                   Profile
                 </Button>
               </>
             ) : (
-              <>
-                <Button 
-                  variant="ghost"
-                  onClick={() => {
-                    alert("⚠️ Website Under Construction\n\nPlease do not attempt to login at this time. Thank you for your patience!");
-                  }}
-                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-xl"
-                >
-                  Login
-                </Button>
-                <Button 
-                  onClick={() => {
-                    const waitlistSection = document.getElementById('waitlist');
-                    waitlistSection?.scrollIntoView({ behavior: 'smooth' });
-                  }}
-                  className="bg-gray-900 hover:bg-gray-800 text-white rounded-xl px-6"
-                >
-                  Join Waitlist
-                </Button>
-              </>
+              <Button 
+                variant="ghost"
+                onClick={() => navigate("/auth")}
+                className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
+              >
+                Sign in
+              </Button>
             )}
           </div>
 
@@ -118,9 +121,18 @@ export const HomeHeader = () => {
               <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 Features
               </a>
-              <a href="#pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+              <a href="/pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 Pricing
               </a>
+              <button
+                onClick={() => {
+                  navigate("/blog");
+                  setMobileMenuOpen(false);
+                }}
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left"
+              >
+                Blog
+              </button>
               <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 FAQ
               </a>
@@ -144,26 +156,13 @@ export const HomeHeader = () => {
                     </Button>
                   </>
                 ) : (
-                  <>
-                    <Button 
-                      variant="ghost"
-                      onClick={() => {
-                        alert("⚠️ Website Under Construction\n\nPlease do not attempt to login at this time. Thank you for your patience!");
-                      }}
-                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    >
-                      Login
-                    </Button>
-                    <Button 
-                      onClick={() => {
-                        const waitlistSection = document.getElementById('waitlist');
-                        waitlistSection?.scrollIntoView({ behavior: 'smooth' });
-                      }}
-                      className="bg-gray-900 hover:bg-gray-800 text-white"
-                    >
-                      Join Waitlist
-                    </Button>
-                  </>
+                  <Button 
+                    variant="ghost"
+                    onClick={() => navigate("/auth")}
+                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  >
+                    Login
+                  </Button>
                 )}
               </div>
             </nav>

@@ -176,9 +176,12 @@ async function handleSubscriptionActivated(
         ? "basic"
         : subscription.notes?.plan?.includes("pro")
         ? "pro"
-        : "enterprise";
+        : subscription.notes?.plan?.includes("enterprise")
+        ? "enterprise"
+        : "basic"; // Default to basic if unknown
       const isFounder = subscription.notes?.is_founder === "true";
-      const seatsAllowed = planType === "pro" ? 5 : 1;
+      // Pro and Enterprise get 5 seats, Basic gets 1
+      const seatsAllowed = planType === "pro" || planType === "enterprise" ? 5 : 1;
 
       await supabaseClient.from("subscriptions").insert({
         user_id: userId,

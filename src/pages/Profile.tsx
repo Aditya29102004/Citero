@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, ArrowLeft, User, Mail, Calendar } from "lucide-react";
+import { Loader2, ArrowLeft, User, Mail, Calendar, RefreshCw } from "lucide-react";
 import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
@@ -205,31 +205,77 @@ const Profile = () => {
 const SubscriptionInfo = ({ userId }: { userId?: string }) => {
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchSubscription = async () => {
+    if (!userId) return;
+    
+    try {
+      // First try to get active subscription
+      let { data, error } = await supabase
+        .from("subscriptions")
+        .select("id, user_id, plan_type, status, current_period_start, current_period_end, amount_paid, currency, created_at, subscription_id, razorpay_subscription_id")
+        .eq("user_id", userId)
+        .eq("status", "active")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      console.log("Fetched active subscription:", { data, error });
+
+      // If no active subscription, check for pending (payment processing)
+      if (!data && (!error || error.code === 'PGRST116')) {
+        const { data: pendingData, error: pendingError } = await supabase
+          .from("subscriptions")
+          .select("id, user_id, plan_type, status, current_period_start, current_period_end, amount_paid, currency, created_at, subscription_id, razorpay_subscription_id")
+          .eq("user_id", userId)
+          .eq("status", "pending")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        console.log("Fetched pending subscription:", { pendingData, pendingError });
+        
+        if (pendingData) {
+          data = pendingData;
+          error = null;
+        } else if (pendingError && pendingError.code !== 'PGRST116') {
+          error = pendingError;
+        }
+      }
+
+      // If still no subscription, check for any subscription (fallback)
+      if (!data && (!error || error.code === 'PGRST116')) {
+        const { data: anyData, error: anyError } = await supabase
+          .from("subscriptions")
+          .select("id, user_id, plan_type, status, current_period_start, current_period_end, amount_paid, currency, created_at, subscription_id, razorpay_subscription_id")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        console.log("Fetched any subscription:", { anyData, anyError });
+        
+        if (anyData) {
+          data = anyData;
+          error = null;
+        }
+      }
+
+      if (error && error.code !== 'PGRST116') {
+        console.error("Error fetching subscription:", error);
+      }
+
+      console.log("Final subscription data:", data);
+      setSubscription(data);
+    } catch (error) {
+      console.error("Error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    if (!userId) return;
-
-    const fetchSubscription = async () => {
-      try {
-        const { data, error } = await supabase
-          .from("subscriptions")
-          .select("*")
-          .eq("user_id", userId)
-          .eq("status", "active")
-          .single();
-
-        if (error && error.code !== 'PGRST116') {
-          console.error("Error fetching subscription:", error);
-        }
-
-        setSubscription(data);
-      } catch (error) {
-        console.error("Error:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchSubscription();
   }, [userId]);
 
@@ -241,40 +287,79 @@ const SubscriptionInfo = ({ userId }: { userId?: string }) => {
     return (
       <div>
         <p className="text-sm text-gray-600 mb-4">No active subscription</p>
-        <Button onClick={() => window.location.href = "/#pricing"}>
+        <Button onClick={() => navigate("/pricing")}>
           View Plans
         </Button>
       </div>
     );
   }
 
-  const periodEnd = new Date(subscription.current_period_end);
-  const isExpired = periodEnd < new Date();
+  // Handle null current_period_end gracefully
+  const periodEnd = subscription.current_period_end 
+    ? new Date(subscription.current_period_end) 
+    : null;
+  const isExpired = periodEnd ? periodEnd < new Date() : false;
+  const statusDisplay = subscription.status === 'active' && !isExpired ? 'Active' : 
+                        subscription.status === 'pending' ? 'Pending' :
+                        isExpired ? 'Expired' : subscription.status || 'Unknown';
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await fetchSubscription();
+    setRefreshing(false);
+  };
 
   return (
     <div className="space-y-2">
+      <div className="flex justify-between items-center mb-2">
+        <span className="text-sm font-medium text-gray-700">Subscription</span>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleRefresh}
+          disabled={refreshing}
+          className="h-8"
+        >
+          <RefreshCw className={`h-3 w-3 mr-1 ${refreshing ? 'animate-spin' : ''}`} />
+          Refresh
+        </Button>
+      </div>
       <div className="flex justify-between items-center">
         <span className="text-sm font-medium text-gray-700">Plan</span>
         <span className="text-sm text-gray-900 capitalize">{subscription.plan_type}</span>
       </div>
       <div className="flex justify-between items-center">
         <span className="text-sm font-medium text-gray-700">Status</span>
-        <span className={`text-sm font-medium ${isExpired ? 'text-red-600' : 'text-green-600'}`}>
-          {isExpired ? 'Expired' : 'Active'}
+        <span className={`text-sm font-medium ${
+          subscription.status === 'active' && !isExpired ? 'text-green-600' : 
+          subscription.status === 'pending' ? 'text-yellow-600' :
+          isExpired ? 'text-red-600' : 'text-gray-600'
+        }`}>
+          {statusDisplay}
         </span>
       </div>
-      <div className="flex justify-between items-center">
-        <span className="text-sm font-medium text-gray-700">Period End</span>
-        <span className="text-sm text-gray-600">
-          {periodEnd.toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        </span>
-      </div>
+      {(subscription.subscription_id || subscription.razorpay_subscription_id) && (
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-gray-700">Subscription ID</span>
+          <span className="text-sm text-gray-600 font-mono text-xs">
+            {subscription.subscription_id || subscription.razorpay_subscription_id}
+          </span>
+        </div>
+      )}
+      {periodEnd && (
+        <div className="flex justify-between items-center">
+          <span className="text-sm font-medium text-gray-700">Period End</span>
+          <span className="text-sm text-gray-600">
+            {periodEnd.toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })}
+          </span>
+        </div>
+      )}
       {isExpired && (
-        <Button onClick={() => window.location.href = "/#pricing"} className="mt-4">
+        <Button onClick={() => navigate("/pricing")} className="mt-4">
           Renew Subscription
         </Button>
       )}

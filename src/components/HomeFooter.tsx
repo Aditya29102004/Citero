@@ -5,15 +5,15 @@ export const HomeFooter = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-gray-200 bg-white" style={{ marginBottom: '0', paddingBottom: '0' }}>
-      <div className="max-w-7xl mx-auto px-3 lg:px-4 py-16" style={{ paddingBottom: '16px', marginBottom: '0' }}>
+    <footer className="border-t border-gray-200 bg-white">
+      <div className="max-w-7xl mx-auto px-3 lg:px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
           {/* Product Column */}
           <div>
             <h3 className="text-sm font-semibold text-gray-900 mb-4 tracking-tight">Product</h3>
             <ul className="space-y-3 text-sm text-gray-600">
               <li><a href="#features" className="hover:text-gray-900 transition-colors">Dashboard</a></li>
-              <li><a href="#pricing" className="hover:text-gray-900 transition-colors">Pricing</a></li>
+              <li><a href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</a></li>
             </ul>
           </div>
 

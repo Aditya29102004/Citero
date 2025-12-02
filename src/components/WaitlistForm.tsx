@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { CheckCircle2, Loader2, Mail, Send } from "lucide-react";
+import { CheckCircle2, Loader2, Send } from "lucide-react";
 
 export const WaitlistForm = () => {
   const [email, setEmail] = useState("");
@@ -134,14 +134,8 @@ export const WaitlistForm = () => {
   return (
     <div className="max-w-2xl mx-auto bg-white border border-gray-200 rounded-2xl p-8 md:p-12 shadow-lg relative overflow-hidden">
       <div className="relative z-10">
-        {/* Waitlist count badge */}
-        <div className="flex items-center justify-between mb-6">
-          <div className="inline-flex items-center gap-2 px-4 py-2 bg-gray-100/80 rounded-full border border-gray-200/50">
-            <Mail className="h-4 w-4 text-gray-600" />
-            <span className="text-sm font-medium text-gray-700">
-              Join {waitlistCount}+ founders on the waitlist
-            </span>
-          </div>
+        {/* Privacy note */}
+        <div className="flex items-center justify-end mb-6">
           <p className="text-xs text-gray-500">We'll never spam. Unsubscribe anytime.</p>
         </div>
 

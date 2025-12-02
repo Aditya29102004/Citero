@@ -19,6 +19,9 @@ export const ParticleBackground = ({
   particleCount = 120,
   className = '' 
 }: ParticleBackgroundProps) => {
+  // Reduce particles on mobile for better performance
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const optimizedParticleCount = isMobile ? Math.min(particleCount, 40) : particleCount;
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const particlesRef = useRef<Particle[]>([]);
   const animationFrameRef = useRef<number>();
@@ -42,7 +45,8 @@ export const ParticleBackground = ({
     // Initialize particles
     const initParticles = () => {
       particlesRef.current = [];
-      for (let i = 0; i < particleCount; i++) {
+      const count = isMobile ? Math.min(particleCount, 40) : particleCount;
+      for (let i = 0; i < count; i++) {
         particlesRef.current.push({
           x: Math.random() * canvas.width,
           y: Math.random() * canvas.height,
@@ -160,13 +164,18 @@ export const ParticleBackground = ({
         cancelAnimationFrame(animationFrameRef.current);
       }
     };
-  }, [particleCount]);
+  }, [particleCount, isMobile]);
 
   return (
     <canvas
       ref={canvasRef}
       className={`fixed inset-0 pointer-events-none ${className}`}
-      style={{ zIndex: 0 }}
+      style={{ 
+        zIndex: 0,
+        willChange: 'transform',
+        backfaceVisibility: 'hidden',
+        transform: 'translateZ(0)'
+      }}
     />
   );
 };

@@ -78,7 +78,7 @@ export const VisibilityTrendChart = ({ brandId }: VisibilityTrendChartProps) => 
               wrapperStyle={{ paddingTop: '10px', fontSize: '12px', color: '#374151' }}
             />
             <Line
-              type="monotone"
+              type="linear"
               dataKey="score"
               stroke="#111827"
               strokeWidth={2.5}
