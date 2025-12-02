@@ -110,20 +110,62 @@ export const HomeHeader = () => {
     e.stopPropagation();
     
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) {
-        toast.error("Error signing out");
-        console.error("Logout error:", error);
+      // Check if there's an active session before signing out
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session) {
+        // Only try to sign out if there's an active session
+        const { error } = await supabase.auth.signOut();
+        if (error) {
+          // If signOut fails, still clear local state and redirect
+          console.warn("Sign out error (but clearing local state):", error);
+        }
       } else {
-        setIsLoggedIn(false);
-        setHasSubscription(false);
-        toast.success("Signed out successfully");
-        navigate("/", { replace: true });
-        window.location.reload();
+        // No session exists, just clear local state
+        console.log("No active session found, clearing local state");
       }
-    } catch (err) {
+      
+      // Always clear local state and redirect, regardless of signOut result
+      setIsLoggedIn(false);
+      setHasSubscription(false);
+      
+      // Clear any local storage/auth data
+      try {
+        localStorage.removeItem('sb-' + (import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] || '') + '-auth-token');
+      } catch (storageError) {
+        // Ignore storage errors
+      }
+      
+      toast.success("Signed out successfully");
+      navigate("/", { replace: true });
+      
+      // Small delay before reload to ensure navigation happens
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
+    } catch (err: any) {
+      // Even if there's an error, clear local state and redirect
       console.error("Logout error:", err);
-      toast.error("Error signing out");
+      
+      // Check if it's a session missing error - this is actually fine
+      if (err?.message?.includes('Auth session missing') || err?.name === 'AuthSessionMissingError') {
+        console.log("Session already missing, proceeding with logout");
+      }
+      
+      setIsLoggedIn(false);
+      setHasSubscription(false);
+      
+      // Clear local storage
+      try {
+        localStorage.removeItem('sb-' + (import.meta.env.VITE_SUPABASE_URL?.split('//')[1]?.split('.')[0] || '') + '-auth-token');
+      } catch (storageError) {
+        // Ignore storage errors
+      }
+      
+      navigate("/", { replace: true });
+      setTimeout(() => {
+        window.location.reload();
+      }, 100);
     }
   };
 
