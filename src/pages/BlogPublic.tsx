@@ -53,18 +53,23 @@ const BlogPublic = () => {
         setBlogs(data);
       } else {
         // If no published blogs, try to get any blogs (for demo purposes)
-        const { data: anyBlogs } = await supabase
+        const { data: anyBlogs, error: anyError } = await supabase
           .from("blogs")
           .select("id, title, topic, created_at, published_at, word_count, seo_keywords, content, status")
           .order("created_at", { ascending: false })
           .limit(50);
 
-        if (anyBlogs && anyBlogs.length > 0) {
+        if (!anyError && anyBlogs && anyBlogs.length > 0) {
           setBlogs(anyBlogs);
+        } else {
+          // No blogs available - set empty array
+          setBlogs([]);
         }
       }
     } catch (error) {
-      console.log("Blogs not accessible");
+      console.log("Blogs not accessible:", error);
+      // Set empty array on error to prevent crashes
+      setBlogs([]);
     } finally {
       setLoading(false);
     }

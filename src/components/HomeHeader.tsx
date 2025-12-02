@@ -64,20 +64,35 @@ export const HomeHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
+  const handleLogout = async (e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) {
+        toast.error("Error signing out");
+        console.error("Logout error:", error);
+      } else {
+        toast.success("Signed out successfully");
+        setIsLoggedIn(false);
+        setHasSubscription(false);
+        navigate("/", { replace: true });
+        // Small delay before reload to ensure navigation happens
+        setTimeout(() => {
+          window.location.reload();
+        }, 100);
+      }
+    } catch (err) {
+      console.error("Logout error:", err);
       toast.error("Error signing out");
-    } else {
-      toast.success("Signed out successfully");
-      navigate("/");
-      window.location.reload(); // Reload to clear all state
     }
   };
 
   return (
     <header className={`fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 transition-all duration-300 ${isScrolled ? 'border-b border-gray-200' : ''}`} 
-            style={{ boxShadow: isScrolled ? '0 1px 3px 0 rgba(0, 0, 0, 0.05)' : 'none' }}>
+            style={{ boxShadow: isScrolled ? '0 1px 3px 0 rgba(0, 0, 0, 0.05)' : 'none', pointerEvents: 'auto' }}>
       <div className="max-w-7xl mx-auto px-3 lg:px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -99,14 +114,22 @@ export const HomeHeader = () => {
               Features
             </a>
             <button
-              onClick={() => navigate("/pricing")}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/pricing");
+              }}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
             >
               Pricing
             </button>
             <button
-              onClick={() => navigate("/blog")}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                navigate("/blog");
+              }}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
             >
               Blog
             </button>
@@ -139,9 +162,10 @@ export const HomeHeader = () => {
                   </>
                 )}
                 <Button 
+                  type="button"
                   variant="ghost"
-                  onClick={handleLogout}
-                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
+                  onClick={(e) => handleLogout(e)}
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg cursor-pointer"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
                   Logout
@@ -175,20 +199,24 @@ export const HomeHeader = () => {
                 Features
               </a>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
                   navigate("/pricing");
                   setMobileMenuOpen(false);
                 }}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left cursor-pointer"
               >
                 Pricing
               </button>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
                   navigate("/blog");
                   setMobileMenuOpen(false);
                 }}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left cursor-pointer"
               >
                 Blog
               </button>
@@ -224,12 +252,14 @@ export const HomeHeader = () => {
                       </>
                     )}
                     <Button 
+                      type="button"
                       variant="ghost"
-                      onClick={() => {
-                        handleLogout();
+                      onClick={(e) => {
+                        e.preventDefault();
+                        handleLogout(e);
                         setMobileMenuOpen(false);
                       }}
-                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 cursor-pointer"
                     >
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
