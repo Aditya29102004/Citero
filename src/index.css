@@ -235,4 +235,17 @@ All colors MUST be HSL.
     animation: slide-in 0.8s ease-out forwards;
     opacity: 0;
   }
+
+  @keyframes scroll {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-scroll {
+    animation: scroll 30s linear infinite;
+  }
 }

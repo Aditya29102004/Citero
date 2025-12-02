@@ -132,6 +132,20 @@ export const HomeFooter = () => {
               height="55" 
             />
           </a>
+          <a href="https://fazier.com/launches/www.unifr.online" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=neutral" 
+              alt="Fazier badge" 
+              width="120" 
+            />
+          </a>
+          <a href="https://starterbest.com" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://starterbest.com/badages-awards.svg" 
+              alt="Featured on Starter Best" 
+              style={{ height: '54px', width: 'auto' }}
+            />
+          </a>
         </div>
       </div>
     </footer>

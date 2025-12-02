@@ -15,4 +15,27 @@ export default defineConfig(({ mode }) => ({
       "@": path.resolve(__dirname, "./src"),
     },
   },
+  build: {
+    // Optimize build output
+    minify: 'esbuild',
+    target: 'es2015',
+    cssMinify: true,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Split vendor chunks for better caching
+          'react-vendor': ['react', 'react-dom', 'react-router-dom'],
+          'ui-vendor': ['@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-select'],
+          'chart-vendor': ['recharts'],
+          'supabase-vendor': ['@supabase/supabase-js'],
+        },
+      },
+    },
+    // Remove console logs in production
+    esbuild: {
+      drop: mode === 'production' ? ['console', 'debugger'] : [],
+    },
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
+  },
 }));
