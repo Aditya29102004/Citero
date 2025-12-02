@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
+import { getUserSubscriptionLimits } from "@/lib/subscriptionLimits";
 
 const Profile = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const Profile = () => {
   const [profile, setProfile] = useState<any>(null);
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [hasSubscription, setHasSubscription] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -46,6 +48,16 @@ const Profile = () => {
 
         setProfile(profileData);
         setName(profileData?.name || session.user.user_metadata?.full_name || "");
+        
+        // Check subscription status
+        try {
+          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+          setHasSubscription(subscriptionLimits.planType !== null);
+        } catch (error) {
+          console.error("Error checking subscription status:", error);
+          setHasSubscription(false);
+        }
+        
         setLoading(false);
       } catch (error) {
         console.error("Error:", error);
@@ -96,14 +108,16 @@ const Profile = () => {
           <main className="flex-1 overflow-auto">
             <div className="max-w-4xl mx-auto px-6 sm:px-8 lg:px-12 py-8 lg:py-12">
               <div className="mb-6">
-                <Button
-                  variant="ghost"
-                  onClick={() => navigate("/dashboard")}
-                  className="mb-4"
-                >
-                  <ArrowLeft className="h-4 w-4 mr-2" />
-                  Back to Dashboard
-                </Button>
+                {hasSubscription && (
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/dashboard")}
+                    className="mb-4"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Back to Dashboard
+                  </Button>
+                )}
                 <h1 className="text-3xl font-bold text-gray-900">Profile</h1>
                 <p className="text-gray-600 mt-2">Manage your account settings</p>
               </div>
@@ -203,6 +217,7 @@ const Profile = () => {
 };
 
 const SubscriptionInfo = ({ userId }: { userId?: string }) => {
+  const navigate = useNavigate();
   const [subscription, setSubscription] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

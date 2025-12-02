@@ -3,12 +3,14 @@ import { Button } from "@/components/ui/button";
 import { TrendingUp, Menu, X, User } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getUserSubscriptionLimits } from "@/lib/subscriptionLimits";
 
 export const HomeHeader = () => {
   const navigate = useNavigate();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<any>(null);
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
@@ -16,13 +18,37 @@ export const HomeHeader = () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
       setUser(session?.user);
+      
+      if (session) {
+        try {
+          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+          setHasSubscription(subscriptionLimits.planType !== null);
+        } catch (error) {
+          console.error("Error checking subscription status:", error);
+          setHasSubscription(false);
+        }
+      } else {
+        setHasSubscription(false);
+      }
     };
 
     checkAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setIsLoggedIn(!!session);
       setUser(session?.user);
+      
+      if (session) {
+        try {
+          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+          setHasSubscription(subscriptionLimits.planType !== null);
+        } catch (error) {
+          console.error("Error checking subscription status:", error);
+          setHasSubscription(false);
+        }
+      } else {
+        setHasSubscription(false);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -78,13 +104,15 @@ export const HomeHeader = () => {
           <div className="hidden md:flex items-center gap-3">
             {isLoggedIn ? (
               <>
-                <Button 
-                  variant="ghost"
-                  onClick={() => navigate("/dashboard")}
-                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
-                >
-                  Dashboard
-                </Button>
+                {hasSubscription && (
+                  <Button 
+                    variant="ghost"
+                    onClick={() => navigate("/dashboard")}
+                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
+                  >
+                    Dashboard
+                  </Button>
+                )}
                 <Button 
                   variant="ghost"
                   onClick={() => navigate("/profile")}
@@ -139,13 +167,15 @@ export const HomeHeader = () => {
               <div className="flex flex-col gap-2 pt-2">
                 {isLoggedIn ? (
                   <>
-                    <Button 
-                      variant="ghost"
-                      onClick={() => navigate("/dashboard")}
-                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    >
-                      Dashboard
-                    </Button>
+                    {hasSubscription && (
+                      <Button 
+                        variant="ghost"
+                        onClick={() => navigate("/dashboard")}
+                        className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                      >
+                        Dashboard
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost"
                       onClick={() => navigate("/profile")}

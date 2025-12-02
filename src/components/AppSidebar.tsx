@@ -16,11 +16,13 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { getUserSubscriptionLimits } from "@/lib/subscriptionLimits";
 
 export function AppSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
   const [isAdmin, setIsAdmin] = useState(false);
+  const [hasSubscription, setHasSubscription] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
   useEffect(() => {
@@ -39,10 +41,27 @@ export function AppSidebar() {
       }
     };
 
+    const checkSubscriptionStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        try {
+          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+          setHasSubscription(subscriptionLimits.planType !== null);
+        } catch (error) {
+          console.error("Error checking subscription status:", error);
+          setHasSubscription(false);
+        }
+      } else {
+        setHasSubscription(false);
+      }
+    };
+
     checkAdminStatus();
+    checkSubscriptionStatus();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(() => {
       checkAdminStatus();
+      checkSubscriptionStatus();
     });
 
     return () => subscription.unsubscribe();
@@ -84,16 +103,18 @@ export function AppSidebar() {
                   {!collapsed && <span>Brands</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
-                  onClick={() => navigate("/dashboard")}
-                  isActive={location.pathname === "/dashboard"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
-                >
-                  <Home className="h-4 w-4" />
-                  {!collapsed && <span>Dashboard</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
+              {hasSubscription && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => navigate("/dashboard")}
+                    isActive={location.pathname === "/dashboard"}
+                    className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  >
+                    <Home className="h-4 w-4" />
+                    {!collapsed && <span>Dashboard</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => navigate("/competitors")}
