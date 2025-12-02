@@ -78,31 +78,66 @@ const PublishBlog = () => {
 
   const fetchBrands = async (userId: string) => {
     try {
-      const { data, error } = await supabase
+      // First, try to find or create a "Website Blog" brand for SEO posts
+      let { data: websiteBrand, error: websiteError } = await supabase
         .from("brands")
         .select("id, name")
         .eq("user_id", userId)
-        .order("name", { ascending: true });
+        .eq("name", "Website Blog")
+        .maybeSingle();
 
-      if (error) throw error;
-      if (data && data.length > 0) {
-        setBrands(data);
-        setSelectedBrandId(data[0].id); // Set first brand as default
-      } else {
-        // Create a default brand for admin if none exists
+      if (websiteError && websiteError.code !== 'PGRST116') {
+        throw websiteError;
+      }
+
+      if (!websiteBrand) {
+        // Create "Website Blog" brand for SEO blog posts
         const { data: newBrand, error: createError } = await supabase
           .from("brands")
           .insert({
             user_id: userId,
-            name: "Admin Blog",
-            description: "Default brand for admin blog posts",
+            name: "Website Blog",
+            description: "Blog posts for website SEO",
           })
           .select()
           .single();
 
-        if (!createError && newBrand) {
-          setBrands([newBrand]);
-          setSelectedBrandId(newBrand.id);
+        if (createError) throw createError;
+        websiteBrand = newBrand;
+      }
+
+      // Set the website blog brand as selected
+      if (websiteBrand) {
+        setBrands([websiteBrand]);
+        setSelectedBrandId(websiteBrand.id);
+      } else {
+        // Fallback: get any brand or create default
+        const { data: anyBrands, error: anyError } = await supabase
+          .from("brands")
+          .select("id, name")
+          .eq("user_id", userId)
+          .order("name", { ascending: true })
+          .limit(1);
+
+        if (!anyError && anyBrands && anyBrands.length > 0) {
+          setBrands(anyBrands);
+          setSelectedBrandId(anyBrands[0].id);
+        } else {
+          // Create a default brand
+          const { data: defaultBrand, error: createDefaultError } = await supabase
+            .from("brands")
+            .insert({
+              user_id: userId,
+              name: "Website Blog",
+              description: "Blog posts for website SEO",
+            })
+            .select()
+            .single();
+
+          if (!createDefaultError && defaultBrand) {
+            setBrands([defaultBrand]);
+            setSelectedBrandId(defaultBrand.id);
+          }
         }
       }
     } catch (error) {
@@ -182,7 +217,10 @@ const PublishBlog = () => {
             <Card className="p-6">
               <div className="flex items-center gap-3 mb-6">
                 <FileText className="h-6 w-6 text-gray-700" />
-                <h1 className="text-2xl font-bold text-gray-900">Publish Blog Post</h1>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Publish Blog Post</h1>
+                  <p className="text-sm text-gray-600 mt-1">Create SEO blog posts for your website</p>
+                </div>
               </div>
 
               <div className="space-y-6">
@@ -217,24 +255,10 @@ const PublishBlog = () => {
                   </p>
                 </div>
 
-                {brands.length > 0 && (
-                  <div>
-                    <Label htmlFor="brand" className="text-sm font-semibold text-gray-700">
-                      Brand
-                    </Label>
-                    <select
-                      id="brand"
-                      value={selectedBrandId}
-                      onChange={(e) => setSelectedBrandId(e.target.value)}
-                      className="mt-2 w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-gray-500"
-                      disabled={saving}
-                    >
-                      {brands.map((brand) => (
-                        <option key={brand.id} value={brand.id}>
-                          {brand.name}
-                        </option>
-                      ))}
-                    </select>
+                {/* Brand is automatically set to "Website Blog" - hidden from user */}
+                {brands.length > 0 && selectedBrandId && (
+                  <div className="hidden">
+                    <input type="hidden" value={selectedBrandId} />
                   </div>
                 )}
 
