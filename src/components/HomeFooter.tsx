@@ -72,6 +72,42 @@ export const HomeFooter = () => {
           </p>
         </div>
       </div>
+      
+      {/* Hidden featured badges for SEO/tracking - not visible */}
+      <div style={{ display: 'none', visibility: 'hidden', position: 'absolute', left: '-9999px' }}>
+        <a href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" target="_blank" rel="noopener noreferrer">
+          <img 
+            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
+            alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
+            width="200" 
+            height="43" 
+          />
+        </a>
+        <a href="https://theindiewall.net" target="_blank" rel="noopener noreferrer">
+          <img 
+            src="https://theindiewall.net/indiewall.svg" 
+            alt="IndieWall" 
+            width="120" 
+            height="60" 
+          />
+        </a>
+        <a href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" target="_blank" rel="noopener noreferrer">
+          <img 
+            src="https://startupfa.me/badges/featured/dark.webp" 
+            alt="unifr - Featured on Startup Fame" 
+            width="171" 
+            height="54" 
+          />
+        </a>
+        <a href="https://dofollow.tools" target="_blank" rel="noopener noreferrer">
+          <img 
+            src="https://dofollow.tools/badge/badge_dark.svg" 
+            alt="Featured on Dofollow.Tools" 
+            width="200" 
+            height="54" 
+          />
+        </a>
+      </div>
     </footer>
   );
 };
