@@ -21,6 +21,7 @@ const Profile = () => {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
   const [hasSubscription, setHasSubscription] = useState(false);
+  const [subscriptionVerified, setSubscriptionVerified] = useState(false);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -28,10 +29,33 @@ const Profile = () => {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError || !session) {
-          navigate("/auth");
+          navigate("/auth", { replace: true });
           return;
         }
 
+        // Check subscription status FIRST - before fetching any data
+        try {
+          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+          const hasActiveSubscription = subscriptionLimits.planType !== null;
+          
+          if (!hasActiveSubscription) {
+            // No subscription - redirect to pricing immediately
+            navigate("/pricing", { replace: true });
+            setLoading(false);
+            return;
+          }
+          
+          setHasSubscription(true);
+          setSubscriptionVerified(true);
+        } catch (error) {
+          console.error("Error checking subscription status:", error);
+          // On error, redirect to pricing
+          navigate("/pricing", { replace: true });
+          setLoading(false);
+          return;
+        }
+
+        // Only fetch profile data if subscription is verified
         setUser(session.user);
         setEmail(session.user.email || "");
 
@@ -49,19 +73,10 @@ const Profile = () => {
         setProfile(profileData);
         setName(profileData?.name || session.user.user_metadata?.full_name || "");
         
-        // Check subscription status
-        try {
-          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
-          setHasSubscription(subscriptionLimits.planType !== null);
-        } catch (error) {
-          console.error("Error checking subscription status:", error);
-          setHasSubscription(false);
-        }
-        
         setLoading(false);
       } catch (error) {
         console.error("Error:", error);
-        navigate("/auth");
+        navigate("/auth", { replace: true });
       }
     };
 
@@ -78,7 +93,8 @@ const Profile = () => {
     }
   };
 
-  if (loading) {
+  // Don't render anything until subscription is verified
+  if (loading || !subscriptionVerified) {
     return (
       <SidebarProvider>
         <div className="flex min-h-screen w-full bg-gray-50/50">

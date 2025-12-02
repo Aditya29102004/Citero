@@ -105,22 +105,24 @@ export const HomeHeader = () => {
             {isLoggedIn ? (
               <>
                 {hasSubscription && (
-                  <Button 
-                    variant="ghost"
-                    onClick={() => navigate("/dashboard")}
-                    className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
-                  >
-                    Dashboard
-                  </Button>
+                  <>
+                    <Button 
+                      variant="ghost"
+                      onClick={() => navigate("/dashboard")}
+                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
+                    >
+                      Dashboard
+                    </Button>
+                    <Button 
+                      variant="ghost"
+                      onClick={() => navigate("/profile")}
+                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
+                    >
+                      <User className="h-4 w-4 mr-2" />
+                      Profile
+                    </Button>
+                  </>
                 )}
-                <Button 
-                  variant="ghost"
-                  onClick={() => navigate("/profile")}
-                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  Profile
-                </Button>
               </>
             ) : (
               <Button 
@@ -168,22 +170,24 @@ export const HomeHeader = () => {
                 {isLoggedIn ? (
                   <>
                     {hasSubscription && (
-                      <Button 
-                        variant="ghost"
-                        onClick={() => navigate("/dashboard")}
-                        className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                      >
-                        Dashboard
-                      </Button>
+                      <>
+                        <Button 
+                          variant="ghost"
+                          onClick={() => navigate("/dashboard")}
+                          className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        >
+                          Dashboard
+                        </Button>
+                        <Button 
+                          variant="ghost"
+                          onClick={() => navigate("/profile")}
+                          className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                        >
+                          <User className="h-4 w-4 mr-2" />
+                          Profile
+                        </Button>
+                      </>
                     )}
-                    <Button 
-                      variant="ghost"
-                      onClick={() => navigate("/profile")}
-                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
-                    >
-                      <User className="h-4 w-4 mr-2" />
-                      Profile
-                    </Button>
                   </>
                 ) : (
                   <Button 
