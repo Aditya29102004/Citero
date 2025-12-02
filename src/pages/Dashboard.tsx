@@ -104,23 +104,21 @@ const Dashboard = () => {
         setSubscriptionVerified(true);
         setSubscriptionLimits(subscriptionLimits);
         
-        // EVERYONE must complete onboarding if they don't have a brand (including founders)
-        let onboardingComplete = false;
-        try {
-          onboardingComplete = await Promise.race([
-            checkOnboardingComplete(),
-            new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
-          ]);
-          
-          if (!onboardingComplete) {
-            // No brand found - redirect to onboarding (applies to everyone)
+        // Only check onboarding if user has a subscription
+          let onboardingComplete = false;
+          try {
+            onboardingComplete = await Promise.race([
+              checkOnboardingComplete(),
+              new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
+            ]);
+            
+            if (!onboardingComplete) {
             navigate("/onboarding/website", { replace: true });
-            setLoading(false);
-            return;
-          }
-        } catch (onboardingError) {
-          console.error("Error checking onboarding:", onboardingError);
-          // On error, redirect to onboarding to ensure brand is created
+              setLoading(false);
+              return;
+            }
+          } catch (onboardingError) {
+            console.error("Error checking onboarding:", onboardingError);
           navigate("/onboarding/website", { replace: true });
           setLoading(false);
           return;
@@ -158,18 +156,6 @@ const Dashboard = () => {
           
           setSubscriptionLimits(subscriptionLimits);
           setSubscriptionVerified(true);
-          
-          // Check onboarding status - EVERYONE must have a brand
-          const onboardingComplete = await Promise.race([
-            checkOnboardingComplete(),
-            new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 3000))
-          ]);
-          
-          if (!onboardingComplete) {
-            // No brand found - redirect to onboarding (applies to everyone)
-            navigate("/onboarding/website", { replace: true });
-            return;
-          }
         } catch (error) {
           console.error("Error checking subscription on auth change:", error);
           navigate("/pricing", { replace: true });
@@ -1574,17 +1560,17 @@ const Dashboard = () => {
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Brand Visibility</p>
-                      <TooltipProvider>
-                        <UITooltip>
-                          <TooltipTrigger>
+                    <TooltipProvider>
+                      <UITooltip>
+                        <TooltipTrigger>
                             <Info className="h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors" />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Percentage of prompts where your brand appeared compared to competitors.</p>
-                          </TooltipContent>
-                        </UITooltip>
-                      </TooltipProvider>
-                    </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Percentage of prompts where your brand appeared compared to competitors.</p>
+                        </TooltipContent>
+                      </UITooltip>
+                    </TooltipProvider>
+                  </div>
                     <p className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">{dashboardData.brandVisibility}%</p>
                     <p className="text-xs text-gray-500 font-medium">Based on {dashboardData.totalPrompts || 0} prompts simulated</p>
                   </div>
@@ -1596,11 +1582,11 @@ const Dashboard = () => {
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Citation Share</p>
-                    </div>
+                  </div>
                     <p className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">{dashboardData.citationShare}%</p>
                     <p className="text-xs text-gray-500 font-medium">
-                      {dashboardData.totalBrandCitations || 0} of {dashboardData.totalAllCitations || 0} citations
-                    </p>
+                    {dashboardData.totalBrandCitations || 0} of {dashboardData.totalAllCitations || 0} citations
+                  </p>
                   </div>
                 </Card>
 
@@ -1610,10 +1596,10 @@ const Dashboard = () => {
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Brand Ranking</p>
-                    </div>
+                  </div>
                     <p className="text-4xl font-bold text-gray-900 mb-2 tracking-tight">
-                      #{dashboardData.brandRanking || "N/A"}
-                    </p>
+                    #{dashboardData.brandRanking || "N/A"}
+                  </p>
                     <p className="text-xs text-gray-500 font-medium">Market tier based on AI visibility</p>
                   </div>
                 </Card>
@@ -1624,19 +1610,19 @@ const Dashboard = () => {
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Closest Competitor</p>
-                    </div>
-                    {dashboardData.closestCompetitor ? (
-                      <>
+                  </div>
+                  {dashboardData.closestCompetitor ? (
+                    <>
                         <p className="text-2xl font-bold text-gray-900 mb-2 tracking-tight truncate">{dashboardData.closestCompetitor.name}</p>
                         <p className="text-xs text-gray-500 font-medium">
-                          {dashboardData.closestCompetitor.visibility !== undefined 
-                            ? `${dashboardData.closestCompetitor.visibility.toFixed(1)}% visibility`
-                            : `${dashboardData.closestCompetitor.mentions} mentions`}
-                        </p>
-                      </>
-                    ) : (
-                      <p className="text-sm text-gray-500">No competitors found</p>
-                    )}
+                        {dashboardData.closestCompetitor.visibility !== undefined 
+                          ? `${dashboardData.closestCompetitor.visibility.toFixed(1)}% visibility`
+                          : `${dashboardData.closestCompetitor.mentions} mentions`}
+                      </p>
+                    </>
+                  ) : (
+                    <p className="text-sm text-gray-500">No competitors found</p>
+                  )}
                   </div>
                 </Card>
               </div>
@@ -2003,8 +1989,8 @@ const Dashboard = () => {
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-1 h-6 bg-green-500 rounded-full"></div>
                         <h3 className="text-base font-bold text-gray-900 tracking-tight">
-                          Key Strengths
-                        </h3>
+                        Key Strengths
+                      </h3>
                       </div>
                       {(latestScanInsights.strengths_and_gaps?.strengths?.length > 0 || latestScanInsights?.strengths?.length > 0) ? (
                         <ul className="space-y-3">
@@ -2027,8 +2013,8 @@ const Dashboard = () => {
                       <div className="flex items-center gap-2 mb-4">
                         <div className="w-1 h-6 bg-amber-500 rounded-full"></div>
                         <h3 className="text-base font-bold text-gray-900 tracking-tight">
-                          Visibility Gaps
-                        </h3>
+                        Visibility Gaps
+                      </h3>
                       </div>
                       {(latestScanInsights.strengths_and_gaps?.gaps?.length > 0 || latestScanInsights?.weaknesses?.length > 0) ? (
                         <>
@@ -2085,8 +2071,8 @@ const Dashboard = () => {
                   <div className="p-6 bg-gradient-to-br from-blue-50/30 to-white">
                     <div className="mb-6 pb-4 border-b border-gray-100">
                       <h3 className="text-lg font-bold text-gray-900 mb-1 tracking-tight">
-                        Suggested Content Topics
-                      </h3>
+                      Suggested Content Topics
+                    </h3>
                       <p className="text-xs text-gray-500 font-medium mt-1">Content ideas to improve your AI visibility</p>
                     </div>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

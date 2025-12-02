@@ -10,6 +10,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
+// Ensure Supabase is initialized
+if (!supabase) {
+  console.error("Supabase client not initialized");
+}
+
 const Index = () => {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
@@ -121,24 +126,24 @@ const Index = () => {
             <div className="lg:col-span-2 flex flex-col justify-center lg:text-left text-center space-y-6 pt-8 lg:pt-12">
               {/* Main Headline */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-[1.2]">
-                Multiply Your Traffic from AI Agents
-              </h1>
-              
+              Multiply Your Traffic from AI Agents
+            </h1>
+            
               {/* Description */}
               <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-xl lg:max-w-none">
-                Convert AI mentions on ChatGPT, Perplexity, and Google AI into real traffic and paying customers.
-              </p>
-              
+              Convert AI mentions on ChatGPT, Perplexity, and Google AI into real traffic and paying customers.
+            </p>
+            
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 lg:justify-start justify-center pt-2">
-                <Button 
-                  onClick={() => navigate("/auth")}
-                  size="default" 
+              <Button 
+                onClick={() => navigate("/auth")}
+                size="default" 
                   className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg px-6 py-3 text-base font-medium shadow-md hover:shadow-lg transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
-                >
-                  Get Started
-                  <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
+              >
+                Get Started
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
               </div>
             </div>
             
@@ -163,43 +168,46 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Featured In Section */}
-      <section className="py-8 px-3 lg:px-4 bg-white relative z-[2] border-t border-gray-200">
-        <div className="max-w-6xl mx-auto">
-          <p className="text-center text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">Featured In</p>
-          <div className="flex flex-wrap items-center justify-center gap-8">
-            {/* Product Hunt */}
-            <a 
-              href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-80 transition-opacity"
-            >
-              <img 
-                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
-                alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
-                width="200" 
-                height="43"
-                className="h-auto"
-              />
-            </a>
-            
-            {/* IndieWall */}
-            <a 
-              href="https://theindiewall.net" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="hover:opacity-80 transition-opacity"
-            >
-              <img 
-                src="https://theindiewall.net/indiewall.svg" 
-                alt="IndieWall" 
-                width="120" 
-                height="60"
-                className="h-auto"
-              />
-            </a>
-          </div>
+      {/* Product Hunt, IndieWall & Startup Fame Badges */}
+      <section className="py-5 px-3 lg:px-4 bg-white relative z-[2]">
+        <div className="max-w-6xl mx-auto flex flex-wrap justify-center items-center gap-6">
+          <a 
+            href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
+              alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
+              style={{ width: '200px', height: '43px' }} 
+              width="200" 
+              height="43" 
+            />
+          </a>
+          <a 
+            href="https://theindiewall.net" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://theindiewall.net/indiewall.svg" 
+              alt="IndieWall" 
+              width="120" 
+              height="60" 
+            />
+          </a>
+          <a 
+            href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://startupfa.me/badges/featured/dark.webp" 
+              alt="unifr - Featured on Startup Fame" 
+              width="171" 
+              height="54" 
+            />
+          </a>
         </div>
       </section>
 
@@ -230,7 +238,7 @@ const Index = () => {
                 See how AI platforms describe your brand, and use those insights to shape your strategy.
               </p>
             </div>
-          </div>
+            </div>
 
           {/* Feature 2: Find Sources - Image Left, Text Right */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
@@ -243,9 +251,9 @@ const Index = () => {
                   className="w-full h-auto block"
                   loading="lazy"
                 />
-              </div>
             </div>
-            
+          </div>
+
             {/* Text Side */}
             <div className="order-1 lg:order-2 lg:pl-8">
               <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
@@ -255,7 +263,7 @@ const Index = () => {
                 Discover the exact sources AI pulls from, so you can optimize the content that drives visibility.
               </p>
             </div>
-          </div>
+            </div>
 
           {/* Feature 3: Compare Competitors - Text Left, Image Right */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
@@ -268,7 +276,7 @@ const Index = () => {
                 Benchmark your brand against competitors and spot opportunities to outrank them.
               </p>
             </div>
-            
+
             {/* Image Side */}
             <div>
               <div className="rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200 shadow-lg">

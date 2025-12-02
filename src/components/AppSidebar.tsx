@@ -168,16 +168,6 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/admin/publish-blog")}
-                  isActive={location.pathname === "/admin/publish-blog"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
-                >
-                  <FileText className="h-4 w-4" />
-                  {!collapsed && <span>Write Blog</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              <SidebarMenuItem>
-                <SidebarMenuButton
                   onClick={() => navigate("/audits")}
                   isActive={location.pathname === "/audits"}
                   className="rounded-lg px-3 py-2.5 transition-all duration-200"
