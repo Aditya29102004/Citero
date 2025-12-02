@@ -15,44 +15,85 @@ export const HomeHeader = () => {
   const [isScrolled, setIsScrolled] = useState(false);
 
   useEffect(() => {
+    let isMounted = true;
+    
     const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-      setUser(session?.user);
-      
-      if (session) {
-        try {
-          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
-          setHasSubscription(subscriptionLimits.planType !== null);
-        } catch (error) {
-          console.error("Error checking subscription status:", error);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!isMounted) return;
+        
+        setIsLoggedIn(!!session);
+        setUser(session?.user);
+        
+        if (session) {
+          // Check subscription asynchronously without blocking UI
+          // Use a timeout to prevent hanging
+          Promise.race([
+            getUserSubscriptionLimits(session.user.id),
+            new Promise<{ planType: null }>((resolve) => 
+              setTimeout(() => resolve({ planType: null }), 3000)
+            )
+          ])
+            .then((subscriptionLimits) => {
+              if (isMounted) {
+                setHasSubscription(subscriptionLimits.planType !== null);
+              }
+            })
+            .catch((error) => {
+              console.error("Error checking subscription status:", error);
+              if (isMounted) {
+                setHasSubscription(false);
+              }
+            });
+        } else {
           setHasSubscription(false);
         }
-      } else {
-        setHasSubscription(false);
+      } catch (error) {
+        console.error("Auth check error:", error);
+        if (isMounted) {
+          setIsLoggedIn(false);
+          setHasSubscription(false);
+        }
       }
     };
 
     checkAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!isMounted) return;
+      
       setIsLoggedIn(!!session);
       setUser(session?.user);
       
       if (session) {
-        try {
-          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
-          setHasSubscription(subscriptionLimits.planType !== null);
-        } catch (error) {
-          console.error("Error checking subscription status:", error);
-          setHasSubscription(false);
-        }
+        // Check subscription asynchronously without blocking UI
+        // Use a timeout to prevent hanging
+        Promise.race([
+          getUserSubscriptionLimits(session.user.id),
+          new Promise<{ planType: null }>((resolve) => 
+            setTimeout(() => resolve({ planType: null }), 3000)
+          )
+        ])
+          .then((subscriptionLimits) => {
+            if (isMounted) {
+              setHasSubscription(subscriptionLimits.planType !== null);
+            }
+          })
+          .catch((error) => {
+            console.error("Error checking subscription status:", error);
+            if (isMounted) {
+              setHasSubscription(false);
+            }
+          });
       } else {
         setHasSubscription(false);
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   useEffect(() => {
@@ -64,25 +105,21 @@ export const HomeHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const handleLogout = async (e?: React.MouseEvent) => {
-    if (e) {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const handleLogout = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
     try {
       const { error } = await supabase.auth.signOut();
       if (error) {
         toast.error("Error signing out");
         console.error("Logout error:", error);
       } else {
-        toast.success("Signed out successfully");
         setIsLoggedIn(false);
         setHasSubscription(false);
+        toast.success("Signed out successfully");
         navigate("/", { replace: true });
-        // Small delay before reload to ensure navigation happens
-        setTimeout(() => {
-          window.location.reload();
-        }, 100);
+        window.location.reload();
       }
     } catch (err) {
       console.error("Logout error:", err);
@@ -92,7 +129,7 @@ export const HomeHeader = () => {
 
   return (
     <header className={`fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 transition-all duration-300 ${isScrolled ? 'border-b border-gray-200' : ''}`} 
-            style={{ boxShadow: isScrolled ? '0 1px 3px 0 rgba(0, 0, 0, 0.05)' : 'none', pointerEvents: 'auto' }}>
+            style={{ boxShadow: isScrolled ? '0 1px 3px 0 rgba(0, 0, 0, 0.05)' : 'none' }}>
       <div className="max-w-7xl mx-auto px-3 lg:px-4">
         <div className="flex h-16 items-center justify-between">
           {/* Logo */}
@@ -115,21 +152,15 @@ export const HomeHeader = () => {
             </a>
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/pricing");
-              }}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              onClick={() => navigate("/pricing")}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer bg-transparent border-none"
             >
               Pricing
             </button>
             <button
               type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                navigate("/blog");
-              }}
-              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer"
+              onClick={() => navigate("/blog")}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer bg-transparent border-none"
             >
               Blog
             </button>
@@ -164,7 +195,7 @@ export const HomeHeader = () => {
                 <Button 
                   type="button"
                   variant="ghost"
-                  onClick={(e) => handleLogout(e)}
+                  onClick={handleLogout}
                   className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg cursor-pointer"
                 >
                   <LogOut className="h-4 w-4 mr-2" />
@@ -200,23 +231,21 @@ export const HomeHeader = () => {
               </a>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   navigate("/pricing");
                   setMobileMenuOpen(false);
                 }}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left cursor-pointer"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left cursor-pointer bg-transparent border-none w-full text-left"
               >
                 Pricing
               </button>
               <button
                 type="button"
-                onClick={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   navigate("/blog");
                   setMobileMenuOpen(false);
                 }}
-                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left cursor-pointer"
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left cursor-pointer bg-transparent border-none w-full text-left"
               >
                 Blog
               </button>
@@ -255,7 +284,6 @@ export const HomeHeader = () => {
                       type="button"
                       variant="ghost"
                       onClick={(e) => {
-                        e.preventDefault();
                         handleLogout(e);
                         setMobileMenuOpen(false);
                       }}

@@ -71,6 +71,7 @@ const BlogPublic = () => {
       // Set empty array on error to prevent crashes
       setBlogs([]);
     } finally {
+      // Always set loading to false, even on error
       setLoading(false);
     }
   };

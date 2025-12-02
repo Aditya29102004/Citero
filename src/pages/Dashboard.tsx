@@ -137,10 +137,16 @@ const Dashboard = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
-        // Check subscription status on auth state change
+        // Check subscription status on auth state change with timeout
         try {
           const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
-          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+          const subscriptionLimits = await Promise.race([
+            getUserSubscriptionLimits(session.user.id),
+            new Promise<{ planType: null }>((resolve) => 
+              setTimeout(() => resolve({ planType: null }), 3000)
+            )
+          ]);
+          
           const hasActiveSubscription = subscriptionLimits.planType !== null;
           
           if (!hasActiveSubscription) {

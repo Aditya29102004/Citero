@@ -90,49 +90,9 @@ export async function getUserSubscriptionLimits(userId: string): Promise<Subscri
       subscription = activeSub;
     }
 
-    // If no active subscription, check for pending subscription (payment processing)
-    if (!subscription) {
-      const { data: pendingSub, error: pendingError } = await supabase
-        .from("subscriptions")
-        .select("id, user_id, plan_type, status")
-        .eq("user_id", userId)
-        .eq("status", "pending")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (pendingError) {
-        if (pendingError.code !== 'PGRST116') {
-          console.error("Error fetching pending subscription:", pendingError);
-        }
-      } else if (pendingSub) {
-        subscription = pendingSub;
-      }
-    }
-
-    // If still no subscription found, check for any subscription regardless of status
-    // (in case status is something else like 'halted', etc.)
-    if (!subscription) {
-      const { data: anySub, error: anyError } = await supabase
-        .from("subscriptions")
-        .select("id, user_id, plan_type, status")
-        .eq("user_id", userId)
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (anyError) {
-        if (anyError.code !== 'PGRST116') {
-          console.error("Error fetching any subscription:", anyError);
-        }
-      } else if (anySub) {
-        console.log("Found subscription with non-active/pending status:", anySub.status);
-        // Only use it if status is not cancelled or expired
-        if (anySub.status !== 'cancelled' && anySub.status !== 'expired') {
-          subscription = anySub;
-        }
-      }
-    }
+    // Only active subscriptions grant access
+    // Don't check for pending/cancelled/expired subscriptions - they don't grant access
+    // If no active subscription was found above, subscription remains null
   } catch (err) {
     console.error("Unexpected error in getUserSubscriptionLimits:", err);
   }

@@ -34,12 +34,19 @@ const Profile = () => {
         }
 
         // Check subscription status FIRST - before fetching any data
+        // Use timeout to prevent hanging on pending/cancelled subscriptions
         try {
-          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+          const subscriptionLimits = await Promise.race([
+            getUserSubscriptionLimits(session.user.id),
+            new Promise<{ planType: null }>((resolve) => 
+              setTimeout(() => resolve({ planType: null }), 3000)
+            )
+          ]);
+          
           const hasActiveSubscription = subscriptionLimits.planType !== null;
           
           if (!hasActiveSubscription) {
-            // No subscription - redirect to pricing immediately
+            // No active subscription (pending/cancelled/expired) - redirect to pricing immediately
             navigate("/pricing", { replace: true });
             setLoading(false);
             return;
