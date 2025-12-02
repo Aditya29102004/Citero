@@ -41,6 +41,19 @@ export async function checkOnboardingComplete(): Promise<boolean> {
 
     console.log("Checking onboarding completion for user:", session.user.id);
 
+    // Check if user is admin - only admins skip onboarding
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin, email")
+      .eq("id", session.user.id)
+      .single();
+
+    const isAdmin = profile?.is_admin === true || profile?.email === 'admin@unifr.com';
+    if (isAdmin) {
+      console.log("User is admin, skipping onboarding check");
+      return true;
+    }
+
     // Check if user has any brands
     // Try to select onboarding_completed, but handle case where column might not exist
     const { data: brands, error } = await supabase
@@ -75,7 +88,7 @@ export async function checkOnboardingComplete(): Promise<boolean> {
 
     // If no brands exist, onboarding is not complete
     if (!brands || brands.length === 0) {
-      console.log("No brands found for user");
+      console.log("No brands found for user - onboarding not complete");
       return false;
     }
 
@@ -86,13 +99,42 @@ export async function checkOnboardingComplete(): Promise<boolean> {
     if (brand.onboarding_completed !== undefined && brand.onboarding_completed !== null) {
       const isComplete = brand.onboarding_completed === true;
       console.log("Onboarding completion status:", isComplete);
+      if (isComplete) {
+        console.log("User has completed onboarding - will not see onboarding again");
+      }
       return isComplete;
     }
 
-    // Fallback: if brands exist but onboarding_completed is not set, assume complete
-    // (for backwards compatibility with existing brands)
-    console.log("onboarding_completed not set, assuming complete (brands exist)");
-    return true;
+    // Fallback: if brands exist but onboarding_completed is not set, check if brand has onboarding data
+    // This handles backwards compatibility - if brand has topics/competitors, assume onboarding was done
+    console.log("onboarding_completed not set, checking if brand has onboarding data");
+    
+    // Check if brand has onboarding-related data (topics, competitors, etc.)
+    const { data: brandDetails } = await supabase
+      .from("brands")
+      .select("topics, competitors, industry, audience")
+      .eq("id", brand.id)
+      .single();
+    
+    // If brand has onboarding data (topics or competitors), assume onboarding was completed
+    const hasOnboardingData = brandDetails && (
+      (brandDetails.topics && Array.isArray(brandDetails.topics) && brandDetails.topics.length > 0) ||
+      (brandDetails.competitors && (Array.isArray(brandDetails.competitors) || typeof brandDetails.competitors === 'object'))
+    );
+    
+    if (hasOnboardingData) {
+      console.log("Brand has onboarding data - assuming onboarding was completed");
+      // Update onboarding_completed to true for future checks
+      await supabase
+        .from("brands")
+        .update({ onboarding_completed: true })
+        .eq("id", brand.id);
+      return true;
+    }
+    
+    // If brand exists but has no onboarding data, onboarding is not complete
+    console.log("Brand exists but has no onboarding data - onboarding not complete");
+    return false;
   } catch (error) {
     console.error("Error in checkOnboardingComplete:", error);
     return false;

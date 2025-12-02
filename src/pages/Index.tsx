@@ -168,50 +168,6 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Product Hunt, IndieWall & Startup Fame Badges */}
-      <section className="py-5 px-3 lg:px-4 bg-white relative z-[2]">
-        <div className="max-w-6xl mx-auto flex flex-wrap justify-center items-center gap-6">
-          <a 
-            href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img 
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
-              alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
-              style={{ width: '200px', height: '43px' }} 
-              width="200" 
-              height="43" 
-            />
-          </a>
-          <a 
-            href="https://theindiewall.net" 
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img 
-              src="https://theindiewall.net/indiewall.svg" 
-              alt="IndieWall" 
-              width="120" 
-              height="60" 
-            />
-          </a>
-          <a 
-            href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" 
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img 
-              src="https://startupfa.me/badges/featured/dark.webp" 
-              alt="unifr - Featured on Startup Fame" 
-              width="171" 
-              height="54" 
-            />
-          </a>
-        </div>
-      </section>
-
-
       {/* Key Features Section - Alternating Image/Text Layout */}
       <section id="features" className="py-32 px-3 lg:px-4 bg-white relative overflow-hidden z-10">
         <div className="max-w-7xl mx-auto relative z-10">
@@ -317,6 +273,60 @@ const Index = () => {
         </div>
       </section>
 
+      {/* Product Hunt, IndieWall, Startup Fame & Dofollow.Tools Badges */}
+      <section className="py-8 px-3 lg:px-4 bg-white relative z-[2]">
+        <div className="max-w-6xl mx-auto flex flex-wrap justify-center items-center gap-6">
+          <a 
+            href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
+              alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
+              style={{ width: '200px', height: '43px' }} 
+              width="200" 
+              height="43" 
+            />
+          </a>
+          <a 
+            href="https://theindiewall.net" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://theindiewall.net/indiewall.svg" 
+              alt="IndieWall" 
+              width="120" 
+              height="60" 
+            />
+          </a>
+          <a 
+            href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://startupfa.me/badges/featured/dark.webp" 
+              alt="unifr - Featured on Startup Fame" 
+              width="171" 
+              height="54" 
+            />
+          </a>
+          <a 
+            href="https://dofollow.tools" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://dofollow.tools/badge/badge_dark.svg" 
+              alt="Featured on Dofollow.Tools" 
+              width="200" 
+              height="54" 
+            />
+          </a>
+        </div>
+      </section>
 
       {/* FAQ Section */}
       <section id="faq" className="py-16 px-3 lg:px-4 bg-gray-50/30 relative overflow-hidden z-10">
