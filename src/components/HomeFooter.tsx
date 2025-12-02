@@ -107,6 +107,12 @@ export const HomeFooter = () => {
             height="54" 
           />
         </a>
+        <a href="https://auraplusplus.com/projects/ai-brand-monitoring-optimization" target="_blank" rel="noopener noreferrer">
+          <img 
+            src="https://auraplusplus.com/images/badges/featured-on-light.svg" 
+            alt="Featured on Aura++" 
+          />
+        </a>
       </div>
     </footer>
   );
