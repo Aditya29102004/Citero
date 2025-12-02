@@ -104,7 +104,7 @@ const Dashboard = () => {
         setSubscriptionVerified(true);
         setSubscriptionLimits(subscriptionLimits);
         
-        // Only check onboarding if user has a subscription
+        // EVERYONE must complete onboarding if they don't have a brand (including founders)
         let onboardingComplete = false;
         try {
           onboardingComplete = await Promise.race([
@@ -113,12 +113,14 @@ const Dashboard = () => {
           ]);
           
           if (!onboardingComplete) {
+            // No brand found - redirect to onboarding (applies to everyone)
             navigate("/onboarding/website", { replace: true });
             setLoading(false);
             return;
           }
         } catch (onboardingError) {
           console.error("Error checking onboarding:", onboardingError);
+          // On error, redirect to onboarding to ensure brand is created
           navigate("/onboarding/website", { replace: true });
           setLoading(false);
           return;
@@ -156,6 +158,18 @@ const Dashboard = () => {
           
           setSubscriptionLimits(subscriptionLimits);
           setSubscriptionVerified(true);
+          
+          // Check onboarding status - EVERYONE must have a brand
+          const onboardingComplete = await Promise.race([
+            checkOnboardingComplete(),
+            new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 3000))
+          ]);
+          
+          if (!onboardingComplete) {
+            // No brand found - redirect to onboarding (applies to everyone)
+            navigate("/onboarding/website", { replace: true });
+            return;
+          }
         } catch (error) {
           console.error("Error checking subscription on auth change:", error);
           navigate("/pricing", { replace: true });

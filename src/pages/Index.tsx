@@ -163,22 +163,43 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Product Hunt Badge */}
-      <section className="py-5 px-3 lg:px-4 bg-white relative z-[2]">
-        <div className="max-w-6xl mx-auto flex justify-center">
-          <a 
-            href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <img 
-              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
-              alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
-              style={{ width: '200px', height: '43px' }} 
-              width="200" 
-              height="43" 
-            />
-          </a>
+      {/* Featured In Section */}
+      <section className="py-8 px-3 lg:px-4 bg-white relative z-[2] border-t border-gray-200">
+        <div className="max-w-6xl mx-auto">
+          <p className="text-center text-sm font-semibold text-gray-500 uppercase tracking-wide mb-6">Featured In</p>
+          <div className="flex flex-wrap items-center justify-center gap-8">
+            {/* Product Hunt */}
+            <a 
+              href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+            >
+              <img 
+                src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
+                alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
+                width="200" 
+                height="43"
+                className="h-auto"
+              />
+            </a>
+            
+            {/* IndieWall */}
+            <a 
+              href="https://theindiewall.net" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="hover:opacity-80 transition-opacity"
+            >
+              <img 
+                src="https://theindiewall.net/indiewall.svg" 
+                alt="IndieWall" 
+                width="120" 
+                height="60"
+                className="h-auto"
+              />
+            </a>
+          </div>
         </div>
       </section>
 
