@@ -5,7 +5,7 @@ export const HomeFooter = () => {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="border-t border-gray-200 bg-white">
+    <footer className="border-t border-gray-200 bg-white relative">
       <div className="max-w-7xl mx-auto px-3 lg:px-4 py-12">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-12 mb-12">
           {/* Product Column */}
@@ -74,22 +74,28 @@ export const HomeFooter = () => {
       </div>
       
       {/* Hidden featured badges for SEO/tracking - visible to crawlers but not to users */}
-      <div style={{ 
-        position: 'absolute', 
-        left: '-9999px', 
-        width: '1px', 
-        height: '1px', 
-        overflow: 'hidden',
-        opacity: 0,
-        pointerEvents: 'none'
-      }}>
+      <div 
+        className="sr-only"
+        style={{ 
+          position: 'absolute',
+          width: '1px',
+          height: '1px',
+          padding: 0,
+          margin: '-1px',
+          overflow: 'hidden',
+          clip: 'rect(0, 0, 0, 0)',
+          whiteSpace: 'nowrap',
+          borderWidth: 0
+        }}
+        aria-hidden="true"
+      >
         <a href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" target="_blank" rel="noopener noreferrer">
           <img 
             src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
             alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
             width="200" 
             height="43" 
-            style={{ width: '200px', height: '43px' }}
+            loading="lazy"
           />
         </a>
         <a href="https://theindiewall.net" target="_blank" rel="noopener noreferrer">
@@ -98,7 +104,7 @@ export const HomeFooter = () => {
             alt="IndieWall" 
             width="120" 
             height="60" 
-            style={{ width: '120px', height: '60px' }}
+            loading="lazy"
           />
         </a>
         <a href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" target="_blank" rel="noopener noreferrer">
@@ -107,7 +113,7 @@ export const HomeFooter = () => {
             alt="unifr - Featured on Startup Fame" 
             width="171" 
             height="54" 
-            style={{ width: '171px', height: '54px' }}
+            loading="lazy"
           />
         </a>
         <a href="https://dofollow.tools" target="_blank" rel="noopener noreferrer">
@@ -116,14 +122,14 @@ export const HomeFooter = () => {
             alt="Featured on Dofollow.Tools" 
             width="200" 
             height="54" 
-            style={{ width: '200px', height: '54px' }}
+            loading="lazy"
           />
         </a>
         <a href="https://auraplusplus.com/projects/ai-brand-monitoring-optimization" target="_blank" rel="noopener noreferrer">
           <img 
             src="https://auraplusplus.com/images/badges/featured-on-light.svg" 
             alt="Featured on Aura++" 
-            style={{ width: 'auto', height: 'auto' }}
+            loading="lazy"
           />
         </a>
       </div>

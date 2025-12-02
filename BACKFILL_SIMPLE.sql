@@ -1,5 +1,5 @@
 -- SIMPLE BACKFILL: If BACKFILL_3_SCANS.sql fails, use this simpler version
--- This creates basic entries even if scan_responses table is empty
+-- This creates basic entries even if scan_responses table is emptyy
 
 WITH scan_numbers AS (
   SELECT 
