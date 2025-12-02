@@ -139,11 +139,10 @@ export const HomeFooter = () => {
               width="120" 
             />
           </a>
-          <a href="https://starterbest.com" target="_blank" rel="noopener noreferrer">
+          <a href="https://similarlabs.com/?ref=embed" target="_blank" rel="noopener noreferrer" style={{ cursor: 'pointer' }}>
             <img 
-              src="https://starterbest.com/badages-awards.svg" 
-              alt="Featured on Starter Best" 
-              style={{ height: '54px', width: 'auto' }}
+              src="https://similarlabs.com/similarlabs-embed-badge-light.svg" 
+              alt="SimilarLabs Embed Badge" 
             />
           </a>
         </div>
