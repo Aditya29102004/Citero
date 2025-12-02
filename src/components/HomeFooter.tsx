@@ -73,65 +73,66 @@ export const HomeFooter = () => {
         </div>
       </div>
       
-      {/* Hidden featured badges for SEO/tracking - visible to crawlers but not to users */}
+      {/* Hidden featured badges for SEO/tracking - positioned off-screen but still rendered for verification */}
       <div 
-        className="sr-only"
         style={{ 
           position: 'absolute',
+          top: 0,
+          left: '-9999px',
           width: '1px',
           height: '1px',
-          padding: 0,
-          margin: '-1px',
-          overflow: 'hidden',
-          clip: 'rect(0, 0, 0, 0)',
-          whiteSpace: 'nowrap',
-          borderWidth: 0
+          overflow: 'visible',
+          zIndex: -1
         }}
-        aria-hidden="true"
       >
-        <a href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" target="_blank" rel="noopener noreferrer">
-          <img 
-            src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
-            alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
-            width="200" 
-            height="43" 
-            loading="lazy"
-          />
-        </a>
-        <a href="https://theindiewall.net" target="_blank" rel="noopener noreferrer">
-          <img 
-            src="https://theindiewall.net/indiewall.svg" 
-            alt="IndieWall" 
-            width="120" 
-            height="60" 
-            loading="lazy"
-          />
-        </a>
-        <a href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" target="_blank" rel="noopener noreferrer">
-          <img 
-            src="https://startupfa.me/badges/featured/dark.webp" 
-            alt="unifr - Featured on Startup Fame" 
-            width="171" 
-            height="54" 
-            loading="lazy"
-          />
-        </a>
-        <a href="https://dofollow.tools" target="_blank" rel="noopener noreferrer">
-          <img 
-            src="https://dofollow.tools/badge/badge_dark.svg" 
-            alt="Featured on Dofollow.Tools" 
-            width="200" 
-            height="54" 
-            loading="lazy"
-          />
-        </a>
-        <a href="https://auraplusplus.com/projects/ai-brand-monitoring-optimization" target="_blank" rel="noopener noreferrer">
-          <img 
-            src="https://auraplusplus.com/images/badges/featured-on-light.svg" 
-            alt="Featured on Aura++" 
-            loading="lazy"
-          />
-        </a>
+        <div style={{ position: 'relative', width: '200px', height: '60px' }}>
+          <a href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
+              alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
+              width="200" 
+              height="43" 
+            />
+          </a>
+          <a href="https://theindiewall.net" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://theindiewall.net/indiewall.svg" 
+              alt="IndieWall" 
+              width="120" 
+              height="60" 
+            />
+          </a>
+          <a href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://startupfa.me/badges/featured/dark.webp" 
+              alt="unifr - Featured on Startup Fame" 
+              width="171" 
+              height="54" 
+            />
+          </a>
+          <a href="https://dofollow.tools" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://dofollow.tools/badge/badge_dark.svg" 
+              alt="Featured on Dofollow.Tools" 
+              width="200" 
+              height="54" 
+            />
+          </a>
+          <a href="https://auraplusplus.com/projects/ai-brand-monitoring-optimization" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://auraplusplus.com/images/badges/featured-on-light.svg" 
+              alt="Featured on Aura++" 
+            />
+          </a>
+          <a href="https://launchigniter.com/product/unifr?ref=badge-unifr" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://launchigniter.com/api/badge/unifr?theme=neutral" 
+              alt="Featured on LaunchIgniter" 
+              width="212" 
+              height="55" 
+            />
+          </a>
+        </div>
       </div>
     </footer>
   );

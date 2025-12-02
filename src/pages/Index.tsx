@@ -273,7 +273,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Product Hunt, IndieWall, Startup Fame, Dofollow.Tools & Aura++ Badges */}
+      {/* Product Hunt, IndieWall, Startup Fame, Dofollow.Tools, Aura++ & LaunchIgniter Badges */}
       <section className="py-8 px-3 lg:px-4 bg-white relative z-[2]">
         <div className="max-w-6xl mx-auto flex flex-wrap justify-center items-center gap-6">
           <a 
@@ -333,6 +333,18 @@ const Index = () => {
             <img 
               src="https://auraplusplus.com/images/badges/featured-on-light.svg" 
               alt="Featured on Aura++" 
+            />
+          </a>
+          <a 
+            href="https://launchigniter.com/product/unifr?ref=badge-unifr" 
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <img 
+              src="https://launchigniter.com/api/badge/unifr?theme=neutral" 
+              alt="Featured on LaunchIgniter" 
+              width="212" 
+              height="55" 
             />
           </a>
         </div>
