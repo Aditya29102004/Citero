@@ -16,7 +16,7 @@ declare global {
 const PLAN_CONFIGS: Record<string, { name: string; price: number; description: string; planKey: string }> = {
   basic_normal: {
     name: "Basic Plan",
-    price: 7999,
+    price: 8900,
     description: "50 AI prompt scans/month, 3 competitor comparisons, 5 top source insights",
     planKey: "basic_normal",
   },
@@ -28,7 +28,7 @@ const PLAN_CONFIGS: Record<string, { name: string; price: number; description: s
   },
   basic_founder: {
     name: "Basic Plan (Founder Circle)",
-    price: 2999,
+    price: 4400,
     description: "50 AI prompt scans/month, 3 competitor comparisons, 5 top source insights - Founder Circle pricing",
     planKey: "basic_founder",
   },

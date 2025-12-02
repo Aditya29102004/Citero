@@ -82,8 +82,8 @@ const Index = () => {
           "url": "https://unifr.ai",
           "offers": {
             "@type": "Offer",
-            "price": "99",
-            "priceCurrency": "USD",
+            "price": "8900",
+            "priceCurrency": "INR",
             "priceValidUntil": "2025-12-31"
           },
           "aggregateRating": {
@@ -380,7 +380,7 @@ const Index = () => {
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Basic</h3>
               <p className="text-sm text-gray-500 mb-6">Perfect for getting started</p>
               <div className="mb-8">
-                <span className="text-5xl font-bold text-gray-900">$99</span>
+                <span className="text-5xl font-bold text-gray-900">₹8,900</span>
                 <span className="text-gray-600 text-xl">/mo</span>
               </div>
               <ul className="space-y-4 mb-8">
@@ -475,7 +475,7 @@ const Index = () => {
                 <div className="bg-white/10 rounded-xl p-6 mb-6 border border-white/20">
                   <p className="text-sm text-gray-300 mb-3">Basic Plan</p>
                   <div className="flex items-baseline gap-2 mb-4">
-                    <p className="text-4xl font-bold text-white">$49</p>
+                    <p className="text-4xl font-bold text-white">₹4,400</p>
                     <p className="text-lg text-gray-300">/mo</p>
                   </div>
                   <p className="text-xs text-gray-400 mb-4">Founder Circle pricing - Limited time offer</p>

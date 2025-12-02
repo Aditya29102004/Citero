@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { TrendingUp, Linkedin, Twitter } from "lucide-react";
+import { TrendingUp, Linkedin } from "lucide-react";
 
 export const HomeFooter = () => {
   const currentYear = new Date().getFullYear();
@@ -61,13 +61,9 @@ export const HomeFooter = () => {
               <span className="text-sm font-semibold text-gray-900">unifr</span>
             </div>
             <div className="flex items-center gap-4">
-              <a href="https://linkedin.com/company/unifr" target="_blank" rel="noopener noreferrer" 
+              <a href="https://www.linkedin.com/company/unifr" target="_blank" rel="noopener noreferrer" 
                  className="text-gray-400 hover:text-gray-600 transition-colors hover:scale-110 transform duration-200">
                 <Linkedin className="h-5 w-5" />
-              </a>
-              <a href="https://twitter.com/unifr" target="_blank" rel="noopener noreferrer" 
-                 className="text-gray-400 hover:text-gray-600 transition-colors hover:scale-110 transform duration-200">
-                <Twitter className="h-5 w-5" />
               </a>
             </div>
           </div>
