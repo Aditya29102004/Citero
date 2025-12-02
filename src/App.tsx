@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { Analytics } from "@vercel/analytics/react";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -13,6 +14,7 @@ import Compare from "./pages/Compare";
 import AdminWaitlist from "./pages/AdminWaitlist";
 import FoundersNoteAdmin from "./pages/admin/FoundersNote";
 import UserManagement from "./pages/admin/UserManagement";
+import PublishBlog from "./pages/admin/PublishBlog";
 import FoundersNoteView from "./pages/FoundersNote";
 import NotFound from "./pages/NotFound";
 import Terms from "./pages/Terms";
@@ -46,12 +48,13 @@ import CompleteOnboarding from "./pages/onboarding/Complete";
 const queryClient = new QueryClient();
 
 const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <Routes>
+  <ErrorBoundary>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/blog" element={<BlogPublic />} />
           <Route path="/auth" element={<Auth />} />
@@ -71,6 +74,7 @@ const App = () => (
           <Route path="/admin/waitlist" element={<AdminWaitlist />} />
           <Route path="/admin/founders-note" element={<FoundersNoteAdmin />} />
           <Route path="/admin/users" element={<UserManagement />} />
+          <Route path="/admin/publish-blog" element={<PublishBlog />} />
           <Route path="/founders-note" element={<FoundersNoteView />} />
           <Route path="/founders-note/:brandId" element={<FoundersNoteView />} />
           <Route path="/brand/:brandId" element={<BrandDashboard />} />
@@ -93,11 +97,12 @@ const App = () => (
           <Route path="/onboarding/complete" element={<CompleteOnboarding />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-        </Routes>
-      </BrowserRouter>
-      <Analytics />
-    </TooltipProvider>
-  </QueryClientProvider>
+          </Routes>
+        </BrowserRouter>
+        <Analytics />
+      </TooltipProvider>
+    </QueryClientProvider>
+  </ErrorBoundary>
 );
 
 export default App;
