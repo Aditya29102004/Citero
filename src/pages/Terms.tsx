@@ -60,8 +60,8 @@ const Terms = () => {
                 unifr offers subscription plans with different features and usage limits:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
-                <li><strong>Normal Plans:</strong> Basic (₹7,999/month), Pro (₹14,999/month)</li>
-                <li><strong>Founder Circle Plans:</strong> Basic Founder (₹2,999/month), Pro Founder (₹6,999/month) - Limited to first 10 subscribers</li>
+                <li><strong>Normal Plans:</strong> Basic ($99/month), Pro (Custom pricing)</li>
+                <li><strong>Founder Circle Plans:</strong> Basic Founder ($49/month), Pro Founder (Custom pricing) - Limited to first 10 subscribers</li>
                 <li>All plans are billed monthly and automatically renew unless cancelled</li>
                 <li>Payments are processed securely through Razorpay, our payment gateway partner</li>
                 <li>By subscribing, you agree to pay all fees associated with your selected plan</li>

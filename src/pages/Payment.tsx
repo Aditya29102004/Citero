@@ -345,7 +345,11 @@ const Payment = () => {
             <div className="pt-4 border-t">
               <div className="flex justify-between items-center">
                 <span className="text-lg font-medium">Monthly Amount</span>
-                <span className="text-2xl font-bold">₹{planConfig.price.toLocaleString('en-IN')}</span>
+                <span className="text-2xl font-bold">
+                  {planConfig.planKey === 'basic_normal' ? '$99' : 
+                   planConfig.planKey === 'basic_founder' ? '$49' : 
+                   `$${planConfig.price.toLocaleString('en-US')}`}
+                </span>
               </div>
               <p className="text-xs text-gray-500 mt-1">Billed monthly, cancel anytime</p>
               {planConfig.planKey.includes("founder") && (

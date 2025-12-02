@@ -1,9 +1,10 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { TrendingUp, Menu, X, User } from "lucide-react";
+import { TrendingUp, Menu, X, User, LogOut } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { getUserSubscriptionLimits } from "@/lib/subscriptionLimits";
+import { toast } from "sonner";
 
 export const HomeHeader = () => {
   const navigate = useNavigate();
@@ -63,6 +64,17 @@ export const HomeHeader = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error("Error signing out");
+    } else {
+      toast.success("Signed out successfully");
+      navigate("/");
+      window.location.reload(); // Reload to clear all state
+    }
+  };
+
   return (
     <header className={`fixed top-0 w-full bg-white/80 backdrop-blur-md z-50 transition-all duration-300 ${isScrolled ? 'border-b border-gray-200' : ''}`} 
             style={{ boxShadow: isScrolled ? '0 1px 3px 0 rgba(0, 0, 0, 0.05)' : 'none' }}>
@@ -86,9 +98,12 @@ export const HomeHeader = () => {
             <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               Features
             </a>
-            <a href="/pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <button
+              onClick={() => navigate("/pricing")}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+            >
               Pricing
-            </a>
+            </button>
             <button
               onClick={() => navigate("/blog")}
               className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
@@ -123,6 +138,14 @@ export const HomeHeader = () => {
                     </Button>
                   </>
                 )}
+                <Button 
+                  variant="ghost"
+                  onClick={handleLogout}
+                  className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
               </>
             ) : (
               <Button 
@@ -151,9 +174,15 @@ export const HomeHeader = () => {
               <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 Features
               </a>
-              <a href="/pricing" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+              <button
+                onClick={() => {
+                  navigate("/pricing");
+                  setMobileMenuOpen(false);
+                }}
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left"
+              >
                 Pricing
-              </a>
+              </button>
               <button
                 onClick={() => {
                   navigate("/blog");
@@ -173,14 +202,20 @@ export const HomeHeader = () => {
                       <>
                         <Button 
                           variant="ghost"
-                          onClick={() => navigate("/dashboard")}
+                          onClick={() => {
+                            navigate("/dashboard");
+                            setMobileMenuOpen(false);
+                          }}
                           className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                         >
                           Dashboard
                         </Button>
                         <Button 
                           variant="ghost"
-                          onClick={() => navigate("/profile")}
+                          onClick={() => {
+                            navigate("/profile");
+                            setMobileMenuOpen(false);
+                          }}
                           className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                         >
                           <User className="h-4 w-4 mr-2" />
@@ -188,11 +223,25 @@ export const HomeHeader = () => {
                         </Button>
                       </>
                     )}
+                    <Button 
+                      variant="ghost"
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                      className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </Button>
                   </>
                 ) : (
                   <Button 
                     variant="ghost"
-                    onClick={() => navigate("/auth")}
+                    onClick={() => {
+                      navigate("/auth");
+                      setMobileMenuOpen(false);
+                    }}
                     className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
                   >
                     Login

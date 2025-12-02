@@ -129,7 +129,7 @@ const Refund = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">7. Founder Circle Offer</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                Founder Circle plans (Basic Founder: ₹2,999/month, Pro Founder: ₹6,999/month) are offered at a significant discount 
+                Founder Circle plans (Basic Founder: $49/month, Pro Founder: Custom pricing) are offered at a significant discount 
                 and are limited to the first 10 subscribers.
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">

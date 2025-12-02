@@ -13,7 +13,7 @@ export const HomeFooter = () => {
             <h3 className="text-sm font-semibold text-gray-900 mb-4 tracking-tight">Product</h3>
             <ul className="space-y-3 text-sm text-gray-600">
               <li><a href="#features" className="hover:text-gray-900 transition-colors">Dashboard</a></li>
-              <li><a href="/pricing" className="hover:text-gray-900 transition-colors">Pricing</a></li>
+              <li><Link to="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link></li>
             </ul>
           </div>
 
