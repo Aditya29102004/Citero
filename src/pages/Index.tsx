@@ -620,15 +620,15 @@ const Index = () => {
                 </li>
                 <li className="flex items-start gap-3 text-sm text-gray-700">
                   <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>3 competitor comparisons</span>
+                  <span>10 competitor comparisons</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-gray-700">
                   <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>5 top source insights</span>
+                  <span>Top source insights</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-gray-700">
                   <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>1 email report / week</span>
+                  <span>5 blog per month</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-gray-700">
                   <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
@@ -671,7 +671,7 @@ const Index = () => {
                 </li>
                 <li className="flex items-start gap-3 text-sm text-white">
                   <CheckCircle2 className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
-                  <span>10 competitor benchmarks</span>
+                  <span>20+ competitor benchmarks</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-white">
                   <CheckCircle2 className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
