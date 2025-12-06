@@ -199,17 +199,34 @@ const Payment = () => {
             setPaymentStatus("success");
             toast.success("Subscription activated! Your subscription is now active.");
             
-            // Redirect to onboarding after 3 seconds (since they just purchased)
-            setTimeout(() => {
-              navigate("/onboarding/website");
-            }, 3000);
+            // Check if user has completed onboarding, then redirect appropriately
+            setTimeout(async () => {
+              const { checkOnboardingComplete } = await import("@/lib/onboardingState");
+              const onboardingComplete = await checkOnboardingComplete();
+              
+              if (onboardingComplete) {
+                // User already completed onboarding - go to dashboard
+                navigate("/dashboard", { replace: true });
+              } else {
+                // User hasn't completed onboarding - go to onboarding
+                navigate("/onboarding/website", { replace: true });
+              }
+            }, 2000);
           } catch (err: any) {
             console.error("Subscription success handler error:", err);
             // Still show success since Razorpay subscription is created
             setPaymentStatus("success");
-            toast.success("Subscription created! Redirecting to dashboard...");
-            setTimeout(() => {
-              navigate("/dashboard");
+            toast.success("Subscription created! Redirecting...");
+            // Check onboarding status before redirecting
+            setTimeout(async () => {
+              const { checkOnboardingComplete } = await import("@/lib/onboardingState");
+              const onboardingComplete = await checkOnboardingComplete();
+              
+              if (onboardingComplete) {
+                navigate("/dashboard", { replace: true });
+              } else {
+                navigate("/onboarding/website", { replace: true });
+              }
             }, 2000);
           }
         },
@@ -354,7 +371,7 @@ const Payment = () => {
               <p className="text-xs text-gray-500 mt-1">Billed monthly, cancel anytime</p>
               {planConfig.planKey.includes("founder") && (
                 <p className="text-xs text-amber-600 mt-2 font-medium">
-                  ⭐ Founder Circle - Limited to first 10 subscribers
+                  ⭐ Founder Circle - Limited time offer
                 </p>
               )}
             </div>
@@ -411,6 +428,9 @@ const Payment = () => {
             Your subscription will auto-renew monthly unless cancelled. Payments are processed securely through Razorpay.
             <br />
             <a href="/refund" className="underline hover:text-gray-700" target="_blank" rel="noopener noreferrer">30-day money-back guarantee</a> applies to new subscriptions.
+            <br />
+            <span className="text-gray-600 font-medium">Need help?</span> Contact us at{" "}
+            <a href="mailto:hertofhelp@gmail.com" className="underline hover:text-gray-700 font-medium">hertofhelp@gmail.com</a>
           </p>
         </CardContent>
       </Card>

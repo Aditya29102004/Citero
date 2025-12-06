@@ -78,34 +78,60 @@ const Index = () => {
         description="Multiply your traffic from AI agents. Track how ChatGPT, Gemini, Claude, and Perplexity describe your brand. Get AI visibility insights, competitor analysis, and actionable recommendations to turn AI mentions into traffic and customers."
         keywords="AI visibility tracking, GEO tracking, Generative Engine Optimization, AI search optimization, brand tracking, ChatGPT visibility, Gemini tracking, Claude tracking, Perplexity tracking, AI mentions, AI brand monitoring"
         canonical="https://unifr.ai"
-        structuredData={{
-          "@context": "https://schema.org",
-          "@type": "SoftwareApplication",
-          "name": "unifr",
-          "applicationCategory": "BusinessApplication",
-          "description": "Track and optimize your brand's AI visibility across ChatGPT, Gemini, Claude, and Perplexity. Get actionable insights to turn AI mentions into traffic and customers.",
-          "url": "https://unifr.ai",
-          "offers": {
-            "@type": "Offer",
-            "price": "99",
-            "priceCurrency": "USD",
-            "priceValidUntil": "2025-12-31"
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "SoftwareApplication",
+            "name": "unifr",
+            "applicationCategory": "BusinessApplication",
+            "description": "Track and optimize your brand's AI visibility across ChatGPT, Gemini, Claude, and Perplexity. Get actionable insights to turn AI mentions into traffic and customers.",
+            "url": "https://unifr.ai",
+            "offers": {
+              "@type": "Offer",
+              "price": "99",
+              "priceCurrency": "USD",
+              "priceValidUntil": "2025-12-31"
+            },
+            "aggregateRating": {
+              "@type": "AggregateRating",
+              "ratingValue": "4.8",
+              "reviewCount": "127"
+            },
+            "featureList": [
+              "AI visibility tracking",
+              "GEO scanning",
+              "Competitor analysis",
+              "Sentiment analysis",
+              "Source citation tracking",
+              "Weekly reports",
+              "Blog recommendations"
+            ]
           },
-          "aggregateRating": {
-            "@type": "AggregateRating",
-            "ratingValue": "4.8",
-            "reviewCount": "127"
+          {
+            "@context": "https://schema.org",
+            "@type": "FAQPage",
+            "mainEntity": faqs.map(faq => ({
+              "@type": "Question",
+              "name": faq.question,
+              "acceptedAnswer": {
+                "@type": "Answer",
+                "text": faq.answer
+              }
+            }))
           },
-          "featureList": [
-            "AI visibility tracking",
-            "GEO scanning",
-            "Competitor analysis",
-            "Sentiment analysis",
-            "Source citation tracking",
-            "Weekly reports",
-            "Blog recommendations"
-          ]
-        }}
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            "name": "unifr",
+            "url": "https://unifr.ai",
+            "description": "Track how ChatGPT, Perplexity, and Gemini describe your brand — and shows you how to increase your AI-driven traffic and visibility.",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://unifr.ai/search?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          }
+        ]}
       />
       <ParticleBackground particleCount={typeof window !== 'undefined' && window.innerWidth < 768 ? 20 : 40} />
       <HomeHeader />
@@ -144,9 +170,9 @@ const Index = () => {
                 Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
-              </div>
             </div>
-            
+          </div>
+
             {/* Right Side - Dashboard Screenshot - Larger */}
             <div className="lg:col-span-3 relative lg:order-2">
               <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-200/80 bg-white p-2">
@@ -541,11 +567,19 @@ const Index = () => {
             {/* Right side - Text and CTA */}
             <div className="flex flex-col justify-center lg:text-left text-center relative z-20 order-1 lg:order-2">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 md:mb-4 tracking-tight leading-tight">
-                See how AI agents perceive your brand
+                Unifr tracks how AI describe your brand — and shows you how to increase your AI-driven traffic and visibility.
               </h2>
-              <p className="text-base md:text-lg text-gray-600 md:text-gray-700 mb-4 md:mb-6 leading-relaxed">
-                Turn insights into visibility and turn mentions into customers.
-              </p>
+              <div className="text-base md:text-lg text-gray-600 md:text-gray-700 mb-4 md:mb-6 leading-relaxed space-y-3">
+                <p>
+                  AI models increasingly decide which products users trust and discover. If AI is describing you incorrectly, or not mentioning you at all, you're losing traffic, leads, and credibility.
+                </p>
+                <p>
+                  AI answers change constantly. Asking ChatGPT manually doesn't show hidden citations, competitor visibility, long-term trends, sentiment analysis, or which websites influence AI models.
+                </p>
+                <p className="font-medium text-gray-900">
+                  Unifr automates all of this.
+                </p>
+              </div>
               <div className="flex flex-col sm:flex-row gap-3 lg:justify-start justify-center">
                 <Button 
                   onClick={() => navigate("/auth")}

@@ -37,6 +37,7 @@ import Prompts from "./pages/Prompts";
 import Team from "./pages/Team";
 import Settings from "./pages/Settings";
 import KnowledgeBase from "./pages/KnowledgeBase";
+import Leads from "./pages/Leads";
 import WebsiteOnboarding from "./pages/onboarding/Website";
 import DescriptionOnboarding from "./pages/onboarding/Description";
 import TopicsOnboarding from "./pages/onboarding/Topics";
@@ -69,6 +70,7 @@ const App = () => (
           <Route path="/team" element={<Team />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/knowledge-base" element={<KnowledgeBase />} />
+          <Route path="/leads" element={<Leads />} />
           <Route path="/admin/waitlist" element={<AdminWaitlist />} />
           <Route path="/admin/founders-note" element={<FoundersNoteAdmin />} />
           <Route path="/admin/users" element={<UserManagement />} />

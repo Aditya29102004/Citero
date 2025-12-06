@@ -7,7 +7,6 @@ import { Card } from "@/components/ui/card";
 import { OnboardingStepper } from "@/components/OnboardingStepper";
 import { supabase } from "@/integrations/supabase/client";
 import { saveOnboardingData } from "@/lib/onboardingState";
-import { getUserSubscriptionLimits } from "@/lib/subscriptionLimits";
 import { toast } from "sonner";
 import { Loader2, Globe } from "lucide-react";
 
@@ -24,45 +23,66 @@ export default function WebsiteOnboarding() {
   const navigate = useNavigate();
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [loading, setLoading] = useState(false);
-  const [checkingPayment, setCheckingPayment] = useState(true);
 
   useEffect(() => {
-    const checkPayment = async () => {
-      try {
-        const { data: { session } } = await supabase.auth.getSession();
-        if (!session) {
-          navigate("/auth");
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
+      // Check if user already has a brand (onboarding already completed)
+      const { data: existingBrands } = await supabase
+        .from("brands")
+        .select("id, onboarding_completed")
+        .eq("user_id", session.user.id)
+        .order("created_at", { ascending: false })
+        .limit(1);
+
+      if (existingBrands && existingBrands.length > 0) {
+        const brand = existingBrands[0];
+        // Check if onboarding is completed
+        if (brand.onboarding_completed === true) {
+          toast.info("You've already completed onboarding");
+          // Check subscription status to redirect appropriately
+          const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
+          const limits = await getUserSubscriptionLimits(session.user.id);
+          if (limits.planType !== null) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/pricing", { replace: true });
+          }
           return;
         }
+        // If brand exists but onboarding not marked complete, check if it has onboarding data
+        const { data: brandDetails } = await supabase
+          .from("brands")
+          .select("topics, competitors, onboarding_completed")
+          .eq("id", brand.id)
+          .single();
+        
+        const hasOnboardingData = brandDetails && (
+          (brandDetails.topics && Array.isArray(brandDetails.topics) && brandDetails.topics.length > 0) ||
+          (brandDetails.competitors && (Array.isArray(brandDetails.competitors) || typeof brandDetails.competitors === 'object'))
+        );
 
-        const limits = await getUserSubscriptionLimits(session.user.id);
-        if (!limits.planType) {
-          toast.error("Please subscribe to access onboarding");
-          navigate("/payment");
+        if (hasOnboardingData || brandDetails?.onboarding_completed === true) {
+          toast.info("You've already completed onboarding");
+          const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
+          const limits = await getUserSubscriptionLimits(session.user.id);
+          if (limits.planType !== null) {
+            navigate("/dashboard", { replace: true });
+          } else {
+            navigate("/pricing", { replace: true });
+          }
           return;
         }
-
-        setCheckingPayment(false);
-      } catch (error) {
-        console.error("Error checking payment:", error);
-        toast.error("Failed to verify subscription");
-        navigate("/payment");
       }
     };
 
-    checkPayment();
+    checkAuth();
   }, [navigate]);
-
-  if (checkingPayment) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-gray-600" />
-          <p className="text-gray-600">Verifying subscription...</p>
-        </div>
-      </div>
-    );
-  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

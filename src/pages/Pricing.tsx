@@ -189,6 +189,14 @@ const Pricing = () => {
               </div>
             </div>
           </div>
+
+          {/* Support Contact */}
+          <div className="max-w-4xl mx-auto mt-8 text-center">
+            <p className="text-sm text-gray-600">
+              <span className="font-medium">Need help?</span> Contact us at{" "}
+              <a href="mailto:hertofhelp@gmail.com" className="underline hover:text-gray-900 font-medium">hertofhelp@gmail.com</a>
+            </p>
+          </div>
         </div>
       </section>
       </div>

@@ -29,8 +29,34 @@ const Auth = () => {
         navigate(redirectTo);
         return;
       }
-      // Otherwise, go to pricing page
-      navigate("/pricing");
+
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/pricing");
+        return;
+      }
+
+      // Check if user has completed onboarding
+      const { checkOnboardingComplete } = await import("@/lib/onboardingState");
+      const onboardingComplete = await checkOnboardingComplete();
+
+      if (!onboardingComplete) {
+        // User hasn't completed onboarding - redirect to onboarding
+        navigate("/onboarding/website", { replace: true });
+        return;
+      }
+
+      // User has completed onboarding - check subscription status
+      const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
+      const limits = await getUserSubscriptionLimits(session.user.id);
+      
+      if (limits.planType !== null) {
+        // User has subscription - go to dashboard
+        navigate("/dashboard", { replace: true });
+      } else {
+        // User has no subscription - go to pricing
+        navigate("/pricing", { replace: true });
+      }
     };
 
     const checkAuth = async () => {
@@ -128,6 +154,9 @@ const Auth = () => {
           }
           
           toast.success("Account created successfully!");
+          
+          // Redirect new user to onboarding
+          navigate("/onboarding/website", { replace: true });
         }
       }
     } catch (error: any) {
@@ -143,7 +172,8 @@ const Auth = () => {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${window.location.origin}/auth?redirect=/pricing`,
+          // Redirect to auth page, which will check onboarding and redirect appropriately
+          redirectTo: `${window.location.origin}/auth`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

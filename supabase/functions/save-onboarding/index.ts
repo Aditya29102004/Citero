@@ -42,6 +42,48 @@ serve(async (req) => {
       throw new Error("websiteUrl and summary are required");
     }
 
+    // Check if user already has a brand (prevent duplicate onboarding)
+    const { data: existingBrands } = await supabaseClient
+      .from("brands")
+      .select("id, onboarding_completed, topics, competitors")
+      .eq("user_id", user.id)
+      .order("created_at", { ascending: false })
+      .limit(1);
+
+    if (existingBrands && existingBrands.length > 0) {
+      const existingBrand = existingBrands[0];
+      
+      // Check if onboarding is already completed
+      if (existingBrand.onboarding_completed === true) {
+        return new Response(
+          JSON.stringify({ 
+            error: "You have already completed onboarding. Each email can only complete onboarding once." 
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          }
+        );
+      }
+
+      // Check if brand has onboarding data (topics or competitors)
+      const hasOnboardingData = 
+        (existingBrand.topics && Array.isArray(existingBrand.topics) && existingBrand.topics.length > 0) ||
+        (existingBrand.competitors && (Array.isArray(existingBrand.competitors) || typeof existingBrand.competitors === 'object'));
+
+      if (hasOnboardingData) {
+        return new Response(
+          JSON.stringify({ 
+            error: "You have already completed onboarding. Each email can only complete onboarding once." 
+          }),
+          {
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+            status: 400,
+          }
+        );
+      }
+    }
+
     // Extract brand name from URL or summary
     const brandName = websiteUrl
       .replace(/^https?:\/\//, "")

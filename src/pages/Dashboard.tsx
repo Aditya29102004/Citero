@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
@@ -51,6 +51,7 @@ const Dashboard = () => {
   const [runningScan, setRunningScan] = useState(false);
   const [currentScan, setCurrentScan] = useState<any>(null);
   const [scanPollingInterval, setScanPollingInterval] = useState<NodeJS.Timeout | null>(null);
+  const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
   const [aiProvider, setAiProvider] = useState<'openai' | 'gemini' | 'deepseek' | 'openrouter'>('openai');
   const [subscriptionLimits, setSubscriptionLimits] = useState<SubscriptionLimits | null>(null);
   const [scanUsage, setScanUsage] = useState<number>(0);
@@ -1835,7 +1836,7 @@ const Dashboard = () => {
                 </Card>
               </div>
 
-              {/* Things To Do - Actionable Recommendations - Clean Professional Style */}
+              {/* Things To Do - Stacked Expandable Cards */}
               {(() => {
                 // Parse actionable_recommendations - can be array or object
                 let actionItems: any[] = [];
@@ -1849,116 +1850,119 @@ const Dashboard = () => {
                   }
                 }
                 
+                // Sort by priority: Urgent first, then High, then others
+                const priorityOrder: Record<string, number> = { 'Urgent': 0, 'High': 1, 'Moderate': 2, 'Low': 3 };
+                const sortedItems = [...actionItems].sort((a, b) => {
+                  const aPriority = priorityOrder[a.priority] ?? 99;
+                  const bPriority = priorityOrder[b.priority] ?? 99;
+                  return aPriority - bPriority;
+                });
+                
+                const toggleItem = (index: number) => {
+                  setExpandedItems(prev => {
+                    const newSet = new Set(prev);
+                    if (newSet.has(index)) {
+                      newSet.delete(index);
+                    } else {
+                      newSet.add(index);
+                    }
+                    return newSet;
+                  });
+                };
+                
                 // Always show the section, even if empty
                 return (
-                  <Card className="border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 mb-10 overflow-hidden">
+                  <div className="mb-10">
                     {/* Header */}
-                    <div className="px-6 py-5 border-b border-gray-100 bg-gradient-to-r from-gray-50/50 to-white">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="text-xl font-bold text-gray-900 mb-1 tracking-tight">
-                            Boost Product Visibility
-                          </h3>
-                          <p className="text-sm text-gray-600 font-medium">
-                            Clear, prioritized steps to turn mentions into customers
-                          </p>
-                        </div>
-                        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-gray-200 shadow-sm text-gray-700 text-sm font-semibold">
-                          <span>{actionItems.length} items</span>
-                        </div>
-                      </div>
+                    <div className="mb-4">
+                      <h3 className="text-lg font-bold text-gray-900 mb-1 tracking-tight">
+                        Boost Product Visibility
+                      </h3>
+                      <p className="text-sm text-gray-600">
+                        Clear, prioritized steps to turn mentions into customers
+                      </p>
                     </div>
 
-                    {/* Table-like Structure */}
-                    <div className="divide-y divide-gray-200">
-                      {actionItems.length > 0 ? actionItems.slice(0, 5).map((rec: any, index: number) => {
-                        const actionText = rec.action || rec.title || '';
-                        const priority = rec.priority || 'Moderate';
-                        const focusArea = rec.focus_area || rec.category || 'General';
-                        
-                        // Priority styling - minimal, professional
-                        const getPriorityStyle = (p: string) => {
-                          if (p === 'Urgent') {
-                            return {
-                              indicator: 'bg-gray-900',
-                              badge: 'bg-gray-100 text-gray-700 border-gray-200',
-                            };
-                          } else if (p === 'High') {
-                            return {
-                              indicator: 'bg-gray-700',
-                              badge: 'bg-gray-50 text-gray-600 border-gray-200',
-                            };
-                          } else {
-                            return {
-                              indicator: 'bg-gray-400',
-                              badge: 'bg-gray-50 text-gray-600 border-gray-200',
-                            };
-                          }
-                        };
-                        
-                        const style = getPriorityStyle(priority);
-                        
-                        return (
-                          <div
-                            key={index}
-                            className="group px-6 py-5 hover:bg-gradient-to-r hover:from-gray-50/50 hover:to-white transition-all duration-200 border-l-2 border-transparent hover:border-primary/30"
-                          >
-                            <div className="flex items-start gap-4">
-                              {/* Number Indicator */}
-                              <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-gradient-to-br from-gray-100 to-gray-50 border border-gray-200 flex items-center justify-center shadow-sm group-hover:shadow-md transition-shadow">
-                                <span className="text-sm font-bold text-gray-700">{index + 1}</span>
-                              </div>
-                              
-                              {/* Content */}
-                              <div className="flex-1 min-w-0">
-                                <p className="text-base text-gray-900 font-semibold mb-3 leading-snug group-hover:text-gray-950 transition-colors">
-                                  {actionText}
-                                </p>
-                                
-                                {/* Tags */}
-                                <div className="flex flex-wrap items-center gap-2">
-                                  <span className={`px-3 py-1 rounded-lg text-xs font-semibold border shadow-sm ${style.badge}`}>
-                                    {priority}
-                                  </span>
-                                  <span className="px-3 py-1 rounded-lg text-xs text-gray-600 bg-gray-50 border border-gray-200 shadow-sm font-medium">
-                                    {focusArea}
-                                  </span>
+                    {/* Stacked Cards */}
+                    {sortedItems.length > 0 ? (
+                      <div className="space-y-3">
+                        {sortedItems.map((rec: any, index: number) => {
+                          const actionText = rec.action || rec.title || '';
+                          const priority = rec.priority || 'Moderate';
+                          const focusArea = rec.focus_area || rec.category || 'General';
+                          const isUrgent = priority === 'Urgent';
+                          const isExpanded = expandedItems.has(index);
+                          const hasDetails = rec.details || rec.description || rec.reason;
+                          
+                          return (
+                            <Card 
+                              key={index}
+                              className={`border border-gray-200 bg-white shadow-sm transition-all duration-150 hover:shadow-md ${hasDetails ? 'cursor-pointer' : ''}`}
+                              onClick={() => hasDetails && toggleItem(index)}
+                            >
+                              <div className="px-5 py-4">
+                                <div className="flex items-start gap-3">
+                                  {/* Priority Badge - Red for Urgent, Gray for others */}
+                                  {isUrgent ? (
+                                    <div className="flex-shrink-0 w-1.5 h-full bg-red-500 rounded-full mt-1"></div>
+                                  ) : (
+                                    <div className="flex-shrink-0 w-1.5 h-full bg-gray-300 rounded-full mt-1"></div>
+                                  )}
+                                  
+                                  {/* Content */}
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-start justify-between gap-3 mb-2">
+                                      <p className="text-sm text-gray-900 font-medium leading-relaxed flex-1">
+                                        {actionText}
+                                      </p>
+                                      {hasDetails && (
+                                        <div className="flex-shrink-0">
+                                          <ArrowRight 
+                                            className={`h-4 w-4 text-gray-400 transition-transform duration-200 ${isExpanded ? 'rotate-90' : ''}`}
+                                          />
+                                        </div>
+                                      )}
+                                    </div>
+                                    
+                                    {/* Tags */}
+                                    <div className="flex flex-wrap items-center gap-2">
+                                      {isUrgent ? (
+                                        <span className="px-2.5 py-0.5 rounded-md text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+                                          {priority}
+                                        </span>
+                                      ) : (
+                                        <span className="px-2.5 py-0.5 rounded-md text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200">
+                                          {priority}
+                                        </span>
+                                      )}
+                                      <span className="px-2.5 py-0.5 rounded-md text-xs font-medium text-gray-600 bg-gray-50 border border-gray-200">
+                                        {focusArea}
+                                      </span>
+                                    </div>
+                                    
+                                    {/* Expanded Details */}
+                                    {isExpanded && hasDetails && (
+                                      <div className="mt-4 pt-4 border-t border-gray-100">
+                                        <p className="text-sm text-gray-600 leading-relaxed">
+                                          {rec.details || rec.description || rec.reason}
+                                        </p>
+                                      </div>
+                                    )}
+                                  </div>
                                 </div>
                               </div>
-                              
-                              {/* Arrow Indicator */}
-                              <div className="flex-shrink-0">
-                                <ArrowRight className="h-5 w-5 text-gray-400 group-hover:text-primary group-hover:translate-x-1 transition-all duration-200" />
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      }) : (
+                            </Card>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      <Card className="border border-gray-200 bg-white shadow-sm">
                         <div className="px-6 py-8 text-center">
                           <p className="text-sm text-gray-500">No actionable recommendations available yet. Run a scan to generate insights.</p>
                         </div>
-                      )}
-                    </div>
-
-                    {/* Footer */}
-                    {actionItems.length > 5 && (
-                      <div className="px-6 py-4 border-t border-gray-200 bg-gray-50">
-                        <div className="flex items-center justify-between">
-                          <p className="text-sm text-gray-600">
-                            Showing 5 of {actionItems.length} recommendations
-                          </p>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-gray-700 hover:text-gray-900 hover:bg-gray-100"
-                          >
-                            View All
-                            <ArrowRight className="h-3.5 w-3.5 ml-2" />
-                          </Button>
-                        </div>
-                      </div>
+                      </Card>
                     )}
-                  </Card>
+                  </div>
                 );
               })()}
 
@@ -1980,61 +1984,59 @@ const Dashboard = () => {
                 </Card>
               )}
 
-              {/* Strengths & Gaps - Enhanced Style - Always Visible */}
+              {/* Strengths & Gaps - Clean Professional Style */}
               {latestScanInsights && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
-                  {/* Strengths Card - Always Show */}
-                  <Card className="border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
-                    <div className="p-6 bg-gradient-to-br from-green-50/30 to-white">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                  {/* Strengths Card */}
+                  <Card className="border border-gray-200 bg-white shadow-sm">
+                    <div className="p-6">
+                      <div className="mb-5 pb-4 border-b border-gray-200">
                         <h3 className="text-base font-bold text-gray-900 tracking-tight">
-                        Key Strengths
-                      </h3>
+                          Key Strengths
+                        </h3>
                       </div>
                       {(latestScanInsights.strengths_and_gaps?.strengths?.length > 0 || latestScanInsights?.strengths?.length > 0) ? (
-                        <ul className="space-y-3">
+                        <ul className="space-y-3.5">
                           {(latestScanInsights.strengths_and_gaps?.strengths || latestScanInsights?.strengths || []).map((strength: string, index: number) => (
-                            <li key={index} className="flex items-start gap-3 text-sm text-gray-700 group/item">
-                              <span className="mt-1 h-2 w-2 rounded-full bg-green-500 flex-shrink-0 group-hover/item:scale-125 transition-transform" />
+                            <li key={index} className="flex items-start gap-3 text-sm text-gray-700">
+                              <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                               <span className="flex-1 font-medium leading-relaxed">{strength}</span>
                             </li>
                           ))}
                         </ul>
                       ) : (
-                        <p className="text-sm text-gray-500 font-medium">No strengths identified yet. Run a scan to analyze your brand visibility.</p>
+                        <p className="text-sm text-gray-500">No strengths identified yet. Run a scan to analyze your brand visibility.</p>
                       )}
                     </div>
                   </Card>
                   
-                  {/* Gaps Card - Always Show */}
-                  <Card className="border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 overflow-hidden">
-                    <div className="p-6 bg-gradient-to-br from-amber-50/30 to-white">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-1 h-6 bg-amber-500 rounded-full"></div>
+                  {/* Gaps Card */}
+                  <Card className="border border-gray-200 bg-white shadow-sm">
+                    <div className="p-6">
+                      <div className="mb-5 pb-4 border-b border-gray-200">
                         <h3 className="text-base font-bold text-gray-900 tracking-tight">
-                        Visibility Gaps
-                      </h3>
+                          Visibility Gaps
+                        </h3>
                       </div>
                       {(latestScanInsights.strengths_and_gaps?.gaps?.length > 0 || latestScanInsights?.weaknesses?.length > 0) ? (
                         <>
-                          <ul className="space-y-3">
+                          <ul className="space-y-3.5">
                             {(latestScanInsights.strengths_and_gaps?.gaps || latestScanInsights?.weaknesses || []).map((gap: string, index: number) => (
-                              <li key={index} className="flex items-start gap-3 text-sm text-gray-700 group/item">
-                                <span className="mt-1 h-2 w-2 rounded-full bg-amber-500 flex-shrink-0 group-hover/item:scale-125 transition-transform" />
+                              <li key={index} className="flex items-start gap-3 text-sm text-gray-700">
+                                <span className="mt-1.5 h-1.5 w-1.5 rounded-full bg-gray-400 flex-shrink-0" />
                                 <span className="flex-1 font-medium leading-relaxed">{gap}</span>
                               </li>
                             ))}
                           </ul>
                           {latestScanInsights.strengths_and_gaps?.opportunity_topic && (
                             <div className="mt-5 pt-4 border-t border-gray-200">
-                              <p className="text-xs font-bold mb-2 text-gray-500 uppercase tracking-wide">Opportunity Topic</p>
-                              <p className="text-sm text-gray-700 font-semibold">{latestScanInsights.strengths_and_gaps.opportunity_topic}</p>
+                              <p className="text-xs font-semibold mb-2 text-gray-500 uppercase tracking-wide">Opportunity Topic</p>
+                              <p className="text-sm text-gray-700 font-medium">{latestScanInsights.strengths_and_gaps.opportunity_topic}</p>
                             </div>
                           )}
                         </>
                       ) : (
-                        <p className="text-sm text-gray-500 font-medium">No gaps identified yet. Run a scan to discover improvement opportunities.</p>
+                        <p className="text-sm text-gray-500">No gaps identified yet. Run a scan to discover improvement opportunities.</p>
                       )}
                     </div>
                   </Card>
@@ -2044,22 +2046,20 @@ const Dashboard = () => {
               {/* Show empty state if no insights at all */}
               {!latestScanInsights && dashboardData && !dashboardData.isEmpty && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-10">
-                  <Card className="border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                  <Card className="border border-gray-200 bg-white shadow-sm">
                     <div className="p-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-1 h-6 bg-green-500 rounded-full"></div>
+                      <div className="mb-5 pb-4 border-b border-gray-200">
                         <h3 className="text-base font-bold text-gray-900 tracking-tight">Key Strengths</h3>
                       </div>
-                      <p className="text-sm text-gray-500 font-medium">Run a scan to analyze your brand visibility and identify strengths.</p>
+                      <p className="text-sm text-gray-500">Run a scan to analyze your brand visibility and identify strengths.</p>
                     </div>
                   </Card>
-                  <Card className="border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                  <Card className="border border-gray-200 bg-white shadow-sm">
                     <div className="p-6">
-                      <div className="flex items-center gap-2 mb-4">
-                        <div className="w-1 h-6 bg-amber-500 rounded-full"></div>
+                      <div className="mb-5 pb-4 border-b border-gray-200">
                         <h3 className="text-base font-bold text-gray-900 tracking-tight">Visibility Gaps</h3>
                       </div>
-                      <p className="text-sm text-gray-500 font-medium">Run a scan to discover improvement opportunities.</p>
+                      <p className="text-sm text-gray-500">Run a scan to discover improvement opportunities.</p>
                     </div>
                   </Card>
                 </div>
@@ -2067,9 +2067,9 @@ const Dashboard = () => {
 
               {/* Content Ideas */}
               {latestScanInsights?.content_ideas?.length > 0 && (
-                <Card className="border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300 rounded-lg mb-8 overflow-hidden">
-                  <div className="p-6 bg-gradient-to-br from-blue-50/30 to-white">
-                    <div className="mb-6 pb-4 border-b border-gray-100">
+                <Card className="border border-gray-200 bg-white shadow-sm rounded-lg mb-8 overflow-hidden">
+                  <div className="p-6 bg-white">
+                    <div className="mb-6 pb-4 border-b border-gray-200">
                       <h3 className="text-lg font-bold text-gray-900 mb-1 tracking-tight">
                       Suggested Content Topics
                     </h3>
@@ -2079,9 +2079,9 @@ const Dashboard = () => {
                       {latestScanInsights.content_ideas.map((idea: any, index: number) => (
                         <div 
                           key={index} 
-                          className="group p-5 rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-md transition-all duration-200 bg-white hover:-translate-y-0.5"
+                          className="p-5 rounded-xl border border-gray-200 bg-white"
                         >
-                          <h4 className="font-bold text-sm mb-2 text-gray-900 group-hover:text-primary transition-colors">{idea.title}</h4>
+                          <h4 className="font-bold text-sm mb-2 text-gray-900">{idea.title}</h4>
                           <p className="text-sm text-gray-600 mb-4 leading-relaxed font-medium">
                             {idea.description}
                           </p>

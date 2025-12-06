@@ -10,5 +10,15 @@ Allow: /
 User-agent: facebookexternalhit
 Allow: /
 
+User-agent: PerplexityBot
+Allow: /
+Crawl-delay: 1
+
+User-agent: PerplexityClawler
+Allow: /
+Crawl-delay: 1
+
 User-agent: *
 Allow: /
+
+Sitemap: https://unifr.ai/sitemap.xml

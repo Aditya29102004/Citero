@@ -1,4 +1,4 @@
-import { Home, LogOut, GitCompare, Users, FileText, Search, TrendingUp, BarChart3, MessageSquare, BookOpen, Settings, ChevronLeft, ChevronRight, Zap, PenTool, UserCog } from "lucide-react";
+import { Home, LogOut, GitCompare, Users, FileText, Search, TrendingUp, BarChart3, MessageSquare, BookOpen, Settings, ChevronLeft, ChevronRight, Zap, PenTool, UserCog, UserPlus } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
@@ -104,16 +104,16 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </SidebarMenuItem>
               {hasSubscription && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => navigate("/dashboard")}
-                    isActive={location.pathname === "/dashboard"}
-                    className="rounded-lg px-3 py-2.5 transition-all duration-200"
-                  >
-                    <Home className="h-4 w-4" />
-                    {!collapsed && <span>Dashboard</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => navigate("/dashboard")}
+                  isActive={location.pathname === "/dashboard"}
+                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                >
+                  <Home className="h-4 w-4" />
+                  {!collapsed && <span>Dashboard</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
               )}
               <SidebarMenuItem>
                 <SidebarMenuButton
@@ -145,6 +145,18 @@ export function AppSidebar() {
                   {!collapsed && <span>Sources</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
+              {hasSubscription && (
+                <SidebarMenuItem>
+                  <SidebarMenuButton
+                    onClick={() => navigate("/leads")}
+                    isActive={location.pathname === "/leads"}
+                    className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  >
+                    <UserPlus className="h-4 w-4" />
+                    {!collapsed && <span>Leads</span>}
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

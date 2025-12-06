@@ -69,15 +69,21 @@ export const SEO = ({
       canonicalLink.setAttribute("href", canonical);
     }
 
-    // Add structured data (JSON-LD)
+    // Add structured data (JSON-LD) - handle both arrays and single objects
     if (structuredData) {
-      let scriptTag = document.querySelector('script[type="application/ld+json"]');
-      if (!scriptTag) {
-        scriptTag = document.createElement("script");
+      // Remove existing structured data scripts
+      const existingScripts = document.querySelectorAll('script[type="application/ld+json"]');
+      existingScripts.forEach(script => script.remove());
+      
+      // Add new structured data
+      const dataArray = Array.isArray(structuredData) ? structuredData : [structuredData];
+      dataArray.forEach((data, index) => {
+        const scriptTag = document.createElement("script");
         scriptTag.setAttribute("type", "application/ld+json");
+        scriptTag.textContent = JSON.stringify(data);
+        scriptTag.id = `structured-data-${index}`;
         document.head.appendChild(scriptTag);
-      }
-      scriptTag.textContent = JSON.stringify(structuredData);
+      });
     }
   }, [title, description, keywords, canonical, ogImage, ogType, structuredData]);
 
