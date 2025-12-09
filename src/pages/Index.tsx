@@ -405,6 +405,31 @@ const Index = () => {
                 alt="SimilarLabs Embed Badge" 
               />
             </a>
+            <a 
+              href="https://findly.tools/unifr?utm_source=unifr" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://findly.tools/badges/findly-tools-badge-light.svg" 
+                alt="Featured on findly.tools" 
+                width="150" 
+              />
+            </a>
+            <a 
+              href="https://shipybara.com/projects/unifr" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://shipybara.com/images/badges/shipybara-badge-light.svg" 
+                alt="Featured on Shipybara" 
+                width="150" 
+                height="54" 
+              />
+            </a>
             {/* Duplicate set for seamless loop */}
             <a 
               href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
@@ -505,6 +530,31 @@ const Index = () => {
               <img 
                 src="https://similarlabs.com/similarlabs-embed-badge-light.svg" 
                 alt="SimilarLabs Embed Badge" 
+              />
+            </a>
+            <a 
+              href="https://findly.tools/unifr?utm_source=unifr" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://findly.tools/badges/findly-tools-badge-light.svg" 
+                alt="Featured on findly.tools" 
+                width="150" 
+              />
+            </a>
+            <a 
+              href="https://shipybara.com/projects/unifr" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://shipybara.com/images/badges/shipybara-badge-light.svg" 
+                alt="Featured on Shipybara" 
+                width="150" 
+                height="54" 
               />
             </a>
           </div>
