@@ -434,6 +434,19 @@ const Index = () => {
                 height="54" 
               />
             </a>
+            <a 
+              href="https://startuptrusted.com?ref=unifr.online" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://startuptrusted.com/api/badge?type=top&style=light" 
+                alt="unifr on StartupTrusted" 
+                width="240" 
+                height="54" 
+              />
+            </a>
             {/* Duplicate set for seamless loop */}
             <a 
               href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
@@ -558,6 +571,19 @@ const Index = () => {
                 src="https://shipybara.com/images/badges/shipybara-badge-light.svg" 
                 alt="Featured on Shipybara" 
                 width="150" 
+                height="54" 
+              />
+            </a>
+            <a 
+              href="https://startuptrusted.com?ref=unifr.online" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://startuptrusted.com/api/badge?type=top&style=light" 
+                alt="unifr on StartupTrusted" 
+                width="240" 
                 height="54" 
               />
             </a>
