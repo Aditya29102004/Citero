@@ -160,6 +160,10 @@ const Index = () => {
               Convert AI mentions on ChatGPT, Perplexity, and Google AI into real traffic and paying customers.
             </p>
             
+            <p className="text-base text-gray-500 leading-relaxed max-w-xl lg:max-w-none">
+              Login to check score for free
+            </p>
+            
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 lg:justify-start justify-center pt-2">
               <Button 

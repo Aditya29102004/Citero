@@ -38,6 +38,8 @@ import Team from "./pages/Team";
 import Settings from "./pages/Settings";
 import KnowledgeBase from "./pages/KnowledgeBase";
 import Leads from "./pages/Leads";
+import Logo from "./pages/Logo";
+import Feedback from "./pages/Feedback";
 import WebsiteOnboarding from "./pages/onboarding/Website";
 import DescriptionOnboarding from "./pages/onboarding/Description";
 import TopicsOnboarding from "./pages/onboarding/Topics";
@@ -55,6 +57,8 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+          <Route path="/logo" element={<Logo />} />
+          <Route path="/feedback" element={<Feedback />} />
           <Route path="/blog" element={<BlogPublic />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/dashboard" element={<Dashboard />} />

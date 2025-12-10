@@ -189,9 +189,6 @@ export const HomeHeader = () => {
           
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
-              Features
-            </a>
             <button
               type="button"
               onClick={() => navigate("/pricing")}
@@ -205,6 +202,13 @@ export const HomeHeader = () => {
               className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer bg-transparent border-none"
             >
               Blog
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/feedback")}
+              className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors cursor-pointer bg-transparent border-none"
+            >
+              Feedback
             </button>
             <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               FAQ
@@ -268,9 +272,6 @@ export const HomeHeader = () => {
         {mobileMenuOpen && (
           <div className="md:hidden py-4 border-t border-gray-200">
             <nav className="flex flex-col gap-4">
-              <a href="#features" className="text-sm font-medium text-gray-600 hover:text-gray-900">
-                Features
-              </a>
               <button
                 type="button"
                 onClick={() => {
@@ -290,6 +291,16 @@ export const HomeHeader = () => {
                 className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left cursor-pointer bg-transparent border-none w-full text-left"
               >
                 Blog
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  navigate("/feedback");
+                  setMobileMenuOpen(false);
+                }}
+                className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left cursor-pointer bg-transparent border-none w-full text-left"
+              >
+                Feedback
               </button>
               <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900">
                 FAQ
