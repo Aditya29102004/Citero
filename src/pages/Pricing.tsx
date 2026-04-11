@@ -35,10 +35,10 @@ const Pricing = () => {
   return (
     <div className="bg-white min-h-screen">
       <SEO
-        title="Pricing - unifr | Choose Your Plan"
+        title="Pricing - citero | Choose Your Plan"
         description="Choose the plan that fits you for AI visibility tracking."
         keywords="pricing, plans, subscription, AI visibility tracking"
-        canonical="https://unifr.ai/pricing"
+        canonical="https://citero.ai/pricing"
       />
       <HomeHeader />
       

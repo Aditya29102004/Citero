@@ -32,7 +32,7 @@ CREATE POLICY "Admins can view all founder notes"
     EXISTS (
       SELECT 1 FROM public.profiles
       WHERE profiles.id = auth.uid()
-      AND (profiles.is_admin = true OR profiles.email = 'admin@unifr.com')
+      AND (profiles.is_admin = true OR profiles.email = 'admin@citero.com')
     )
   );
 
@@ -42,7 +42,7 @@ CREATE POLICY "Admins can insert founder notes"
     EXISTS (
       SELECT 1 FROM public.profiles
       WHERE profiles.id = auth.uid()
-      AND (profiles.is_admin = true OR profiles.email = 'admin@unifr.com')
+      AND (profiles.is_admin = true OR profiles.email = 'admin@citero.com')
     )
   );
 
@@ -52,7 +52,7 @@ CREATE POLICY "Admins can update founder notes"
     EXISTS (
       SELECT 1 FROM public.profiles
       WHERE profiles.id = auth.uid()
-      AND (profiles.is_admin = true OR profiles.email = 'admin@unifr.com')
+      AND (profiles.is_admin = true OR profiles.email = 'admin@citero.com')
     )
   );
 
@@ -62,7 +62,7 @@ CREATE POLICY "Admins can delete founder notes"
     EXISTS (
       SELECT 1 FROM public.profiles
       WHERE profiles.id = auth.uid()
-      AND (profiles.is_admin = true OR profiles.email = 'admin@unifr.com')
+      AND (profiles.is_admin = true OR profiles.email = 'admin@citero.com')
     )
   );
 

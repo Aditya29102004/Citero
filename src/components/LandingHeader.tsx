@@ -11,7 +11,7 @@ export const LandingHeader = () => {
         <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
           <TrendingUp className="h-6 w-6 text-primary" />
           <span className="text-xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-            unifr
+            citero
           </span>
         </div>
         

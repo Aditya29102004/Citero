@@ -60,8 +60,8 @@ Return ONLY a JSON array of insight strings, no other text. Example format:
           headers: {
             Authorization: `Bearer ${OPENROUTER_API_KEY}`,
             "Content-Type": "application/json",
-            "HTTP-Referer": "https://unifr.com",
-            "X-Title": "Unifr Brand Tracker",
+            "HTTP-Referer": "https://citero.com",
+            "X-Title": "Citero Brand Tracker",
           },
           body: JSON.stringify({
             model: "qwen/qwen-2.5-7b-instruct",

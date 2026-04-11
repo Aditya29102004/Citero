@@ -12,7 +12,7 @@ export const LandingFooter = () => {
             <div className="flex items-center gap-2">
               <TrendingUp className="h-5 w-5 text-primary" />
               <span className="text-lg font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-                unifr
+                citero
               </span>
             </div>
             <p className="text-sm text-muted-foreground">
@@ -48,7 +48,7 @@ export const LandingFooter = () => {
         </div>
 
         <div className="mt-12 pt-8 border-t border-border text-center text-sm text-muted-foreground">
-          <p>© {currentYear} unifr. All rights reserved.</p>
+          <p>© {currentYear} citero. All rights reserved.</p>
         </div>
       </div>
     </footer>

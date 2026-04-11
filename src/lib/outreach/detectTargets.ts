@@ -62,7 +62,7 @@ If information is not available, use null. Be realistic - don't make up emails o
         "Content-Type": "application/json",
         Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "HTTP-Referer": window.location.origin,
-        "X-Title": "Unifr Outreach",
+        "X-Title": "Citero Outreach",
       },
       body: JSON.stringify({
         model: FALLBACK_MODEL,

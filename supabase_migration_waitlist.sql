@@ -36,7 +36,7 @@ CREATE POLICY "Only admins can view waitlist"
     EXISTS (
       SELECT 1 FROM profiles
       WHERE profiles.id = auth.uid()
-      AND (profiles.is_admin = true OR profiles.email = 'admin@unifr.com')
+      AND (profiles.is_admin = true OR profiles.email = 'admin@citero.com')
     )
   );
 
@@ -56,5 +56,5 @@ CREATE TRIGGER update_waitlist_updated_at
   EXECUTE FUNCTION update_waitlist_updated_at();
 
 -- Add comment to table
-COMMENT ON TABLE public.waitlist IS 'Stores waitlist signups for unifr launch';
+COMMENT ON TABLE public.waitlist IS 'Stores waitlist signups for citero launch';
 

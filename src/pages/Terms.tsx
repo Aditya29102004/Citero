@@ -7,10 +7,10 @@ const Terms = () => {
   return (
     <div className="bg-white min-h-screen">
       <SEO
-        title="Terms & Conditions - unifr | Legal Terms of Service"
-        description="Read unifr's Terms & Conditions. Understand our service terms, user agreements, subscription policies, and acceptable use guidelines for our AI visibility tracking platform."
-        keywords="unifr terms, terms of service, legal terms, service agreement, AI tracking terms"
-        canonical="https://unifr.ai/terms"
+        title="Terms & Conditions - citero | Legal Terms of Service"
+        description="Read citero's Terms & Conditions. Understand our service terms, user agreements, subscription policies, and acceptable use guidelines for our AI visibility tracking platform."
+        keywords="citero terms, terms of service, legal terms, service agreement, AI tracking terms"
+        canonical="https://citero.ai/terms"
       />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
@@ -26,7 +26,7 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">1. Agreement to Terms</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                By accessing or using unifr ("Service"), you agree to be bound by these Terms & Conditions ("Terms"). 
+                By accessing or using citero ("Service"), you agree to be bound by these Terms & Conditions ("Terms"). 
                 If you disagree with any part of these terms, you may not access the Service.
               </p>
             </section>
@@ -34,7 +34,7 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">2. Description of Service</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                unifr is an AI visibility tracking platform that monitors how AI models like ChatGPT, Gemini, and Claude 
+                citero is an AI visibility tracking platform that monitors how AI models like ChatGPT, Gemini, and Claude 
                 describe your brand across different queries and contexts. Our Service includes GEO (Generative Engine Optimization) 
                 scanning, brand visibility tracking, sentiment analysis, competitor comparisons, and related analytics.
               </p>
@@ -57,7 +57,7 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">4. Subscription Plans and Billing</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                unifr offers subscription plans with different features and usage limits:
+                citero offers subscription plans with different features and usage limits:
               </p>
               <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
                 <li><strong>Normal Plans:</strong> Basic ($99/month), Pro (Custom pricing)</li>
@@ -94,7 +94,7 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">6. Intellectual Property</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                The Service and its original content, features, and functionality are owned by unifr and are protected by 
+                The Service and its original content, features, and functionality are owned by citero and are protected by 
                 international copyright, trademark, patent, trade secret, and other intellectual property laws. You may not 
                 copy, modify, distribute, sell, or lease any part of the Service without our written permission.
               </p>
@@ -120,7 +120,7 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">9. Limitation of Liability</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                To the maximum extent permitted by law, unifr shall not be liable for any indirect, incidental, special, 
+                To the maximum extent permitted by law, citero shall not be liable for any indirect, incidental, special, 
                 consequential, or punitive damages, or any loss of profits or revenues, whether incurred directly or indirectly, 
                 or any loss of data, use, goodwill, or other intangible losses resulting from your use of the Service.
               </p>
@@ -146,7 +146,7 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">12. Governing Law</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which unifr 
+                These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which citero 
                 operates, without regard to its conflict of law provisions.
               </p>
             </section>

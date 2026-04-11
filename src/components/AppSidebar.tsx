@@ -36,7 +36,7 @@ export function AppSidebar() {
           .single();
         
         if (data) {
-          setIsAdmin(data.is_admin === true || data.email === 'admin@unifr.com');
+          setIsAdmin(data.is_admin === true || data.email === 'admin@citero.com');
         }
       }
     };
@@ -81,7 +81,7 @@ export function AppSidebar() {
     <Sidebar className={collapsed ? "w-16" : ""}>
       <SidebarHeader className="border-b border-gray-200/80 px-6 py-5">
         <div className="flex items-center justify-between">
-          {!collapsed && <h2 className="text-xl font-bold text-gray-900 tracking-tight">unifr</h2>}
+          {!collapsed && <h2 className="text-xl font-bold text-gray-900 tracking-tight">citero</h2>}
           {collapsed && <div className="w-6 h-6 bg-gray-900 rounded"></div>}
         </div>
       </SidebarHeader>

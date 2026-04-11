@@ -61,7 +61,7 @@ const AdminWaitlist = () => {
 
       if (error) throw error;
 
-      const adminStatus = data?.is_admin === true || data?.email === 'admin@unifr.com';
+      const adminStatus = data?.is_admin === true || data?.email === 'admin@citero.com';
       setIsAdmin(adminStatus);
 
       if (adminStatus) {

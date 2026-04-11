@@ -13,7 +13,7 @@ export interface OnboardingData {
   categoryRanking?: string;
 }
 
-const ONBOARDING_STORAGE_KEY = "unifr_onboarding_data";
+const ONBOARDING_STORAGE_KEY = "citero_onboarding_data";
 
 export function saveOnboardingData(data: Partial<OnboardingData>) {
   const existing = getOnboardingData();
@@ -48,7 +48,7 @@ export async function checkOnboardingComplete(): Promise<boolean> {
       .eq("id", session.user.id)
       .single();
 
-    const isAdmin = profile?.is_admin === true || profile?.email === 'admin@unifr.com';
+    const isAdmin = profile?.is_admin === true || profile?.email === 'admin@citero.com';
     if (isAdmin) {
       console.log("User is admin, skipping onboarding check");
       return true;

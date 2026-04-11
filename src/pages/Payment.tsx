@@ -142,7 +142,7 @@ const Payment = () => {
       const options = {
         key: razorpayKeyId,
         subscription_id: subscription.id,
-        name: "Unifr Subscription",
+        name: "Citero Subscription",
         description: PLAN_CONFIGS[planType].name,
         prefill: {
           email: session.user.email || "",

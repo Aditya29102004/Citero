@@ -7,10 +7,10 @@ const Privacy = () => {
   return (
     <div className="bg-white min-h-screen">
       <SEO
-        title="Privacy Policy - unifr | Data Protection & Privacy"
-        description="Read unifr's Privacy Policy. Learn how we collect, use, and protect your data when you use our AI visibility tracking platform. Your privacy is important to us."
-        keywords="unifr privacy policy, data protection, privacy, GDPR, data security, AI tracking privacy"
-        canonical="https://unifr.ai/privacy"
+        title="Privacy Policy - citero | Data Protection & Privacy"
+        description="Read citero's Privacy Policy. Learn how we collect, use, and protect your data when you use our AI visibility tracking platform. Your privacy is important to us."
+        keywords="citero privacy policy, data protection, privacy, GDPR, data security, AI tracking privacy"
+        canonical="https://citero.ai/privacy"
       />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
@@ -26,9 +26,9 @@ const Privacy = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Introduction</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                At unifr ("we," "our," or "us"), your privacy matters. This Privacy Policy explains how we collect, use, store, 
+                At citero ("we," "our," or "us"), your privacy matters. This Privacy Policy explains how we collect, use, store, 
                 and protect your information when you use our AI visibility tracking and analytics platform ("Service"). By accessing 
-                unifr, you agree to the practices outlined below.
+                citero, you agree to the practices outlined below.
               </p>
             </section>
 
@@ -167,7 +167,7 @@ const Privacy = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">8. Children's Privacy</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                unifr is not intended for individuals under 18.
+                citero is not intended for individuals under 18.
               </p>
               <p className="text-gray-700 leading-relaxed mb-4">
                 We do not knowingly collect data from minors. Contact us if you believe a minor has submitted personal information.

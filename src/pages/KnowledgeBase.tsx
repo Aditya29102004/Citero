@@ -101,7 +101,7 @@ const KnowledgeBase = () => {
             <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
               <div className="mb-8">
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">Knowledge Base</h1>
-                <p className="text-gray-600">Find answers to common questions and learn how to use unifr</p>
+                <p className="text-gray-600">Find answers to common questions and learn how to use citero</p>
               </div>
 
               <div className="mb-8">

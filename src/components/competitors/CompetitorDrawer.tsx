@@ -67,7 +67,7 @@ Keep it concise and professional.`;
                 "Content-Type": "application/json",
                 Authorization: `Bearer ${OPENROUTER_API_KEY}`,
                 "HTTP-Referer": window.location.origin,
-                "X-Title": "Unifr Competitor Analysis",
+                "X-Title": "Citero Competitor Analysis",
               },
               body: JSON.stringify({
                 model: "qwen/qwen-2.5-7b-instruct",

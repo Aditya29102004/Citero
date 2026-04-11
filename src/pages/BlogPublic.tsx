@@ -5,10 +5,19 @@ import { HomeHeader } from "@/components/HomeHeader";
 import { Button } from "@/components/ui/button";
 import { Calendar, FileText, ArrowRight, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-// Simple markdown renderer
+// Simple markdown renderer with security sanitization
 const renderMarkdown = (text: string): string => {
   if (!text) return "";
-  return text
+  
+  // XSS protection: Escape all raw HTML tags first
+  let safeText = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  return safeText
     .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold mb-4 mt-6">$1</h1>')
     .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-semibold mb-3 mt-6">$1</h2>')
     .replace(/^### (.*$)/gim, '<h3 class="text-xl font-semibold mb-2 mt-4">$1</h3>')

@@ -31,7 +31,7 @@ This guide will walk you through setting up Razorpay in your dashboard to accept
 2. **Customize your checkout**:
    - Upload your logo
    - Set brand colors
-   - Add company name: "unifr"
+   - Add company name: "citero"
    - Set up payment page URL (optional)
 
 ### 2.3 Set Up Webhooks (Important!)

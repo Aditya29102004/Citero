@@ -77,7 +77,7 @@ WHERE email = 'your-admin-email@example.com';
 **Admin Requirements:**
 - User must be authenticated (logged in)
 - User must have `is_admin = true` in their profile, OR
-- User email must match 'admin@unifr.com'
+- User email must match 'admin@citero.com'
 
 ### Admin Features
 

@@ -6,10 +6,10 @@ const Refund = () => {
   return (
     <div className="bg-white min-h-screen">
       <SEO
-        title="Refund Policy - unifr | 30-Day Money-Back Guarantee"
-        description="Learn about unifr's refund policy. We offer a 30-day money-back guarantee for new subscribers. Understand our refund eligibility, processing, and cancellation policies."
-        keywords="unifr refund policy, money back guarantee, refund, cancellation policy, subscription refund"
-        canonical="https://unifr.ai/refund"
+        title="Refund Policy - citero | 30-Day Money-Back Guarantee"
+        description="Learn about citero's refund policy. We offer a 30-day money-back guarantee for new subscribers. Understand our refund eligibility, processing, and cancellation policies."
+        keywords="citero refund policy, money back guarantee, refund, cancellation policy, subscription refund"
+        canonical="https://citero.ai/refund"
       />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
@@ -25,7 +25,7 @@ const Refund = () => {
             <section>
               <h2 className="text-2xl font-semibold text-gray-900 mb-4">Overview</h2>
               <p className="text-gray-700 leading-relaxed mb-4">
-                At unifr, we want you to feel confident using our AI visibility tracking and analytics platform. This Refund Policy 
+                At citero, we want you to feel confident using our AI visibility tracking and analytics platform. This Refund Policy 
                 outlines when refunds may be issued for subscription fees and how refund requests are handled.
               </p>
             </section>

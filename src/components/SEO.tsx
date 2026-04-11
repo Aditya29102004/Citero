@@ -11,11 +11,11 @@ interface SEOProps {
 }
 
 export const SEO = ({
-  title = "unifr - Track & Optimize Your Brand's AI Visibility | GEO Tracking Platform",
+  title = "citero - Track & Optimize Your Brand's AI Visibility | GEO Tracking Platform",
   description = "Track how ChatGPT, Gemini, Claude, and Perplexity describe your brand. Get AI visibility insights, competitor analysis, and actionable recommendations to turn AI mentions into traffic and customers.",
   keywords = "AI visibility tracking, GEO tracking, Generative Engine Optimization, AI search optimization, brand tracking, ChatGPT visibility, Gemini tracking, Claude tracking, Perplexity tracking",
   canonical,
-  ogImage = "https://unifr.ai/og-image.png",
+  ogImage = "https://citero.ai/og-image.png",
   ogType = "website",
   structuredData,
 }: SEOProps) => {
@@ -44,7 +44,7 @@ export const SEO = ({
     updateMetaTag("og:image", ogImage, "property");
     updateMetaTag("og:type", ogType, "property");
     updateMetaTag("og:url", canonical || window.location.href, "property");
-    updateMetaTag("og:site_name", "unifr", "property");
+    updateMetaTag("og:site_name", "citero", "property");
 
     // Update Twitter tags
     updateMetaTag("twitter:card", "summary_large_image");
@@ -55,7 +55,7 @@ export const SEO = ({
     // Add viewport and other important meta tags
     updateMetaTag("viewport", "width=device-width, initial-scale=1.0");
     updateMetaTag("theme-color", "#111827");
-    updateMetaTag("author", "unifr");
+    updateMetaTag("author", "citero");
     updateMetaTag("robots", "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1");
 
     // Update canonical URL

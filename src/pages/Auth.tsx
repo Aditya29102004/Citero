@@ -234,7 +234,7 @@ const Auth = () => {
         <div className="relative z-10 w-full h-full flex items-center justify-center">
           <img 
             src="/Untitled design.png" 
-            alt={isLogin ? "Welcome back" : "Join unifr"}
+            alt={isLogin ? "Welcome back" : "Join citero"}
             className="max-w-full max-h-full object-contain"
           />
         </div>
@@ -246,7 +246,7 @@ const Auth = () => {
           {/* Mobile Logo */}
           <div className="lg:hidden mb-8 flex items-center justify-center gap-2">
             <TrendingUp className="h-8 w-8 text-gray-900" />
-            <span className="text-2xl font-bold text-gray-900">unifr</span>
+            <span className="text-2xl font-bold text-gray-900">citero</span>
           </div>
           
           <Card className="border-0 shadow-lg">

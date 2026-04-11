@@ -102,7 +102,7 @@ Provide a brief 2-3 sentence explanation of why this source matters for brand vi
               "Content-Type": "application/json",
               Authorization: `Bearer ${OPENROUTER_API_KEY}`,
               "HTTP-Referer": window.location.origin,
-              "X-Title": "Unifr Outreach",
+              "X-Title": "Citero Outreach",
             },
             body: JSON.stringify({
               model: "qwen/qwen-2.5-7b-instruct",

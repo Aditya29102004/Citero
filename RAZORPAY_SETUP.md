@@ -35,7 +35,7 @@ This guide will help you set up Razorpay payments for your website.
 2. Customize:
    - Upload your logo
    - Set brand colors
-   - Company name: "unifr"
+   - Company name: "citero"
 
 ### Set Up Webhooks (Optional but Recommended)
 1. Go to **Settings** → **Webhooks**

@@ -45,10 +45,10 @@ const Contact = () => {
   return (
     <div className="bg-white min-h-screen">
       <SEO
-        title="Contact unifr - Get in Touch | AI Visibility Tracking Support"
-        description="Have questions about unifr? Contact our team for support, sales inquiries, or enterprise solutions. We're here to help you optimize your brand's AI visibility."
-        keywords="contact unifr, unifr support, AI visibility help, GEO tracking support, unifr sales"
-        canonical="https://unifr.ai/contact"
+        title="Contact citero - Get in Touch | AI Visibility Tracking Support"
+        description="Have questions about citero? Contact our team for support, sales inquiries, or enterprise solutions. We're here to help you optimize your brand's AI visibility."
+        keywords="contact citero, citero support, AI visibility help, GEO tracking support, citero sales"
+        canonical="https://citero.ai/contact"
       />
       <HomeHeader />
       <div className="pt-32 pb-24 px-3 lg:px-4">
@@ -58,7 +58,7 @@ const Contact = () => {
               Contact Us
             </h1>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Have questions about unifr? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
+              Have questions about citero? We'd love to hear from you. Send us a message and we'll respond as soon as possible.
             </p>
           </div>
 
@@ -104,7 +104,7 @@ const Contact = () => {
                 <ul className="space-y-3 text-gray-600">
                   <li>
                     <Link to="/about" className="hover:text-gray-900 underline">
-                      Learn more about unifr
+                      Learn more about citero
                     </Link>
                   </li>
                   <li>

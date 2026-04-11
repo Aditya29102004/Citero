@@ -19,7 +19,7 @@ This guide will help you set up Google OAuth login and email verification for yo
 2. **Create a new project** (or select existing):
    - Click on project dropdown at the top
    - Click "New Project"
-   - Enter project name (e.g., "unifr-auth")
+   - Enter project name (e.g., "citero-auth")
    - Click "Create"
 
 3. **Enable Google+ API**:
@@ -32,7 +32,7 @@ This guide will help you set up Google OAuth login and email verification for yo
    - Click **"+ CREATE CREDENTIALS"** → **"OAuth client ID"**
    - If prompted, configure OAuth consent screen first:
      - User Type: **External** (unless you have Google Workspace)
-     - App name: **unifr**
+     - App name: **citero**
      - User support email: Your email
      - Developer contact: Your email
      - Click "Save and Continue"
@@ -43,7 +43,7 @@ This guide will help you set up Google OAuth login and email verification for yo
    
 5. **Create OAuth Client**:
    - Application type: **Web application**
-   - Name: **unifr Web Client**
+   - Name: **citero Web Client**
    - **Authorized JavaScript origins**:
      ```
      https://YOUR_PROJECT_REF.supabase.co

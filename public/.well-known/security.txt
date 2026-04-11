@@ -1,5 +1,5 @@
 Contact: mailto:hertofhelp@gmail.com
 Expires: 2026-12-31T23:59:59.000Z
 Preferred-Languages: en
-Canonical: https://unifr.ai/.well-known/security.txt
+Canonical: https://citero.ai/.well-known/security.txt
 

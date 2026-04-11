@@ -50,7 +50,7 @@ serve(async (req) => {
       throw new Error("Profile not found");
     }
 
-    const isAdmin = profile.is_admin === true || profile.email === 'admin@unifr.com';
+    const isAdmin = profile.is_admin === true || profile.email === 'admin@citero.com';
     if (!isAdmin) {
       throw new Error("Admin privileges required");
     }

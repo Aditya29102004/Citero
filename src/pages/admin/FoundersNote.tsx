@@ -75,7 +75,7 @@ const FoundersNote = () => {
       .single();
 
     if (data) {
-      const admin = data.is_admin === true || data.email === 'admin@unifr.com';
+      const admin = data.is_admin === true || data.email === 'admin@citero.com';
       setIsAdmin(admin);
       if (!admin) {
         navigate("/dashboard");

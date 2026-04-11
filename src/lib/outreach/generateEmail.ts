@@ -82,7 +82,7 @@ Return your response as a JSON object with these exact keys:
         "Content-Type": "application/json",
         Authorization: `Bearer ${OPENROUTER_API_KEY}`,
         "HTTP-Referer": window.location.origin,
-        "X-Title": "Unifr Outreach",
+        "X-Title": "Citero Outreach",
       },
       body: JSON.stringify({
         model: FALLBACK_MODEL,

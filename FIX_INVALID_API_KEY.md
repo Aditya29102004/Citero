@@ -20,7 +20,7 @@ The OpenAI API key stored in Supabase Edge Function secrets is **invalid, expire
    - You can't see the full key value (for security)
 4. **Create a NEW key**:
    - Click **"Create new secret key"**
-   - Give it a name (e.g., "Unifr GEO Scan")
+   - Give it a name (e.g., "Citero GEO Scan")
    - Click **"Create secret key"**
    - **IMPORTANT**: Copy the ENTIRE key immediately (you won't see it again!)
      - It starts with `sk-` and is very long (50+ characters)

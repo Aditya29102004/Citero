@@ -54,21 +54,19 @@ export const HomeFooter = () => {
         {/* Bottom Section */}
         <div className="pt-8 border-t border-gray-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="flex items-center gap-2">
-              <div className="p-1.5 bg-gray-900 rounded-lg">
-                <TrendingUp className="h-4 w-4 text-white" />
-              </div>
-              <span className="text-sm font-semibold text-gray-900">unifr</span>
+            <div className="flex items-center gap-2.5">
+              <img src="/logo.svg" alt="citero logo" className="w-6 h-6 rounded-md object-contain drop-shadow-sm" />
+              <span className="text-sm font-semibold text-gray-900">citero</span>
             </div>
             <div className="flex items-center gap-4">
-              <a href="https://www.linkedin.com/company/unifr" target="_blank" rel="noopener noreferrer" 
+              <a href="https://www.linkedin.com/company/citero" target="_blank" rel="noopener noreferrer" 
                  className="text-gray-400 hover:text-gray-600 transition-colors hover:scale-110 transform duration-200">
                 <Linkedin className="h-5 w-5" />
               </a>
             </div>
           </div>
           <p className="text-center md:text-left text-sm text-gray-500 mt-6">
-            © {currentYear} unifr — All Rights Reserved.
+            © {currentYear} citero — All Rights Reserved.
           </p>
         </div>
       </div>
@@ -86,10 +84,10 @@ export const HomeFooter = () => {
         }}
       >
         <div style={{ position: 'relative', width: '200px', height: '60px' }}>
-          <a href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" target="_blank" rel="noopener noreferrer">
+          <a href="https://www.producthunt.com/products/citero-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-citero-ai" target="_blank" rel="noopener noreferrer">
             <img 
               src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
-              alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
+              alt="Citero AI - Multiply Your Traffic from AI Agents | Product Hunt" 
               width="200" 
               height="43" 
             />
@@ -102,10 +100,10 @@ export const HomeFooter = () => {
               height="60" 
             />
           </a>
-          <a href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" target="_blank" rel="noopener noreferrer">
+          <a href="https://startupfa.me/s/citero?utm_source=www.citero.online" target="_blank" rel="noopener noreferrer">
             <img 
               src="https://startupfa.me/badges/featured/dark.webp" 
-              alt="unifr - Featured on Startup Fame" 
+              alt="citero - Featured on Startup Fame" 
               width="171" 
               height="54" 
             />
@@ -124,15 +122,15 @@ export const HomeFooter = () => {
               alt="Featured on Aura++" 
             />
           </a>
-          <a href="https://launchigniter.com/product/unifr?ref=badge-unifr" target="_blank" rel="noopener noreferrer">
+          <a href="https://launchigniter.com/product/citero?ref=badge-citero" target="_blank" rel="noopener noreferrer">
             <img 
-              src="https://launchigniter.com/api/badge/unifr?theme=neutral" 
+              src="https://launchigniter.com/api/badge/citero?theme=neutral" 
               alt="Featured on LaunchIgniter" 
               width="212" 
               height="55" 
             />
           </a>
-          <a href="https://fazier.com/launches/www.unifr.online" target="_blank" rel="noopener noreferrer">
+          <a href="https://fazier.com/launches/www.citero.online" target="_blank" rel="noopener noreferrer">
             <img 
               src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=neutral" 
               alt="Fazier badge" 

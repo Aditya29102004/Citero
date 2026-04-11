@@ -8,9 +8,19 @@ import { Badge } from "@/components/ui/badge";
 import { Lightbulb, Sparkles } from "lucide-react";
 import { ScrollArea } from "@/components/ui/scroll-area";
 
-// Simple markdown renderer
+// Simple markdown renderer with security sanitization
 const renderMarkdown = (text: string): string => {
-  return text
+  if (!text) return "";
+  
+  // XSS protection: Escape all raw HTML tags first
+  let safeText = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+
+  return safeText
     .replace(/^# (.*$)/gim, '<h1 class="text-3xl font-bold mb-4">$1</h1>')
     .replace(/^## (.*$)/gim, '<h2 class="text-2xl font-semibold mb-3 mt-6">$1</h2>')
     .replace(/^### (.*$)/gim, '<h3 class="text-xl font-semibold mb-2 mt-4">$1</h3>')

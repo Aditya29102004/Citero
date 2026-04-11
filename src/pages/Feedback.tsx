@@ -94,9 +94,9 @@ const Feedback = () => {
   return (
     <div className="bg-white min-h-screen">
       <SEO
-        title="Feedback & Suggestions - unifr"
-        description="Share your feedback, suggestions, or report issues with unifr. We value your input!"
-        canonical="https://unifr.ai/feedback"
+        title="Feedback & Suggestions - citero"
+        description="Share your feedback, suggestions, or report issues with citero. We value your input!"
+        canonical="https://citero.ai/feedback"
       />
       <HomeHeader />
       

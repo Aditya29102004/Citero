@@ -73,7 +73,7 @@ Provide concise, actionable recommendations as a numbered list.`;
               "Content-Type": "application/json",
               Authorization: `Bearer ${OPENROUTER_API_KEY}`,
               "HTTP-Referer": window.location.origin,
-              "X-Title": "Unifr Prompt Simulator",
+              "X-Title": "Citero Prompt Simulator",
             },
             body: JSON.stringify({
               model: "qwen/qwen-2.5-7b-instruct",

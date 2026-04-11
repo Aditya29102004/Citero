@@ -74,18 +74,18 @@ const Index = () => {
   return (
     <div className="bg-white overflow-x-hidden relative min-h-screen">
       <SEO
-        title="unifr - Track & Optimize Your Brand's AI Visibility | GEO Tracking Platform"
+        title="citero - Track & Optimize Your Brand's AI Visibility | GEO Tracking Platform"
         description="Multiply your traffic from AI agents. Track how ChatGPT, Gemini, Claude, and Perplexity describe your brand. Get AI visibility insights, competitor analysis, and actionable recommendations to turn AI mentions into traffic and customers."
         keywords="AI visibility tracking, GEO tracking, Generative Engine Optimization, AI search optimization, brand tracking, ChatGPT visibility, Gemini tracking, Claude tracking, Perplexity tracking, AI mentions, AI brand monitoring"
-        canonical="https://unifr.ai"
+        canonical="https://citero.ai"
         structuredData={[
           {
             "@context": "https://schema.org",
             "@type": "SoftwareApplication",
-            "name": "unifr",
+            "name": "citero",
             "applicationCategory": "BusinessApplication",
             "description": "Track and optimize your brand's AI visibility across ChatGPT, Gemini, Claude, and Perplexity. Get actionable insights to turn AI mentions into traffic and customers.",
-            "url": "https://unifr.ai",
+            "url": "https://citero.ai",
             "offers": {
               "@type": "Offer",
               "price": "99",
@@ -122,12 +122,12 @@ const Index = () => {
           {
             "@context": "https://schema.org",
             "@type": "WebSite",
-            "name": "unifr",
-            "url": "https://unifr.ai",
+            "name": "citero",
+            "url": "https://citero.ai",
             "description": "Track how ChatGPT, Perplexity, and Gemini describe your brand — and shows you how to increase your AI-driven traffic and visibility.",
             "potentialAction": {
               "@type": "SearchAction",
-              "target": "https://unifr.ai/search?q={search_term_string}",
+              "target": "https://citero.ai/search?q={search_term_string}",
               "query-input": "required name=search_term_string"
             }
           }
@@ -183,7 +183,7 @@ const Index = () => {
                 <div className="rounded-lg overflow-hidden bg-gradient-to-br from-gray-50/30 to-white">
                   <img 
                     src="/Screenshot 2025-12-02 180248.png" 
-                    alt="unifr Dashboard"
+                    alt="citero Dashboard"
                     className="w-full h-auto block rounded-lg scale-105"
                     loading="eager"
                     style={{ transform: 'scale(1.05)' }}
@@ -309,14 +309,14 @@ const Index = () => {
           <div className="flex items-center gap-8 animate-scroll">
             {/* First set of badges */}
             <a 
-              href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
+              href="https://www.producthunt.com/products/citero-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-citero-ai" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
             >
               <img 
                 src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
-                alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
+                alt="Citero AI - Multiply Your Traffic from AI Agents | Product Hunt" 
                 style={{ width: '200px', height: '43px' }} 
                 width="200" 
                 height="43" 
@@ -336,14 +336,14 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" 
+              href="https://startupfa.me/s/citero?utm_source=www.citero.online" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
             >
               <img 
                 src="https://startupfa.me/badges/featured/dark.webp" 
-                alt="unifr - Featured on Startup Fame" 
+                alt="citero - Featured on Startup Fame" 
                 width="171" 
                 height="54" 
               />
@@ -373,20 +373,20 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://launchigniter.com/product/unifr?ref=badge-unifr" 
+              href="https://launchigniter.com/product/citero?ref=badge-citero" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
             >
               <img 
-                src="https://launchigniter.com/api/badge/unifr?theme=neutral" 
+                src="https://launchigniter.com/api/badge/citero?theme=neutral" 
                 alt="Featured on LaunchIgniter" 
                 width="212" 
                 height="55" 
               />
             </a>
             <a 
-              href="https://fazier.com/launches/www.unifr.online" 
+              href="https://fazier.com/launches/www.citero.online" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
@@ -410,7 +410,7 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://findly.tools/unifr?utm_source=unifr" 
+              href="https://findly.tools/citero?utm_source=citero" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
@@ -422,7 +422,7 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://shipybara.com/projects/unifr" 
+              href="https://shipybara.com/projects/citero" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
@@ -435,28 +435,28 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://startuptrusted.com?ref=unifr.online" 
+              href="https://startuptrusted.com?ref=citero.online" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
             >
               <img 
                 src="https://startuptrusted.com/api/badge?type=top&style=light" 
-                alt="unifr on StartupTrusted" 
+                alt="citero on StartupTrusted" 
                 width="240" 
                 height="54" 
               />
             </a>
             {/* Duplicate set for seamless loop */}
             <a 
-              href="https://www.producthunt.com/products/unifr-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-unifr-ai" 
+              href="https://www.producthunt.com/products/citero-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-citero-ai" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
             >
               <img 
                 src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1037308&theme=neutral&t=1763916799417" 
-                alt="Unifr AI - Multiply Your Traffic from AI Agents | Product Hunt" 
+                alt="Citero AI - Multiply Your Traffic from AI Agents | Product Hunt" 
                 style={{ width: '200px', height: '43px' }} 
                 width="200" 
                 height="43" 
@@ -476,14 +476,14 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://startupfa.me/s/unifr?utm_source=www.unifr.online" 
+              href="https://startupfa.me/s/citero?utm_source=www.citero.online" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
             >
               <img 
                 src="https://startupfa.me/badges/featured/dark.webp" 
-                alt="unifr - Featured on Startup Fame" 
+                alt="citero - Featured on Startup Fame" 
                 width="171" 
                 height="54" 
               />
@@ -513,20 +513,20 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://launchigniter.com/product/unifr?ref=badge-unifr" 
+              href="https://launchigniter.com/product/citero?ref=badge-citero" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
             >
               <img 
-                src="https://launchigniter.com/api/badge/unifr?theme=neutral" 
+                src="https://launchigniter.com/api/badge/citero?theme=neutral" 
                 alt="Featured on LaunchIgniter" 
                 width="212" 
                 height="55" 
               />
             </a>
             <a 
-              href="https://fazier.com/launches/www.unifr.online" 
+              href="https://fazier.com/launches/www.citero.online" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
@@ -550,7 +550,7 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://findly.tools/unifr?utm_source=unifr" 
+              href="https://findly.tools/citero?utm_source=citero" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
@@ -562,7 +562,7 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://shipybara.com/projects/unifr" 
+              href="https://shipybara.com/projects/citero" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
@@ -575,14 +575,14 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://startuptrusted.com?ref=unifr.online" 
+              href="https://startuptrusted.com?ref=citero.online" 
               target="_blank"
               rel="noopener noreferrer"
               className="flex-shrink-0"
             >
               <img 
                 src="https://startuptrusted.com/api/badge?type=top&style=light" 
-                alt="unifr on StartupTrusted" 
+                alt="citero on StartupTrusted" 
                 width="240" 
                 height="54" 
               />
@@ -599,7 +599,7 @@ const Index = () => {
               Frequently Asked Questions
             </h2>
             <p className="text-base text-gray-600 max-w-2xl mx-auto">
-              Everything you need to know about unifr
+              Everything you need to know about citero
             </p>
           </div>
 
@@ -647,7 +647,7 @@ const Index = () => {
             {/* Right side - Text and CTA */}
             <div className="flex flex-col justify-center lg:text-left text-center relative z-20 order-1 lg:order-2">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 md:mb-4 tracking-tight leading-tight">
-                Unifr tracks how AI describe your brand — and shows you how to increase your AI-driven traffic and visibility.
+                Citero tracks how AI describe your brand — and shows you how to increase your AI-driven traffic and visibility.
               </h2>
               <div className="text-base md:text-lg text-gray-600 md:text-gray-700 mb-4 md:mb-6 leading-relaxed space-y-3">
                 <p>
@@ -657,7 +657,7 @@ const Index = () => {
                   AI answers change constantly. Asking ChatGPT manually doesn't show hidden citations, competitor visibility, long-term trends, sentiment analysis, or which websites influence AI models.
                 </p>
                 <p className="font-medium text-gray-900">
-                  Unifr automates all of this.
+                  Citero automates all of this.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 lg:justify-start justify-center">
