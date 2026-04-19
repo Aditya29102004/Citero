@@ -87,10 +87,10 @@ export function extractCompetitorsFromResponse(
  */
 export function calculateVisibilityScore(
   competitorMentions: number,
-  totalMentionsAcrossAllCompetitors: number
+  totalQueries: number
 ): number {
-  if (totalMentionsAcrossAllCompetitors === 0) return 0;
-  return (competitorMentions / totalMentionsAcrossAllCompetitors) * 100;
+  if (totalQueries === 0) return 0;
+  return (competitorMentions / totalQueries) * 100;
 }
 
 /**
@@ -98,10 +98,10 @@ export function calculateVisibilityScore(
  */
 export function calculateCitationShare(
   competitorMentions: number,
-  totalMentionsInResponses: number
+  totalQueries: number
 ): number {
-  if (totalMentionsInResponses === 0) return 0;
-  return (competitorMentions / totalMentionsInResponses) * 100;
+  if (totalQueries === 0) return 0;
+  return (competitorMentions / totalQueries) * 100;
 }
 
 /**

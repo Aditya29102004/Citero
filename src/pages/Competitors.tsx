@@ -746,7 +746,7 @@ const Competitors = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {competitors.map((comp) => (
+                          {competitors.slice(0, 10).map((comp) => (
                             <tr key={comp.name} className="border-b border-gray-100 hover:bg-gray-50">
                               <td className="py-3 px-4 text-sm font-medium text-gray-900">#{comp.rank}</td>
                               <td className="py-3 px-4 text-sm text-gray-900 font-medium">{comp.name}</td>
@@ -769,22 +769,59 @@ const Competitors = () => {
                   </Card>
 
                   {/* Competitor Visibility Trend Chart */}
-                  <Card className="p-6 border border-gray-200 bg-white">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-6">Competitor Visibility Trend (Last 7 Scans)</h3>
+                  <Card className="p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <h3 className="text-lg font-bold text-slate-900 mb-2 tracking-tight">Competitor Visibility Trend</h3>
+                    <p className="text-xs text-slate-500 mb-6 font-medium">Timeline of mentions compared to top competitors</p>
                     {competitorTrend.length === 0 ? (
                       <div className="h-[400px] flex items-center justify-center text-gray-500">
                         <p>Run more scans to see competitor trends.</p>
                       </div>
                     ) : (
                       <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={competitorTrend} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                          <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
-                          <YAxis stroke="#9ca3af" fontSize={11} domain={[0, 100]} tickFormatter={(value) => `${value}%`} tickLine={false} axisLine={false} />
-                          <Tooltip 
-                            contentStyle={{ backgroundColor: 'white', border: '1px solid #e5e7eb', borderRadius: '8px', padding: '8px 12px' }}
+                        <LineChart data={competitorTrend} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                          <defs>
+                            <filter id="shadowCompetitorTabs" height="200%">
+                              <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.1"/>
+                            </filter>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                          <XAxis 
+                            dataKey="date" 
+                            stroke="#94a3b8" 
+                            fontSize={11} 
+                            tickLine={false} 
+                            axisLine={false} 
+                            tickMargin={12}
                           />
-                          <Legend wrapperStyle={{ paddingTop: '20px' }} iconType="line" iconSize={12} fontSize={11} />
+                          <YAxis 
+                            stroke="#94a3b8" 
+                            fontSize={11} 
+                            domain={[0, 100]} 
+                            tickFormatter={(value) => `${value}%`} 
+                            tickLine={false} 
+                            axisLine={false} 
+                            tickMargin={12}
+                          />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              backdropFilter: 'blur(8px)',
+                              border: '1px solid #f1f5f9',
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+                              color: '#0f172a',
+                              fontSize: '13px',
+                              fontWeight: 500,
+                            }}
+                            cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                            formatter={(value: any) => [typeof value === 'number' ? `${value.toFixed(1)}%` : value, undefined]}
+                          />
+                          <Legend 
+                            wrapperStyle={{ paddingTop: '24px' }} 
+                            iconType="circle" 
+                            iconSize={10} 
+                            fontSize={12} 
+                          />
                           {competitors.slice(0, 5).map((comp, idx) => {
                             const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
                             return (
@@ -793,9 +830,10 @@ const Competitors = () => {
                                 type="monotone"
                                 dataKey={comp.name}
                                 stroke={colors[idx % colors.length]}
-                                strokeWidth={2}
-                                dot={{ r: 3 }}
-                                activeDot={{ r: 5 }}
+                                strokeWidth={3}
+                                dot={{ r: 4, fill: '#fff', stroke: colors[idx % colors.length], strokeWidth: 2 }}
+                                activeDot={{ r: 6, fill: colors[idx % colors.length], stroke: '#fff', strokeWidth: 2 }}
+                                style={{ filter: 'url(#shadowCompetitorTabs)' }}
                               />
                             );
                           })}

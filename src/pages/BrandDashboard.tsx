@@ -481,7 +481,7 @@ const BrandDashboard = () => {
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>Scanning...</span>
                           <span>
-                            {latestScan.completed_questions}/{latestScan.total_questions}
+                            {(latestScan.completed_questions || 0) * 3}/{(latestScan.total_questions || 0) * 3}
                           </span>
                         </div>
                         <Progress 

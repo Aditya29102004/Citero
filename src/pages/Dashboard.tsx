@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ShimmerCard, ShimmerChart } from "@/components/ShimmerCard";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
+import { LineChart, Line, AreaChart, Area, ComposedChart, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, PieChart, Pie, Cell } from "recharts";
 import { ArrowRight, Play, Loader2, X, Info, Target, Users, Lightbulb, CheckCircle2, Sparkles } from "lucide-react";
 import { mergeCompetitors } from "@/lib/utils/competitorAnalysis";
 import { toast } from "sonner";
@@ -52,10 +52,20 @@ const Dashboard = () => {
   const [currentScan, setCurrentScan] = useState<any>(null);
   const [scanPollingInterval, setScanPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const [expandedItems, setExpandedItems] = useState<Set<number>>(new Set());
-  const [aiProvider, setAiProvider] = useState<'openai' | 'gemini' | 'deepseek' | 'openrouter'>('openai');
+  const [aiProvider, setAiProvider] = useState<'openai' | 'gemini' | 'deepseek' | 'openrouter' | 'claude' | 'perplexity'>('openai');
   const [subscriptionLimits, setSubscriptionLimits] = useState<SubscriptionLimits | null>(null);
   const [scanUsage, setScanUsage] = useState<number>(0);
   const [latestScanInsights, setLatestScanInsights] = useState<any>(null);
+  const [isDashboardLoading, setIsDashboardLoading] = useState(false);
+  // Generation counter: each new call gets a higher number; stale calls are ignored
+  const fetchGenRef = useRef(0);
+  // Deduplication guard for consecutive identical fetches
+  const lastFetchKeyRef = useRef("");
+  // Refs to always hold the CURRENT filter values for use inside closures (realtime callbacks, etc.)
+  const providerRef = useRef(aiProvider);
+  const timeRangeRef = useRef(timeRangeFilter);
+  // Track whether the provider has been initialised from the DB yet (prevents fetchBrandDetails overwriting user selection)
+  const providerInitialisedRef = useRef(false);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -138,15 +148,11 @@ const Dashboard = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
-        // Check subscription status on auth state change with timeout
+        // Check subscription status on auth state change
         try {
           const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
-          const subscriptionLimits = await Promise.race([
-            getUserSubscriptionLimits(session.user.id),
-            new Promise<{ planType: null }>((resolve) => 
-              setTimeout(() => resolve({ planType: null }), 3000)
-            )
-          ]);
+          // Remove the 3-second timeout that could falsely trigger a redirect on slow connections
+          const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
           
           const hasActiveSubscription = subscriptionLimits.planType !== null;
           
@@ -159,8 +165,7 @@ const Dashboard = () => {
           setSubscriptionVerified(true);
         } catch (error) {
           console.error("Error checking subscription on auth change:", error);
-          navigate("/pricing", { replace: true });
-          return;
+          // Do not redirect on error to prevent kicking users out during transient network issues
         }
         
         await ensureProfile(
@@ -170,7 +175,7 @@ const Dashboard = () => {
         );
         await fetchUserBrands(session.user.id);
         if (selectedBrandId) {
-          await fetchDashboardData(session.user.id);
+          await fetchDashboardData({ userId: session.user.id, provider: aiProvider, timeRange: timeRangeFilter });
         }
       } else {
         // No session - redirect to auth
@@ -187,7 +192,22 @@ const Dashboard = () => {
     };
   }, []);
 
-  // Fetch latest scan only when brand changes, not when filters change
+  // Keep refs in sync whenever state changes so closures always read fresh values
+  useEffect(() => { providerRef.current = aiProvider; }, [aiProvider]);
+  useEffect(() => { timeRangeRef.current = timeRangeFilter; }, [timeRangeFilter]);
+
+  // Reset provider-initialised flag when brand changes so next brand's saved provider is loaded
+  useEffect(() => { providerInitialisedRef.current = false; }, [selectedBrandId]);
+
+  // Fetch brand details ONLY when brand changes (not on filter/provider changes)
+  // This prevents fetchBrandDetails from overwriting the user's aiProvider selection
+  useEffect(() => {
+    if (selectedBrandId && session?.user.id) {
+      fetchBrandDetails();
+    }
+  }, [selectedBrandId, session?.user.id]);
+
+  // Check for running scans on brand change (to restore UI state after reload)
   useEffect(() => {
     if (selectedBrandId && session?.user.id) {
       // First check for running scans immediately to restore state after reload
@@ -206,7 +226,6 @@ const Dashboard = () => {
           if (runningScan) {
             // Set immediately to restore UI state
             setCurrentScan(runningScan);
-            // Start polling right away
             return;
           }
         } catch (error) {
@@ -224,19 +243,10 @@ const Dashboard = () => {
   // Fetch dashboard data when brand or filters change
   useEffect(() => {
     if (selectedBrandId && session?.user.id) {
-      fetchDashboardData(session.user.id);
+      fetchDashboardData({ userId: session.user.id, provider: aiProvider, timeRange: timeRangeFilter });
       fetchSubscriptionLimits();
-      fetchBrandDetails();
-      
-      // Set up periodic refresh to check for new completed scans (every 15 seconds)
-      const refreshInterval = setInterval(() => {
-        fetchDashboardData(session.user.id);
-        fetchLatestScan();
-      }, 15000);
-      
-      return () => clearInterval(refreshInterval);
     }
-  }, [selectedBrandId, timeRangeFilter, topicsFilter, session?.user.id]);
+  }, [selectedBrandId, timeRangeFilter, topicsFilter, aiProvider, session?.user.id]);
 
   useEffect(() => {
     if (session?.user.id) {
@@ -244,50 +254,54 @@ const Dashboard = () => {
     }
   }, [session?.user.id]);
 
+  // Realtime subscription for scans table replacing polling
   useEffect(() => {
-    // Clean up any existing interval first
-    if (scanPollingInterval) {
-      clearInterval(scanPollingInterval);
-      setScanPollingInterval(null);
-    }
+    if (!selectedBrandId) return;
 
-    // Poll if scan is running and we have a brand selected
-    if (currentScan?.status === 'running' && selectedBrandId) {
-      const interval = setInterval(() => {
-        fetchLatestScan();
-      }, 2000);
-      setScanPollingInterval(interval);
-      return () => {
-        clearInterval(interval);
-        setScanPollingInterval(null);
-      };
-    }
-    
-    // Also poll periodically even when no scan is running to catch completed scans
-    // This ensures dashboard updates when scans complete in the background
-    if (selectedBrandId && session?.user.id && currentScan?.status !== 'running') {
-      const backgroundPollInterval = setInterval(async () => {
-        // Check for latest scan
-        const { data: latestScan } = await supabase
-          .from("scans")
-          .select("*")
-          .eq("brand_id", selectedBrandId)
-          .order("started_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
-        
-        // If we found a completed scan that's different from current, refresh dashboard
-        if (latestScan && latestScan.status === 'completed' && latestScan.id !== currentScan?.id) {
-          await fetchDashboardData(session.user.id);
-          setCurrentScan(latestScan);
+    // Realtime channel for observing scan updates explicitly
+    const channel = supabase
+      .channel(`scans-updates-${selectedBrandId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'scans',
+          filter: `brand_id=eq.${selectedBrandId}`
+        },
+        (payload) => {
+          const newScan = payload.new as any;
+          // Extra guard to guarantee brand_id match
+          if (newScan && newScan.brand_id !== selectedBrandId) return;
+
+          if (newScan) {
+            setCurrentScan((prevScan: any) => {
+              // Status transition check (not completed -> completed)
+              if (prevScan?.status !== 'completed' && newScan.status === 'completed') {
+                if (session?.user?.id) {
+                  // Use refs to get current filter values (callback closure would be stale)
+                  fetchDashboardData({ userId: session.user.id, provider: providerRef.current, timeRange: timeRangeRef.current, forceRefresh: true });
+                }
+              }
+              return newScan;
+            });
+          }
         }
-      }, 10000); // Check every 10 seconds
-      
-      return () => {
-        clearInterval(backgroundPollInterval);
-      };
-    }
-  }, [currentScan?.status, currentScan?.id, selectedBrandId, session?.user.id]);
+      )
+      .subscribe();
+
+    // 30s background optional fallback poll
+    const fallbackPollInterval = setInterval(async () => {
+      if (session?.user?.id) {
+        fetchLatestScan();
+      }
+    }, 30000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(fallbackPollInterval);
+    };
+  }, [selectedBrandId, session?.user.id]);
 
   const fetchLatestScan = async () => {
     if (!selectedBrandId) return;
@@ -317,23 +331,6 @@ const Dashboard = () => {
         // Always update running scans to show progress, or if status/id changed
         if (isRunning || statusChanged || isDifferentScan || !currentScan || progressChanged) {
           setCurrentScan(data);
-          
-          if (data.status === 'completed' && session?.user.id && statusChanged) {
-            // Refresh dashboard immediately when scan completes to show insights
-            // Also refresh insights data - use multiple attempts to ensure data is ready
-            const refreshDashboard = async (attempt = 1) => {
-              await fetchDashboardData(session.user.id);
-              await fetchLatestScan();
-              
-              // If this is the first attempt, try again after 2 seconds to catch any delayed data
-              if (attempt === 1) {
-                setTimeout(() => refreshDashboard(2), 2000);
-              }
-            };
-            
-            // Start refresh immediately
-            setTimeout(() => refreshDashboard(1), 500);
-          }
         }
       } else {
         // Only clear currentScan if it's not running (to avoid flickering)
@@ -391,9 +388,17 @@ const Dashboard = () => {
 
       if (brandData) {
         setSelectedBrand(brandData);
-        // Set AI provider from brand settings or default to openai
-        const provider = brandData.ai_provider as 'openai' | 'gemini' | 'deepseek' | 'openrouter' | undefined;
-        setAiProvider(provider && ['openai', 'gemini', 'deepseek', 'openrouter'].includes(provider) ? provider : 'openai');
+        // Only set AI provider from DB on the FIRST load of this brand
+        // (never overwrite a provider the user has already picked this session)
+        if (!providerInitialisedRef.current) {
+          const brandAny = brandData as any;
+          const savedProvider = brandAny.ai_provider as string | undefined;
+          const validProviders = ['openai', 'gemini', 'deepseek', 'openrouter', 'claude', 'perplexity'];
+          const resolvedProvider = savedProvider && validProviders.includes(savedProvider) ? savedProvider as any : 'openai';
+          setAiProvider(resolvedProvider);
+          providerRef.current = resolvedProvider;
+          providerInitialisedRef.current = true;
+        }
       }
     } catch (error) {
       console.error("Error fetching brand details:", error);
@@ -411,14 +416,17 @@ const Dashboard = () => {
       const usage = await getUserScanUsage(session.user.id);
       setScanUsage(usage);
 
-      // If user has Basic plan and current provider is not allowed, switch to allowed one
-      if (limits.planType === 'basic' && !limits.allowedAIProviders.includes(aiProvider)) {
-        setAiProvider(limits.allowedAIProviders[0] as 'openai' | 'gemini');
+      // If user has Basic plan and current provider is not allowed, switch to first allowed one
+      // Only do this when the provider is genuinely disallowed – prevents re-render loops
+      if (limits.planType === 'basic' && !limits.allowedAIProviders.includes(providerRef.current)) {
+        const fallback = limits.allowedAIProviders[0] as any;
+        setAiProvider(fallback);
+        providerRef.current = fallback;
         if (selectedBrandId) {
           try {
-            await supabase
+            await (supabase as any)
               .from('brands')
-              .update({ ai_provider: limits.allowedAIProviders[0] })
+              .update({ ai_provider: fallback })
               .eq('id', selectedBrandId);
           } catch (error) {
             console.warn('Could not save AI provider preference:', error);
@@ -486,13 +494,24 @@ const Dashboard = () => {
     return 0;
   };
 
-  const fetchDashboardData = async (userId: string) => {
-    try {
-      if (!selectedBrandId) {
-        setDashboardData(null);
-        return;
-      }
+  const fetchDashboardData = async ({ userId, provider, timeRange, forceRefresh }: { userId: string; provider: string; timeRange: string; forceRefresh?: boolean }) => {
+    if (!selectedBrandId) return;
 
+    // Deduplicate identical fetches globally
+    const fetchKey = `${selectedBrandId}-${provider}-${timeRange}`;
+    if (!forceRefresh && lastFetchKeyRef.current === fetchKey && dashboardData) {
+      console.log(`[Dashboard] Skip duplicate fetch: ${fetchKey}`);
+      return;
+    }
+    lastFetchKeyRef.current = fetchKey;
+
+    // Increment generation; capture this call's generation
+    const thisGen = ++fetchGenRef.current;
+
+    // Show loading spinner on every fetch so the user sees something is happening
+    setIsDashboardLoading(true);
+
+    try {
       // Don't call fetchLatestScan from here - it's handled by the useEffect hook
       // This prevents excessive calls when filters change
       
@@ -502,11 +521,11 @@ const Dashboard = () => {
         return;
       }
 
-      // Calculate date range
+      // Calculate date range using the explicit timeRange argument
       const now = new Date();
       let startDate: Date | null = null;
-      if (timeRangeFilter !== "all") {
-        switch (timeRangeFilter) {
+      if (timeRange !== "all") {
+        switch (timeRange) {
           case "7d":
             startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
             break;
@@ -526,19 +545,33 @@ const Dashboard = () => {
         .eq("brand_id", selectedBrandId)
         .order("created_at", { ascending: true });
 
+      // Generation guard: if a newer call came in, discard this result
+      if (thisGen !== fetchGenRef.current) return;
+
       if (scanResultsError) {
         console.error("Error fetching scan results:", scanResultsError);
-        // Set empty state instead of null to prevent blank screen
-        setDashboardData({ isEmpty: true, scanCount: 0, error: scanResultsError.message });
+        if (thisGen === fetchGenRef.current) {
+          setDashboardData({ isEmpty: true, scanCount: 0, error: scanResultsError.message });
+        }
         return;
       }
 
-      // Use all scan results (no platform filtering)
-      const scanResults = allScanResults || [];
+      // Use all scan results
+      let scanResults = allScanResults || [];
+
+      // Filter explicitly by platform using the explicit provider argument (no stale closure)
+      if (provider && scanResults.length > 0) {
+        scanResults = scanResults.filter((result: any) => {
+          const resultPlatform = result.platform || 'openai';
+          return resultPlatform === provider;
+        });
+      }
+
+      console.log(`[Dashboard] Fetched data for provider=${provider}, timeRange=${timeRange}, count=${scanResults.length}`);
 
       // Apply time filter client-side
-      let filteredResults = scanResults || [];
-      if (startDate && scanResults) {
+      let filteredResults = scanResults;
+      if (startDate && scanResults.length > 0) {
         filteredResults = scanResults.filter((result: any) => {
           const resultDate = new Date(result.created_at);
           return resultDate >= startDate!;
@@ -650,18 +683,16 @@ const Dashboard = () => {
         }
       }
 
-      // Get brand data for topics and competitors (must be done early)
-      const { data: brandData } = await supabase
+      // Get brand data for competitors (must be done early)
+      const { data: brandDataRaw } = await (supabase as any)
         .from("brands")
-        .select("topics, primary_competitors, competitors")
+        .select("primary_competitors, competitors")
         .eq("id", selectedBrandId)
         .single();
+      const brandData = brandDataRaw as any;
 
-      if (brandData && (brandData as any).topics && Array.isArray((brandData as any).topics)) {
-        setAvailableTopics((brandData as any).topics);
-      } else {
-        setAvailableTopics([]);
-      }
+      // topics column does not exist in brands table schema, skip
+      setAvailableTopics([]);
 
       // Get initial competitors from brand (early, before brand ranking calculation)
       let initialCompetitors: string[] = [];
@@ -711,7 +742,8 @@ const Dashboard = () => {
 
       // 1. Brand Visibility KPI
       const brandVisibility = latestScan.visibility_score ? Number(latestScan.visibility_score).toFixed(1) : "0.0";
-      const totalPrompts = latestScan.total_prompts || latestScanData?.total_questions || 0;
+      const actualTotalPrompts = latestScan.total_prompts || latestScanData?.total_questions || 0;
+      const totalPrompts = actualTotalPrompts > 0 ? actualTotalPrompts * 3 : 0;
 
       // 2. Citation Share KPI
       const citationShare = latestScan.citation_share ? Number(latestScan.citation_share).toFixed(1) : "0.0";
@@ -920,6 +952,9 @@ const Dashboard = () => {
           citations: count,
         }));
 
+      // Only commit if this is still the latest fetch
+      if (thisGen !== fetchGenRef.current) return;
+
       setDashboardData({
         isEmpty: false,
         scanCount: filteredResults.length,
@@ -939,12 +974,17 @@ const Dashboard = () => {
       });
     } catch (error: any) {
       console.error("Error fetching dashboard data:", error);
-      // Set empty state instead of null to prevent blank screen
-      setDashboardData({ 
-        isEmpty: true, 
-        scanCount: 0, 
-        error: error?.message || "Failed to load dashboard data" 
-      });
+      if (thisGen === fetchGenRef.current) {
+        setDashboardData({ 
+          isEmpty: true, 
+          scanCount: 0, 
+          error: error?.message || "Failed to load dashboard data" 
+        });
+      }
+    } finally {
+      if (thisGen === fetchGenRef.current) {
+        setIsDashboardLoading(false);
+      }
     }
   };
 
@@ -1000,7 +1040,7 @@ const Dashboard = () => {
     }
 
     // Check AI provider is allowed
-    const providerCheck = await isAIProviderAllowed(session.user.id, aiProvider);
+    const providerCheck = await isAIProviderAllowed(session.user.id, aiProvider as any);
     if (!providerCheck.allowed) {
       toast.error(providerCheck.reason || "AI provider not allowed");
       return;
@@ -1107,17 +1147,23 @@ const Dashboard = () => {
   const CompetitorTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          {payload.map((entry: any, index: number) => (
-            <p key={index} className="text-sm" style={{ color: entry.color }}>
-              <span className="font-medium">{entry.name}:</span> {entry.value}%
-            </p>
-          ))}
-          {payload[0]?.payload?.timestamp && (
-            <p className="text-xs text-gray-500 mt-2">
-              {new Date(payload[0].payload.timestamp).toLocaleDateString()}
-            </p>
-          )}
+        <div className="bg-white/95 backdrop-blur-sm border border-slate-200/80 rounded-xl shadow-xl p-4 min-w-[160px] animate-in fade-in zoom-in-95 duration-200">
+          <p className="text-[13px] font-bold text-slate-900 mb-3 pb-2 border-b border-slate-100">
+            {payload[0]?.payload?.date || 'Competitor Trends'}
+          </p>
+          <div className="flex flex-col gap-2.5">
+            {payload.map((entry: any, index: number) => (
+              <div key={index} className="flex items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: entry.color }} />
+                  <span className="text-[13px] font-medium text-slate-700">{entry.name}</span>
+                </div>
+                <span className="text-[13px] font-bold" style={{ color: entry.color }}>
+                  {typeof entry.value === 'number' ? entry.value.toFixed(1) : entry.value}%
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       );
     }
@@ -1128,15 +1174,16 @@ const Dashboard = () => {
   const CitationTooltip = ({ active, payload }: any) => {
     if (active && payload && payload.length) {
       return (
-        <div className="bg-white border border-gray-200 rounded-lg shadow-lg p-3">
-          <p className="text-sm font-medium text-gray-900">
-            Citation Share: {payload[0].value}%
+        <div className="bg-white/95 backdrop-blur-sm border border-emerald-100 rounded-xl shadow-xl p-4 min-w-[140px] animate-in fade-in zoom-in-95 duration-200 ring-1 ring-black/5">
+          <p className="text-[12px] font-bold text-slate-500 mb-1 uppercase tracking-wider">
+            {payload[0]?.payload?.date || 'Date'}
           </p>
-          {payload[0]?.payload?.timestamp && (
-            <p className="text-xs text-gray-500 mt-1">
-              {new Date(payload[0].payload.timestamp).toLocaleDateString()}
-            </p>
-          )}
+          <div className="flex items-end gap-2">
+            <span className="text-2xl font-black text-emerald-600 tracking-tight">
+              {typeof payload[0].value === 'number' ? payload[0].value.toFixed(1) : payload[0].value}%
+            </span>
+            <span className="text-[13px] font-medium text-emerald-700/80 mb-1">share</span>
+          </div>
         </div>
       );
     }
@@ -1200,7 +1247,7 @@ const Dashboard = () => {
                         </span>
                         <div className="flex items-center gap-3">
                           <span className="text-sm text-blue-700 font-semibold bg-blue-100 px-3 py-1 rounded-lg">
-                            {currentScan.completed_questions || 0} / {currentScan.total_questions || 0} prompts answered
+                            {(currentScan.completed_questions || 0) * 3} / {(currentScan.total_questions || 0) * 3} prompts answered
                           </span>
                           <Button
                             onClick={handleCancelScan}
@@ -1224,75 +1271,19 @@ const Dashboard = () => {
                 )}
                 
                 <div className="mb-8">
-                  <div className="flex items-center justify-between mb-6">
-                    <div className="flex items-center gap-4">
-                      <div>
-                        <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-                      </div>
-                      {brands.length > 0 && (
-                        <Select 
-                          value={selectedBrandId} 
-                          onValueChange={(value) => {
-                            setSelectedBrandId(value);
-                            const brand = brands.find(b => b.id === value);
-                            if (brand) setSelectedBrandName(brand.name);
-                          }}
-                        >
-                          <SelectTrigger className="w-[200px] border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                            <SelectValue placeholder="Select Brand" />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {brands.map((brand) => (
-                              <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      )}
+                  {/* Header & Run Scan Button */}
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
+                    <div>
+                      <h1 className="text-4xl font-extrabold text-[#0f172a] tracking-tight">Dashboard</h1>
                     </div>
-                  </div>
-                  
-                  {/* AI Provider Selection and Run Scan */}
-                  {selectedBrandId && (
-                    <div className="mb-6 flex flex-col sm:flex-row items-start sm:items-end gap-4">
-                      <div className="flex flex-col gap-2 min-w-[200px]">
-                        <Label htmlFor="ai-provider" className="text-xs text-gray-600 font-semibold uppercase tracking-wide">
-                          AI Provider
-                        </Label>
-                        <AIProviderSelect
-                          value={aiProvider}
-                          onValueChange={async (value) => {
-                            if (!session?.user?.id) return;
-                            
-                            const providerCheck = await isAIProviderAllowed(session.user.id, value);
-                            if (!providerCheck.allowed) {
-                              toast.error(providerCheck.reason || "AI provider not available on your plan");
-                              return;
-                            }
-                            
-                            setAiProvider(value);
-                            if (selectedBrandId) {
-                              try {
-                                const { error } = await supabase
-                                  .from('brands')
-                                  .update({ ai_provider: value })
-                                  .eq('id', selectedBrandId);
-                                if (error) {
-                                  console.warn('Could not save AI provider preference:', error.message);
-                                }
-                              } catch (error) {
-                                console.warn('Error saving AI provider preference:', error);
-                              }
-                            }
-                          }}
-                          subscriptionLimits={subscriptionLimits}
-                          disabled={runningScan || currentScan?.status === 'running'}
-                          className="w-full bg-white border-gray-300 text-sm h-10"
-                        />
-                      </div>
-                      <div className="flex items-center gap-3">
+                    {selectedBrandId && (
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                         {subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && (
-                          <div className="text-xs text-gray-500 text-right">
-                            {scanUsage} / {subscriptionLimits.scansPerMonth} scans this month
+                          <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 shadow-sm h-11">
+                            <div className="text-[13px] font-medium text-gray-700">
+                              <span className="font-bold text-gray-900">{scanUsage}</span>
+                              <span className="text-gray-500"> / {subscriptionLimits.scansPerMonth} scans</span>
+                            </div>
                           </div>
                         )}
                         <Button
@@ -1302,31 +1293,85 @@ const Dashboard = () => {
                             currentScan?.status === 'running' || 
                             (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth)
                           }
-                          className="bg-gray-900 text-white hover:bg-gray-800"
+                          className="bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 shadow-sm h-11 px-6 font-semibold rounded-xl"
                         >
                           <RefreshCw className={`h-4 w-4 mr-2 ${runningScan || currentScan?.status === 'running' ? 'animate-spin' : ''}`} />
                           {currentScan?.status === 'running' ? 'Scanning...' : 
                            (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth) ? 'Limit Reached' : 'Run GEO Scan'}
                         </Button>
                         {subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth && (
-                          <div className="flex items-center gap-1 text-xs text-amber-600">
-                            <AlertCircle className="h-3 w-3" />
-                            <span>Monthly limit reached. Upgrade to Pro for more scans.</span>
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                            <span className="text-xs text-amber-700 font-medium">Monthly limit reached</span>
                           </div>
                         )}
                         {subscriptionLimits && (!subscriptionLimits.planType || subscriptionLimits.scansPerMonth === 0) && (
-                          <div className="flex items-center gap-1 text-xs text-amber-600">
-                            <AlertCircle className="h-3 w-3" />
-                            <span>No active subscription. Please subscribe to run scans.</span>
+                          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                            <span className="text-xs text-amber-700 font-medium">No active subscription</span>
                           </div>
                         )}
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                   
-                  <div className="flex gap-4">
+                  {/* Filters Row */}
+                  <div className="flex flex-wrap items-center gap-3">
+                    {brands.length > 0 && (
+                      <Select 
+                        value={selectedBrandId} 
+                        onValueChange={(value) => {
+                          setSelectedBrandId(value);
+                          const brand = brands.find(b => b.id === value);
+                          if (brand) setSelectedBrandName(brand.name);
+                        }}
+                      >
+                        <SelectTrigger className="w-[180px] h-11 rounded-xl bg-white border-gray-200 text-[13.5px] transition-all">
+                          <SelectValue placeholder="Select Brand" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {brands.map((brand) => (
+                            <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    )}
+                    
+                    {selectedBrandId && (
+                      <AIProviderSelect
+                        value={aiProvider}
+                        onValueChange={async (value) => {
+                          if (!session?.user?.id) return;
+                          
+                          const providerCheck = await isAIProviderAllowed(session.user.id, value as any);
+                          if (!providerCheck.allowed) {
+                            toast.error(providerCheck.reason || "AI provider not available on your plan");
+                            return;
+                          }
+                          
+                          setAiProvider(value as any);
+                          if (selectedBrandId) {
+                            try {
+                              const { error } = await (supabase as any)
+                                .from('brands')
+                                .update({ ai_provider: value })
+                                .eq('id', selectedBrandId);
+                              if (error) {
+                                console.warn('Could not save AI provider preference:', error.message);
+                              }
+                            } catch (error) {
+                              console.warn('Error saving AI provider preference:', error);
+                            }
+                          }
+                        }}
+                        subscriptionLimits={subscriptionLimits}
+                        disabled={runningScan || currentScan?.status === 'running'}
+                        className="w-[180px] h-11 rounded-xl bg-white border-gray-200 text-[13.5px] transition-all"
+                      />
+                    )}
+                    
                     <Select value={timeRangeFilter} onValueChange={setTimeRangeFilter}>
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-[180px] h-11 rounded-xl bg-white border-gray-200 text-[13.5px] transition-all">
                         <SelectValue placeholder="Time Range" />
                       </SelectTrigger>
                       <SelectContent>
@@ -1336,26 +1381,23 @@ const Dashboard = () => {
                         <SelectItem value="all">All time</SelectItem>
                       </SelectContent>
                     </Select>
-                    <Select value={topicsFilter} onValueChange={setTopicsFilter}>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Topics" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">All Topics</SelectItem>
-                        {availableTopics.map((topic) => (
-                          <SelectItem key={topic} value={topic}>{topic}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
                   </div>
                 </div>
-                <div className="text-center py-24">
-                  <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-6">
-                    <Target className="h-8 w-8 text-gray-400" />
+                {isDashboardLoading ? (
+                  <div className="text-center py-24">
+                    <Loader2 className="h-10 w-10 animate-spin text-[#0f172a] mx-auto mb-4" />
+                    <p className="text-gray-900 mb-2 text-xl font-bold tracking-tight">Loading Dashboard...</p>
+                    <p className="text-gray-500 text-sm font-medium">Fetching history and optimizing views...</p>
                   </div>
-                  <p className="text-gray-900 mb-2 text-xl font-bold tracking-tight">No AI visibility data yet.</p>
-                  <p className="text-gray-500 mb-8 text-sm font-medium max-w-md mx-auto">Run your first GEO Scan to start tracking your brand's AI presence and get actionable insights.</p>
-                </div>
+                ) : (
+                  <div className="text-center py-24">
+                    <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-gray-100 mb-6">
+                      <Target className="h-8 w-8 text-gray-400" />
+                    </div>
+                    <p className="text-gray-900 mb-2 text-xl font-bold tracking-tight">No AI visibility data yet.</p>
+                    <p className="text-gray-500 mb-8 text-sm font-medium max-w-md mx-auto">Run your first GEO Scan to start tracking your brand's AI presence and get actionable insights.</p>
+                  </div>
+                )}
               </div>
             </main>
           </div>
@@ -1386,7 +1428,7 @@ const Dashboard = () => {
                       </span>
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-blue-700 font-semibold bg-blue-100 px-3 py-1 rounded-lg">
-                          {currentScan.completed_questions || 0} / {currentScan.total_questions || 0} prompts answered
+                          {(currentScan.completed_questions || 0) * 3} / {(currentScan.total_questions || 0) * 3} prompts answered
                         </span>
                         <Button
                           onClick={handleCancelScan}
@@ -1411,90 +1453,28 @@ const Dashboard = () => {
               
               
               {/* Header with Filters */}
+              {/* Header with Filters */}
+              {/* Header with Filters */}
               <div className="mb-10">
-                {/* Title and Brand Selector */}
+                {/* Title and Run Button */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
-                  <div className="flex items-center gap-4">
-                    <div>
-                      <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Dashboard</h1>
-                    </div>
-                    {brands.length > 0 && (
-                      <Select 
-                        value={selectedBrandId} 
-                        onValueChange={(value) => {
-                          setSelectedBrandId(value);
-                          const brand = brands.find(b => b.id === value);
-                          if (brand) setSelectedBrandName(brand.name);
-                        }}
-                      >
-                        <SelectTrigger className="w-[220px] h-10 bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                          <SelectValue placeholder="Select Brand" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {brands.map((brand) => (
-                            <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    )}
+                  <div>
+                    <h1 className="text-4xl font-extrabold text-[#0f172a] tracking-tight">Dashboard</h1>
                   </div>
-                </div>
-                
-                {/* AI Provider Selection and Run Scan */}
-                {selectedBrandId && (
-                  <div className="mb-6 flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4 p-6 bg-gradient-to-br from-white via-gray-50/50 to-white rounded-2xl border border-gray-200/80 shadow-sm hover:shadow-md transition-all duration-300">
-                    <div className="flex flex-col sm:flex-row items-start sm:items-end gap-4 flex-1">
-                      <div className="flex flex-col gap-2 min-w-[200px]">
-                        <Label htmlFor="ai-provider" className="text-xs text-gray-600 font-semibold uppercase tracking-wide">
-                          AI Provider
-                        </Label>
-                        <AIProviderSelect
-                          value={aiProvider}
-                          onValueChange={async (value) => {
-                            if (!session?.user?.id) return;
-                            
-                            // Check if provider is allowed
-                            const providerCheck = await isAIProviderAllowed(session.user.id, value);
-                            if (!providerCheck.allowed) {
-                              toast.error(providerCheck.reason || "AI provider not available on your plan");
-                              return;
-                            }
-                            
-                            setAiProvider(value);
-                            if (selectedBrandId) {
-                              try {
-                                const { error } = await supabase
-                                  .from('brands')
-                                  .update({ ai_provider: value })
-                                  .eq('id', selectedBrandId);
-                                if (error) {
-                                  console.warn('Could not save AI provider preference:', error.message);
-                                }
-                              } catch (error) {
-                                console.warn('Error saving AI provider preference:', error);
-                              }
-                            }
-                          }}
-                          subscriptionLimits={subscriptionLimits}
-                          disabled={runningScan || currentScan?.status === 'running'}
-                          className="w-full bg-white border-gray-200 text-sm h-10 shadow-sm hover:shadow-md transition-shadow"
-                        />
-                      </div>
-                      
+                  
+                  {/* Run Scan Button */}
+                  {selectedBrandId && (
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                       {/* Scan Usage Info */}
                       {subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && (
-                        <div className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-white/80 backdrop-blur-sm border border-gray-200 shadow-sm h-10">
-                          <div className="text-sm text-gray-700">
-                            <span className="font-semibold text-gray-900">{scanUsage}</span>
-                            <span className="text-gray-500"> / {subscriptionLimits.scansPerMonth}</span>
-                            <span className="text-gray-500 text-xs ml-1">scans</span>
+                        <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 shadow-sm h-11">
+                          <div className="text-[13px] font-medium text-gray-700">
+                            <span className="font-bold text-gray-900">{scanUsage}</span>
+                            <span className="text-gray-500"> / {subscriptionLimits.scansPerMonth} scans</span>
                           </div>
                         </div>
                       )}
-                    </div>
-                    
-                    {/* Run Scan Button */}
-                    <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+                      
                       <Button
                         onClick={handleRunGeoScan}
                         disabled={
@@ -1502,7 +1482,7 @@ const Dashboard = () => {
                           currentScan?.status === 'running' || 
                           (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth)
                         }
-                        className="bg-gray-900 text-white hover:bg-gray-800 shadow-md hover:shadow-xl transition-all duration-200 h-10 px-6 font-semibold hover:scale-[1.02] active:scale-[0.98]"
+                        className="bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 shadow-sm transition-all duration-200 h-11 px-6 font-semibold hover:scale-[1.02] active:scale-[0.98] rounded-xl"
                       >
                         <RefreshCw className={`h-4 w-4 mr-2 ${runningScan || currentScan?.status === 'running' ? 'animate-spin' : ''}`} />
                         {currentScan?.status === 'running' ? 'Scanning...' : 
@@ -1523,13 +1503,67 @@ const Dashboard = () => {
                         </div>
                       )}
                     </div>
-                  </div>
-                )}
+                  )}
+                </div>
                 
                 {/* Filters Row */}
-                <div className="flex flex-wrap gap-3">
+                <div className="flex flex-wrap items-center gap-3">
+                  {brands.length > 0 && (
+                    <Select 
+                      value={selectedBrandId} 
+                      onValueChange={(value) => {
+                        setSelectedBrandId(value);
+                        const brand = brands.find(b => b.id === value);
+                        if (brand) setSelectedBrandName(brand.name);
+                      }}
+                    >
+                      <SelectTrigger className="w-[180px] h-11 rounded-xl bg-white border-gray-200 text-[13.5px] transition-all">
+                        <SelectValue placeholder="Select Brand" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {brands.map((brand) => (
+                          <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  
+                  {selectedBrandId && (
+                    <AIProviderSelect
+                      value={aiProvider}
+                      onValueChange={async (value) => {
+                        if (!session?.user?.id) return;
+                        
+                        // Check if provider is allowed
+                        const providerCheck = await isAIProviderAllowed(session.user.id, value as any);
+                        if (!providerCheck.allowed) {
+                          toast.error(providerCheck.reason || "AI provider not available on your plan");
+                          return;
+                        }
+                        
+                        setAiProvider(value as any);
+                        if (selectedBrandId) {
+                          try {
+                            const { error } = await (supabase as any)
+                              .from('brands')
+                              .update({ ai_provider: value })
+                              .eq('id', selectedBrandId);
+                            if (error) {
+                              console.warn('Could not save AI provider preference:', error.message);
+                            }
+                          } catch (error) {
+                            console.warn('Error saving AI provider preference:', error);
+                          }
+                        }
+                      }}
+                      subscriptionLimits={subscriptionLimits}
+                      disabled={runningScan || currentScan?.status === 'running'}
+                      className="w-[180px] h-11 rounded-xl bg-white border-gray-200 text-[13.5px] transition-all"
+                    />
+                  )}
+
                   <Select value={timeRangeFilter} onValueChange={setTimeRangeFilter}>
-                    <SelectTrigger className="w-[180px] h-10 bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                    <SelectTrigger className="w-[180px] h-11 rounded-xl bg-white border-gray-200 text-[13.5px] transition-none">
                       <SelectValue placeholder="Time Range" />
                     </SelectTrigger>
                     <SelectContent>
@@ -1539,32 +1573,26 @@ const Dashboard = () => {
                       <SelectItem value="all">All time</SelectItem>
                     </SelectContent>
                   </Select>
-                  <Select value={topicsFilter} onValueChange={setTopicsFilter}>
-                    <SelectTrigger className="w-[180px] h-10 bg-white border-gray-200 shadow-sm hover:shadow-md transition-shadow">
-                      <SelectValue placeholder="Topics" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">All Topics</SelectItem>
-                      {availableTopics.map((topic) => (
-                        <SelectItem key={topic} value={topic}>{topic}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
                 </div>
+                
+                {!dashboardData?.isEmpty && (
+                   <p className="mt-5 text-sm text-gray-700 font-medium">
+                     Report based on {dashboardData.totalPrompts || 0} prompts.{dashboardData.totalPrompts > 0 ? ` Showing AI visibility trends.` : ''}
+                   </p>
+                )}
               </div>
 
-              {/* KPI Cards - Enhanced Modern Style */}
+              {/* KPI Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
                 {/* Brand Visibility */}
-                <Card className="group relative overflow-hidden p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-bl-full"></div>
+                <Card className="relative overflow-hidden p-6 border border-gray-200 bg-white">
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Brand Visibility</p>
                     <TooltipProvider>
                       <UITooltip>
                         <TooltipTrigger>
-                            <Info className="h-4 w-4 text-gray-400 hover:text-gray-600 transition-colors" />
+                            <Info className="h-4 w-4 text-gray-400" />
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>Percentage of prompts where your brand appeared compared to competitors.</p>
@@ -1578,8 +1606,7 @@ const Dashboard = () => {
                 </Card>
 
                 {/* Citation Share */}
-                <Card className="group relative overflow-hidden p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-bl-full"></div>
+                <Card className="relative overflow-hidden p-6 border border-gray-200 bg-white">
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Citation Share</p>
@@ -1592,8 +1619,7 @@ const Dashboard = () => {
                 </Card>
 
                 {/* Brand Ranking */}
-                <Card className="group relative overflow-hidden p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-purple-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-bl-full"></div>
+                <Card className="relative overflow-hidden p-6 border border-gray-200 bg-white">
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Brand Ranking</p>
@@ -1606,8 +1632,7 @@ const Dashboard = () => {
                 </Card>
 
                 {/* Closest Competitor */}
-                <Card className="group relative overflow-hidden p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5">
-                  <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-amber-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-bl-full"></div>
+                <Card className="relative overflow-hidden p-6 border border-gray-200 bg-white">
                   <div className="relative">
                     <div className="flex items-center justify-between mb-4">
                       <p className="text-sm font-semibold text-gray-600 uppercase tracking-wide">Closest Competitor</p>
@@ -1629,7 +1654,7 @@ const Dashboard = () => {
               </div>
 
               {/* Charts */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
+              <div className="grid grid-cols-1 mb-6">
                 {/* Competitor Visibility Chart */}
                 <Card className="p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                   <div className="mb-6 pb-4 border-b border-gray-100">
@@ -1646,44 +1671,56 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={dashboardData.competitorTrend} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                      <ComposedChart data={dashboardData.competitorTrend} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="colorYourBrand" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                          </linearGradient>
+                          <filter id="shadow" height="200%">
+                            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#3b82f6" floodOpacity="0.2"/>
+                          </filter>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis 
                           dataKey="date" 
-                          stroke="#9ca3af" 
+                          stroke="#94a3b8" 
                           fontSize={11}
                           tickLine={false}
                           axisLine={false}
-                          tickMargin={10}
+                          tickMargin={12}
                         />
                         <YAxis 
-                          stroke="#9ca3af" 
+                          stroke="#94a3b8" 
                           fontSize={11}
                           domain={[0, 100]}
                           tickLine={false}
                           axisLine={false}
-                          tickMargin={10}
+                          tickMargin={12}
                           width={40}
                         />
                         <Tooltip 
                           content={<CompetitorTooltip />}
-                          cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
+                          cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
                         <Legend 
                           wrapperStyle={{ paddingTop: '20px' }}
-                          iconType="line"
-                          iconSize={12}
+                          iconType="circle"
+                          iconSize={8}
                           fontSize={11}
                         />
-                        <Line 
+                        <Area 
                           type="monotone" 
                           dataKey="Your Brand" 
                           stroke="#3b82f6" 
-                          strokeWidth={2.5}
-                          dot={{ r: 3, fill: '#3b82f6' }}
-                          activeDot={{ r: 5 }}
+                          fillOpacity={1} 
+                          fill="url(#colorYourBrand)" 
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: '#fff', stroke: '#3b82f6', strokeWidth: 2 }}
+                          activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
                           name="Your Brand"
                           connectNulls={false}
+                          style={{ filter: 'url(#shadow)' }}
                         />
                         {dashboardData.competitorNames && dashboardData.competitorNames.length > 0 ? dashboardData.competitorNames.map((name: string, index: number) => (
                           <Line
@@ -1692,17 +1729,20 @@ const Dashboard = () => {
                             dataKey={name}
                             stroke={COMPETITOR_COLORS[index % COMPETITOR_COLORS.length]}
                             strokeWidth={2}
-                            dot={{ r: 3, fill: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length] }}
-                            activeDot={{ r: 5 }}
+                            dot={{ r: 3, fill: '#fff', stroke: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length], strokeWidth: 1.5 }}
+                            activeDot={{ r: 5, fill: COMPETITOR_COLORS[index % COMPETITOR_COLORS.length], stroke: '#fff', strokeWidth: 1.5 }}
                             name={name}
                             connectNulls={false}
                           />
                         )) : null}
-                      </LineChart>
+                      </ComposedChart>
                     </ResponsiveContainer>
                   )}
                 </Card>
+              </div>
 
+              {/* Citation Share and Sentiment */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
                 {/* Citation Share Trends Chart */}
                 <Card className="p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                   <div className="mb-6 pb-4 border-b border-gray-100">
@@ -1719,45 +1759,54 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <ResponsiveContainer width="100%" height={300}>
-                      <LineChart data={dashboardData.citationTrend} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
+                      <AreaChart data={dashboardData.citationTrend} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
+                        <defs>
+                          <linearGradient id="colorCitation" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
+                            <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+                          </linearGradient>
+                          <filter id="shadowCitation" height="200%">
+                            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#10b981" floodOpacity="0.2"/>
+                          </filter>
+                        </defs>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
                         <XAxis 
                           dataKey="date" 
-                          stroke="#9ca3af" 
+                          stroke="#94a3b8" 
                           fontSize={11}
                           tickLine={false}
                           axisLine={false}
-                          tickMargin={10}
+                          tickMargin={12}
                         />
                         <YAxis 
-                          stroke="#9ca3af" 
+                          stroke="#94a3b8" 
                           fontSize={11}
                           domain={[0, 100]}
                           tickLine={false}
                           axisLine={false}
-                          tickMargin={10}
+                          tickMargin={12}
                           width={40}
                         />
                         <Tooltip 
                           content={<CitationTooltip />}
-                          cursor={{ stroke: '#e5e7eb', strokeWidth: 1 }}
+                          cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
                         />
-                        <Line 
+                        <Area 
                           type="monotone" 
                           dataKey="Citation Share" 
                           stroke="#10b981" 
-                          strokeWidth={2.5}
-                          dot={{ r: 3, fill: '#10b981' }}
-                          activeDot={{ r: 5 }}
+                          fillOpacity={1}
+                          fill="url(#colorCitation)"
+                          strokeWidth={3}
+                          dot={{ r: 4, fill: '#fff', stroke: '#10b981', strokeWidth: 2 }}
+                          activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }}
+                          style={{ filter: 'url(#shadowCitation)' }}
                         />
-                      </LineChart>
+                      </AreaChart>
                     </ResponsiveContainer>
                   )}
                 </Card>
-              </div>
 
-              {/* Sentiment Distribution and Top Sources */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-10">
                 {/* Sentiment Distribution Pie Chart */}
                 <Card className="p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                   <div className="mb-6 pb-4 border-b border-gray-100">
@@ -1797,17 +1846,19 @@ const Dashboard = () => {
                           }}
                         />
                         <Legend 
-                          wrapperStyle={{ paddingTop: '20px' }}
+                          wrapperStyle={{ paddingTop: '24px' }}
                           iconType="circle"
-                          iconSize={8}
-                          fontSize={11}
+                          iconSize={10}
+                          fontSize={12}
                         />
                       </PieChart>
                     </ResponsiveContainer>
                   )}
                 </Card>
+              </div>
 
-                {/* Top Sources Table */}
+              {/* Top Sources Table */}
+              <div className="grid grid-cols-1 mb-10">
                 <Card className="p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
                   <div className="mb-6 pb-4 border-b border-gray-100">
                     <h3 className="text-lg font-bold text-gray-900 tracking-tight">Top Sources</h3>

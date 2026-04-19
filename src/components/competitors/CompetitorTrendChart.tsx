@@ -109,43 +109,62 @@ export function CompetitorTrendChart({
 
   return (
     <Card className="p-6 border border-gray-200 bg-white">
-      <h3 className="text-lg font-semibold text-gray-900 mb-6">
+      <h3 className="text-lg font-bold text-slate-900 mb-2 tracking-tight">
         Competitor Visibility Trend
       </h3>
+      <p className="text-xs text-slate-500 mb-6 font-medium">Timeline of mentions compared to top competitors</p>
       <ResponsiveContainer width="100%" height={350}>
-        <LineChart data={trendData}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+        <LineChart data={trendData} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+          <defs>
+            <filter id="shadowCompetitor" height="200%">
+              <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.1"/>
+            </filter>
+          </defs>
+          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
           <XAxis
             dataKey="date"
-            stroke="#6b7280"
-            fontSize={12}
+            stroke="#94a3b8"
+            fontSize={11}
             tickLine={false}
             axisLine={false}
+            tickMargin={12}
           />
           <YAxis
-            stroke="#6b7280"
-            fontSize={12}
+            stroke="#94a3b8"
+            fontSize={11}
             tickLine={false}
             axisLine={false}
+            tickMargin={12}
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: "white",
-              border: "1px solid #e5e7eb",
-              borderRadius: "8px",
-              padding: "8px 12px",
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(8px)',
+              border: '1px solid #f1f5f9',
+              borderRadius: '12px',
+              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+              color: '#0f172a',
+              fontSize: '13px',
+              fontWeight: 500,
             }}
+            cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
           />
-          <Legend />
+          <Legend 
+            wrapperStyle={{ paddingTop: '24px' }}
+            iconType="circle"
+            iconSize={10}
+            fontSize={12}
+          />
           {competitors.slice(0, 5).map((competitor, idx) => (
             <Line
               key={competitor.competitor_name}
-              type="linear"
+              type="monotone"
               dataKey={competitor.competitor_name}
               stroke={colors[idx % colors.length]}
-              strokeWidth={2}
-              dot={{ r: 3 }}
-              activeDot={{ r: 5 }}
+              strokeWidth={3}
+              dot={{ r: 4, fill: '#fff', stroke: colors[idx % colors.length], strokeWidth: 2 }}
+              activeDot={{ r: 6, fill: colors[idx % colors.length], stroke: '#fff', strokeWidth: 2 }}
+              style={{ filter: 'url(#shadowCompetitor)' }}
             />
           ))}
         </LineChart>

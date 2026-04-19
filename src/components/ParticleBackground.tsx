@@ -52,9 +52,9 @@ export const ParticleBackground = ({
           y: Math.random() * canvas.height,
           vx: (Math.random() - 0.5) * 0.5,
           vy: (Math.random() - 0.5) * 0.5,
-          radius: Math.random() * 3 + 2,
-          opacity: Math.random() * 0.5 + 0.3,
-          baseRadius: Math.random() * 3 + 2,
+          radius: Math.random() * 2 + 1.5,
+          opacity: Math.random() * 0.3 + 0.1,
+          baseRadius: Math.random() * 2 + 1.5,
         });
       }
     };
@@ -141,7 +141,7 @@ export const ParticleBackground = ({
           const maxConnectionDistance = 180;
 
           if (distance < maxConnectionDistance) {
-            const opacity = (1 - distance / maxConnectionDistance) * 0.25;
+            const opacity = (1 - distance / maxConnectionDistance) * 0.15;
             ctx.beginPath();
             ctx.moveTo(particle.x, particle.y);
             ctx.lineTo(otherParticle.x, otherParticle.y);

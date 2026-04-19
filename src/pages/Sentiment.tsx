@@ -145,9 +145,9 @@ const Sentiment = () => {
         negative: negativePercent,
         total,
         pieData: [
-          { name: "Positive", value: positiveCount, color: "#10b981" },
-          { name: "Neutral", value: neutralCount, color: "#6b7280" },
-          { name: "Negative", value: negativeCount, color: "#ef4444" },
+          { name: "Positive", value: positiveCount, color: "url(#gradientPositive)" },
+          { name: "Neutral", value: neutralCount, color: "url(#gradientNeutral)" },
+          { name: "Negative", value: negativeCount, color: "url(#gradientNegative)" },
         ],
       });
 
@@ -184,7 +184,7 @@ const Sentiment = () => {
         return new Date(scanB?.created_at || 0).getTime() - new Date(scanA?.created_at || 0).getTime();
       });
 
-      cleanedResponses.forEach(r => {
+      uniqueArray.forEach(r => {
         const responseText = (r.cleaned_response || r.ai_response || "").toLowerCase();
         const questionText = (r.question_text || "").toLowerCase();
         const combinedText = responseText + " " + questionText;
@@ -217,7 +217,7 @@ const Sentiment = () => {
         
         // Calculate trend: compare last 3 scans vs older scans
         const recentScore = data.recent.reduce((sum, s) => sum + s, 0) / Math.max(data.recent.length, 1);
-        const olderResponses = cleanedResponses.filter(r => {
+        const olderResponses = uniqueArray.filter(r => {
           const scanIndex = scanIds.indexOf(r.scan_id || 'unknown');
           return scanIndex >= 3;
         });
@@ -248,42 +248,53 @@ const Sentiment = () => {
 
       setTopicSentiment(topicList);
 
-      // 3. STRENGTHS & WEAKNESSES - Extract from responses
-      const positiveResponses = cleanedResponses.filter(r => r.sentiment === 'positive');
-      const negativeResponses = cleanedResponses.filter(r => r.sentiment === 'negative' || (r.sentiment === 'neutral' && r.cleaned_response.toLowerCase().includes('but') || r.cleaned_response.toLowerCase().includes('however')));
+      // 3. STRENGTHS & WEAKNESSES - Generate actionable insights from topic sentiment data
+      const strengthsArray: string[] = [];
+      const weaknessesArray: string[] = [];
 
-      // Extract noun phrases from positive responses
-      const strengthsSet = new Set<string>();
-      positiveResponses.forEach(r => {
-        const text = r.cleaned_response || "";
-        // Extract phrases after positive indicators
-        const phrases = text.match(/(?:excellent|great|strong|good|effective|powerful|reliable|innovative|leading|top|best)\s+([^.!?]+)/gi);
-        if (phrases) {
-          phrases.forEach(phrase => {
-            const cleaned = phrase.replace(/^(excellent|great|strong|good|effective|powerful|reliable|innovative|leading|top|best)\s+/i, '').trim();
-            if (cleaned.length > 10 && cleaned.length < 100) {
-              strengthsSet.add(cleaned);
-            }
-          });
+      topicList.forEach(topic => {
+        if (topic.sentiment === 'positive') {
+          if (topic.trend === 'improving') {
+            strengthsArray.push(`Strong positive perception of ${topic.topic} with an improving trend (${topic.mentions} mentions)`);
+          } else {
+            strengthsArray.push(`Consistently positive sentiment regarding ${topic.topic} (${topic.mentions} mentions)`);
+          }
+        } else if (topic.sentiment === 'negative') {
+          if (topic.trend === 'declining') {
+            weaknessesArray.push(`Critical vulnerability in ${topic.topic} perception with a declining trend (${topic.mentions} negative mentions)`);
+          } else {
+            weaknessesArray.push(`Negative sentiment identified around ${topic.topic} (${topic.mentions} mentions - address immediately)`);
+          }
+        } else if (topic.sentiment === 'neutral') {
+          if (topic.trend === 'declining') {
+             weaknessesArray.push(`Sentiment around ${topic.topic} is neutral but trending downward. Action needed to shift narrative.`);
+          }
         }
       });
-      setStrengths(Array.from(strengthsSet).slice(0, 5));
 
-      // Extract weaknesses
-      const weaknessesSet = new Set<string>();
-      negativeResponses.forEach(r => {
-        const text = r.cleaned_response || "";
-        const phrases = text.match(/(?:limited|lacks|weak|poor|issues|concerns|challenges|problems|difficulties)\s+([^.!?]+)/gi);
-        if (phrases) {
-          phrases.forEach(phrase => {
-            const cleaned = phrase.replace(/^(limited|lacks|weak|poor|issues|concerns|challenges|problems|difficulties)\s+/i, '').trim();
-            if (cleaned.length > 10 && cleaned.length < 100) {
-              weaknessesSet.add(cleaned);
-            }
-          });
+      // Fallbacks if no topic-level insights are found
+      if (strengthsArray.length === 0) {
+        if (positiveCount > 0) {
+          strengthsArray.push(`Brand maintains ${positivePercent}% positive sentiment across ${total} unique AI interactions.`);
+        } else if (total > 0) {
+          strengthsArray.push('Visibility established, but sentiment is largely neutral - opportunity to differentiate.');
+        } else {
+          strengthsArray.push('Run more scans to identify definitive strengths.');
         }
-      });
-      setWeaknesses(Array.from(weaknessesSet).slice(0, 5));
+      }
+
+      if (weaknessesArray.length === 0) {
+        if (negativeCount > 0) {
+           weaknessesArray.push(`Brand sees ${negativePercent}% negative sentiment across ${total} queries - investigate specific AI responses.`);
+        } else if (neutralCount > positiveCount) {
+           weaknessesArray.push(`Brand perception is heavily neutral (${neutralPercent}%). Consider optimizing product documentation to boost positive descriptors.`);
+        } else {
+          weaknessesArray.push('No critical weaknesses identified in current responses.');
+        }
+      }
+
+      setStrengths(strengthsArray.slice(0, 3));
+      setWeaknesses(weaknessesArray.slice(0, 3));
 
       // 4. RECENT AI MENTIONS - Ultra-aggressive deduplication and filter
       // Group by question and deduplicate responses per question
@@ -516,26 +527,63 @@ const Sentiment = () => {
                   </div>
 
                   {/* Pie Chart */}
-                  <Card className="p-6 border border-gray-200 bg-white">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-6">Sentiment Distribution</h3>
+                  <Card className="p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                    <h3 className="text-lg font-bold text-slate-900 mb-6 tracking-tight">Sentiment Distribution</h3>
                     <ResponsiveContainer width="100%" height={300}>
                       <PieChart>
+                        <defs>
+                          <linearGradient id="gradientPositive" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#34d399" stopOpacity={1} />
+                            <stop offset="100%" stopColor="#059669" stopOpacity={1} />
+                          </linearGradient>
+                          <linearGradient id="gradientNeutral" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#cbd5e1" stopOpacity={1} />
+                            <stop offset="100%" stopColor="#64748b" stopOpacity={1} />
+                          </linearGradient>
+                          <linearGradient id="gradientNegative" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stopColor="#fb7185" stopOpacity={1} />
+                            <stop offset="100%" stopColor="#e11d48" stopOpacity={1} />
+                          </linearGradient>
+                          <filter id="shadowPieSentiment" height="130%">
+                            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.1"/>
+                          </filter>
+                        </defs>
                         <Pie
                           data={sentimentData.pieData}
                           cx="50%"
                           cy="50%"
                           labelLine={false}
                           label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
-                          outerRadius={100}
+                          outerRadius={95}
+                          innerRadius={50}
+                          paddingAngle={2}
                           fill="#8884d8"
                           dataKey="value"
+                          stroke="white"
+                          strokeWidth={2}
+                          style={{ filter: 'url(#shadowPieSentiment)' }}
+                          animationBegin={0}
+                          animationDuration={1000}
+                          animationEasing="ease-out"
                         >
                           {sentimentData.pieData.map((entry: any, index: number) => (
                             <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip />
-                        <Legend />
+                        <Tooltip 
+                          contentStyle={{
+                            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                            backdropFilter: 'blur(8px)',
+                            border: '1px solid #f1f5f9',
+                            borderRadius: '12px',
+                            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+                            color: '#0f172a',
+                            fontSize: '13px',
+                            fontWeight: 600,
+                          }}
+                          itemStyle={{ color: '#475569', fontWeight: 500 }}
+                        />
+                        <Legend wrapperStyle={{ paddingTop: '24px' }} iconType="circle" iconSize={10} />
                       </PieChart>
                     </ResponsiveContainer>
                   </Card>
@@ -608,18 +656,52 @@ const Sentiment = () => {
 
                   {/* Sentiment Trend Graph */}
                   {sentimentTrend.length > 0 && (
-                    <Card className="p-6 border border-gray-200 bg-white">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-6">Sentiment Trend (Last 10 Scans)</h3>
+                    <Card className="p-6 border border-gray-200/80 bg-white shadow-sm hover:shadow-md transition-shadow duration-300">
+                      <h3 className="text-lg font-bold text-slate-900 mb-6 tracking-tight">Sentiment Trend (Last 10 Scans)</h3>
                       <ResponsiveContainer width="100%" height={300}>
-                        <LineChart data={sentimentTrend}>
-                          <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                          <XAxis dataKey="date" stroke="#9ca3af" fontSize={11} tickLine={false} axisLine={false} />
-                          <YAxis stroke="#9ca3af" fontSize={11} domain={[0, 100]} tickFormatter={(value) => `${value}%`} tickLine={false} axisLine={false} />
-                          <Tooltip />
-                          <Legend />
-                          <Line type="monotone" dataKey="positive" stroke="#10b981" strokeWidth={2} name="Positive" dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="neutral" stroke="#6b7280" strokeWidth={2} name="Neutral" dot={{ r: 3 }} />
-                          <Line type="monotone" dataKey="negative" stroke="#ef4444" strokeWidth={2} name="Negative" dot={{ r: 3 }} />
+                        <LineChart data={sentimentTrend} margin={{ top: 10, right: 10, left: 0, bottom: 5 }}>
+                          <defs>
+                            <filter id="shadowTrendLine" height="200%">
+                              <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.1"/>
+                            </filter>
+                          </defs>
+                          <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
+                          <XAxis 
+                            dataKey="date" 
+                            stroke="#94a3b8" 
+                            fontSize={11} 
+                            tickLine={false} 
+                            axisLine={false} 
+                            tickMargin={12}
+                          />
+                          <YAxis 
+                            stroke="#94a3b8" 
+                            fontSize={11} 
+                            domain={[0, 100]} 
+                            tickFormatter={(value) => `${value}%`} 
+                            tickLine={false} 
+                            axisLine={false} 
+                            tickMargin={12}
+                            width={40}
+                          />
+                          <Tooltip 
+                            contentStyle={{
+                              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                              backdropFilter: 'blur(8px)',
+                              border: '1px solid #f1f5f9',
+                              borderRadius: '12px',
+                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)',
+                              color: '#0f172a',
+                              fontSize: '13px',
+                              fontWeight: 500,
+                            }}
+                            cursor={{ stroke: '#cbd5e1', strokeWidth: 1, strokeDasharray: '4 4' }}
+                            formatter={(value: any) => [typeof value === 'number' ? `${value.toFixed(1)}%` : value, undefined]}
+                          />
+                          <Legend wrapperStyle={{ paddingTop: '24px' }} iconType="circle" iconSize={10} />
+                          <Line type="monotone" dataKey="positive" stroke="#10b981" strokeWidth={3} name="Positive" dot={{ r: 4, fill: '#fff', stroke: '#10b981', strokeWidth: 2 }} activeDot={{ r: 6, fill: '#10b981', stroke: '#fff', strokeWidth: 2 }} style={{ filter: 'url(#shadowTrendLine)' }} />
+                          <Line type="monotone" dataKey="neutral" stroke="#64748b" strokeWidth={3} name="Neutral" dot={{ r: 4, fill: '#fff', stroke: '#64748b', strokeWidth: 2 }} activeDot={{ r: 6, fill: '#64748b', stroke: '#fff', strokeWidth: 2 }} style={{ filter: 'url(#shadowTrendLine)' }} />
+                          <Line type="monotone" dataKey="negative" stroke="#e11d48" strokeWidth={3} name="Negative" dot={{ r: 4, fill: '#fff', stroke: '#e11d48', strokeWidth: 2 }} activeDot={{ r: 6, fill: '#e11d48', stroke: '#fff', strokeWidth: 2 }} style={{ filter: 'url(#shadowTrendLine)' }} />
                         </LineChart>
                       </ResponsiveContainer>
                     </Card>

@@ -27,17 +27,17 @@ const STOPWORDS = new Set([
 
 function cleanCompetitorName(name: string): string | null {
   if (!name || typeof name !== 'string') return null;
-  
+
   let cleaned = name.replace(/[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]/gu, '');
   cleaned = cleaned.replace(/[^\w\s-]/g, ' ').trim();
   cleaned = cleaned.replace(/\s+/g, ' ').trim();
-  
+
   if (cleaned.length < 3) return null;
-  
+
   const lower = cleaned.toLowerCase();
   if (STOPWORDS.has(lower)) return null;
   if (/^\d+$/.test(cleaned)) return null;
-  
+
   cleaned = cleaned
     .split(/\s+/)
     .map(word => {
@@ -46,39 +46,39 @@ function cleanCompetitorName(name: string): string | null {
       return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
     })
     .join(' ');
-  
+
   return cleaned;
 }
 
 function extractCompetitorsFromResponse(response: string, competitorNames: string[], brandName: string): string[] {
   if (!response || !competitorNames.length) return [];
-  
+
   const found: string[] = [];
   const responseLower = response.toLowerCase();
   const brandLower = brandName.toLowerCase();
-  
+
   competitorNames.forEach(compName => {
     if (!compName || compName.toLowerCase() === brandLower) return;
-    
+
     const compLower = compName.toLowerCase();
     const regex = new RegExp(`\\b${compLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    
+
     if (regex.test(response)) {
       found.push(compName);
     }
   });
-  
+
   return found;
 }
 
 function mergeCompetitors(initial: string[], aiExtracted: string[]): string[] {
   const merged = new Set<string>();
-  
+
   initial.forEach(comp => {
     const cleaned = cleanCompetitorName(comp);
     if (cleaned) merged.add(cleaned);
   });
-  
+
   aiExtracted.forEach(comp => {
     const cleaned = cleanCompetitorName(comp);
     if (cleaned) {
@@ -89,7 +89,7 @@ function mergeCompetitors(initial: string[], aiExtracted: string[]): string[] {
       }
     }
   });
-  
+
   return Array.from(merged);
 }
 
@@ -224,7 +224,7 @@ async function callAI(prompt: string, provider: string = "openai"): Promise<stri
 
     // Now use the cached model for this request
     const url = `https://generativelanguage.googleapis.com/v1beta/models/${cachedGeminiModel}:generateContent?key=${GEMINI_API_KEY}`;
-    
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -322,14 +322,14 @@ const COMMON_STOPWORDS = new Set([
 // Validate if a string looks like a person's name
 function isValidPersonName(name: string): boolean {
   if (!name || typeof name !== 'string') return false;
-  
+
   const trimmed = name.trim();
   if (trimmed.length < 3) return false;
-  
+
   // Must be at least 2 words (first name + last name)
   const words = trimmed.split(/\s+/).filter(w => w.length > 0);
   if (words.length < 2) return false;
-  
+
   // Each word must be capitalized and at least 2 characters
   for (const word of words) {
     if (word.length < 2) return false;
@@ -340,7 +340,7 @@ function isValidPersonName(name: string): boolean {
     // Filter out single letters
     if (word.length === 1) return false;
   }
-  
+
   // Filter out common false positives
   const lowerName = trimmed.toLowerCase();
   const falsePositives = [
@@ -350,14 +350,14 @@ function isValidPersonName(name: string): boolean {
     'he sentiment', 'the sentiment', 'information used', 'sources referenced',
     'there is no', 'direct commentary'
   ];
-  
+
   for (const fp of falsePositives) {
     if (lowerName.includes(fp)) return false;
   }
-  
+
   // Must not be just punctuation or special characters
   if (!/^[A-Za-z\s]+$/.test(trimmed)) return false;
-  
+
   return true;
 }
 
@@ -365,11 +365,11 @@ function isValidPersonName(name: string): boolean {
 function isValidRole(role: string): boolean {
   if (!role || role.length < 2) return false;
   const lowerRole = role.toLowerCase();
-  
+
   // Must contain role keywords
-  const roleKeywords = ['ceo', 'cto', 'cfo', 'founder', 'creator', 'author', 'director', 
+  const roleKeywords = ['ceo', 'cto', 'cfo', 'founder', 'creator', 'author', 'director',
     'president', 'manager', 'lead', 'head', 'vp', 'vice', 'coo', 'cmo'];
-  
+
   return roleKeywords.some(keyword => lowerRole.includes(keyword));
 }
 
@@ -389,7 +389,7 @@ function extractPeopleWithRegex(text: string): Array<{
     snippet: string;
   }> = [];
   const seen = new Set<string>();
-  
+
   // Pattern 1: "Name, Role at Company" or "Name (Role at Company)"
   const pattern1 = /([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)\s*[,\(]\s*([^,\)]+?)(?:\s+at\s+([^,\)]+))?/gi;
   let match;
@@ -397,7 +397,7 @@ function extractPeopleWithRegex(text: string): Array<{
     const name = match[1].trim();
     const role = match[2].trim();
     const company = match[3]?.trim() || null;
-    
+
     // Validate name
     if (isValidPersonName(name) && isValidRole(role)) {
       const key = `${name}-${role}`.toLowerCase();
@@ -413,9 +413,9 @@ function extractPeopleWithRegex(text: string): Array<{
       }
     }
   }
-  
+
   // Pattern 2: "Role Name" (e.g., "CEO John Smith", "Founder Jane Doe")
-  const roles = ['CEO', 'CTO', 'CFO', 'Founder', 'Co-founder', 'Creator', 'Author', 'Director', 
+  const roles = ['CEO', 'CTO', 'CFO', 'Founder', 'Co-founder', 'Creator', 'Author', 'Director',
     'VP', 'Vice President', 'President', 'CMO', 'COO', 'Head of', 'Lead', 'Manager'];
   roles.forEach(role => {
     const pattern = new RegExp(`\\b${role.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s+([A-Z][a-z]+(?:\\s+[A-Z][a-z]+)?)`, 'gi');
@@ -436,21 +436,21 @@ function extractPeopleWithRegex(text: string): Array<{
       }
     }
   });
-  
+
   // Pattern 3: "Name of Company" - Only if name is valid and company looks real
   const pattern3 = /([A-Z][a-z]+\s+[A-Z][a-z]+)\s+(?:of|from|at)\s+([A-Z][a-zA-Z\s]{3,})/gi;
   while ((match = pattern3.exec(text)) !== null) {
     const name = match[1].trim();
     const company = match[2].trim();
-    
+
     // Validate both name and company
     if (isValidPersonName(name) && company && company.length > 3) {
       // Filter out common false positives for company
       const lowerCompany = company.toLowerCase();
-      if (!COMMON_STOPWORDS.has(lowerCompany) && 
-          !lowerCompany.includes('sources') && 
-          !lowerCompany.includes('context') &&
-          !lowerCompany.includes('information')) {
+      if (!COMMON_STOPWORDS.has(lowerCompany) &&
+        !lowerCompany.includes('sources') &&
+        !lowerCompany.includes('context') &&
+        !lowerCompany.includes('information')) {
         const key = `${name}-${company}`.toLowerCase();
         if (!seen.has(key)) {
           seen.add(key);
@@ -465,14 +465,14 @@ function extractPeopleWithRegex(text: string): Array<{
       }
     }
   }
-  
+
   // Pattern 4: Capitalized names with strong context - Only very specific patterns
   // This pattern is very strict - only matches "Role Name" format
   const strongContextPattern = /\b(CEO|CTO|CFO|Founder|Co-founder|Creator|Author|Director|President|VP|Vice President|CMO|COO)\s+([A-Z][a-z]+\s+[A-Z][a-z]+)\b/gi;
   while ((match = strongContextPattern.exec(text)) !== null) {
     const role = match[1].trim();
     const name = match[2].trim();
-    
+
     if (isValidPersonName(name) && isValidRole(role)) {
       const key = `${name}-${role}`.toLowerCase();
       if (!seen.has(key)) {
@@ -487,18 +487,18 @@ function extractPeopleWithRegex(text: string): Array<{
       }
     }
   }
-  
+
   // Filter out any remaining invalid entries before returning
   return people.filter(p => {
     // Must have valid name OR valid role
     if (!p.name && !p.role) return false;
-    
+
     // If name exists, must be valid
     if (p.name && !isValidPersonName(p.name)) return false;
-    
+
     // If role exists, must be valid
     if (p.role && !isValidRole(p.role)) return false;
-    
+
     return true;
   });
 }
@@ -525,16 +525,16 @@ async function extractPeopleFromLLMResponse(rawText: string): Promise<Array<{
     inferred_relevance: string;
     snippet: string;
   }> = [];
-  
+
   try {
     // Use LLM extraction - it's more accurate than regex
     console.log("Running LLM extraction for people");
     const response = await callAI(prompt, "gemini");
     console.log(`LLM response length: ${response.length} chars`);
-    
+
     // Try multiple JSON extraction strategies
     let parsed: any = null;
-    
+
     // Strategy 1: Extract JSON object with "people" key (most common)
     const jsonMatch = response.match(/\{[\s\S]*?"people"[\s\S]*?\}/);
     if (jsonMatch) {
@@ -552,7 +552,7 @@ async function extractPeopleFromLLMResponse(rawText: string): Promise<Array<{
         }
       }
     }
-    
+
     // Strategy 2: Try parsing entire response
     if (!parsed || !parsed.people) {
       try {
@@ -569,27 +569,27 @@ async function extractPeopleFromLLMResponse(rawText: string): Promise<Array<{
         console.log("Could not parse as JSON, response might not contain people");
       }
     }
-    
+
     // Strategy 3: Try to extract if response mentions "people" or "founder" or "CEO"
     if (!parsed || !parsed.people) {
       const lowerResponse = response.toLowerCase();
-      const hasPeopleMentions = lowerResponse.includes('founder') || 
-                                lowerResponse.includes('ceo') || 
-                                lowerResponse.includes('cto') ||
-                                lowerResponse.includes('creator') ||
-                                /[A-Z][a-z]+\s+[A-Z][a-z]+/.test(response); // Pattern for names
-      
+      const hasPeopleMentions = lowerResponse.includes('founder') ||
+        lowerResponse.includes('ceo') ||
+        lowerResponse.includes('cto') ||
+        lowerResponse.includes('creator') ||
+        /[A-Z][a-z]+\s+[A-Z][a-z]+/.test(response); // Pattern for names
+
       if (!hasPeopleMentions) {
         console.log("Response doesn't appear to mention any people");
       } else {
         console.log("Response mentions people-related terms but JSON parsing failed");
       }
     }
-    
+
     // Extract people from parsed JSON
     if (parsed && parsed.people && Array.isArray(parsed.people)) {
       console.log(`Found ${parsed.people.length} people in parsed JSON`);
-      
+
       llmExtracted = parsed.people
         .map((p: any) => ({
           name: p.name || null,
@@ -604,7 +604,7 @@ async function extractPeopleFromLLMResponse(rawText: string): Promise<Array<{
             console.log("Filtered: no name or role");
             return false;
           }
-          
+
           // If name exists, validate it's not a single character or stopword
           if (p.name) {
             const nameStr = String(p.name).trim();
@@ -627,7 +627,7 @@ async function extractPeopleFromLLMResponse(rawText: string): Promise<Array<{
               return false;
             }
           }
-          
+
           // If role exists, validate it's meaningful
           if (p.role) {
             const roleStr = String(p.role).trim();
@@ -645,10 +645,10 @@ async function extractPeopleFromLLMResponse(rawText: string): Promise<Array<{
               return false;
             }
           }
-          
+
           return true;
         });
-      
+
       if (llmExtracted.length > 0) {
         console.log(`LLM extracted ${llmExtracted.length} valid people after filtering`);
       } else if (parsed.people.length > 0) {
@@ -661,45 +661,45 @@ async function extractPeopleFromLLMResponse(rawText: string): Promise<Array<{
     console.error("LLM extraction error:", error.message);
     console.error("Error stack:", error.stack);
   }
-  
+
   // Only use LLM results - regex was producing too many false positives
   if (llmExtracted.length === 0) {
     console.log("No people found via LLM extraction");
     return [];
   }
-  
+
   console.log(`Before deduplication: ${llmExtracted.length} people from LLM`);
-  
+
   // Deduplicate with strict validation
   const unique = new Map<string, typeof llmExtracted[0]>();
   llmExtracted.forEach(p => {
     // Skip if invalid - must have valid name OR valid role
     if (!p.name && !p.role) return;
-    
+
     // If name exists, must be valid
     if (p.name && !isValidPersonName(p.name)) {
       console.log(`Filtered out invalid name: "${p.name}"`);
       return;
     }
-    
+
     // If role exists, must be valid
     if (p.role && !isValidRole(p.role)) {
       console.log(`Filtered out invalid role: "${p.role}"`);
       return;
     }
-    
+
     const key = `${p.name || ''}-${p.role || ''}-${p.company || ''}`.toLowerCase().trim();
     if (key && key !== '--' && key !== '-' && !unique.has(key)) {
       unique.set(key, p);
     }
   });
-  
+
   const final = Array.from(unique.values());
   console.log(`After deduplication and validation: ${final.length} unique valid people`);
   if (final.length > 0) {
     console.log(`Sample extracted:`, final.slice(0, 3).map(p => ({ name: p.name, role: p.role, company: p.company })));
   }
-  
+
   return final;
 }
 
@@ -725,7 +725,7 @@ function dedupePeople(people: Array<{
     if (!p.name && !p.role) {
       continue;
     }
-    
+
     // If name exists, validate it
     if (p.name) {
       // Filter out single characters
@@ -741,7 +741,7 @@ function dedupePeople(people: Array<{
         continue;
       }
     }
-    
+
     // If role exists, validate it
     if (p.role) {
       // Filter out single characters
@@ -753,15 +753,15 @@ function dedupePeople(people: Array<{
         continue;
       }
     }
-    
+
     // Create key for deduplication
     const key = `${p.name || ""}-${p.role || ""}-${p.company || ""}`.toLowerCase().trim();
-    
+
     // Skip if key is completely empty
     if (key === "--" || key === "") {
       continue;
     }
-    
+
     // If we have this exact combination, keep the one with more information
     if (map.has(key)) {
       const existing = map.get(key)!;
@@ -779,26 +779,70 @@ function dedupePeople(people: Array<{
 }
 
 function generateQuestions(brandName: string, description: string, topics: string[]): string[] {
-  // Generate 15 questions focused on comparisons, alternatives, trust, top brands, reliability, growth, popularity, credibility
-  const baseQuestions = [
-    `Who are the most credible alternatives to ${brandName}?`,
-    `Which platforms compete with ${brandName} for emerging founders?`,
-    `How does ${brandName} compare to other startup discovery tools?`,
-    `What are the top brands in the ${topics[0] || 'startup'} space?`,
-    `Which platforms are considered the most reliable alternatives to ${brandName}?`,
-    `What are the fastest-growing brands in the ${topics[0] || 'startup'} ecosystem right now?`,
-    `How trustworthy is ${brandName} compared to competitors?`,
-    `What brands are considered experts in ${topics[0] || 'startup networking'}?`,
-    `Which platforms offer similar features to ${brandName}?`,
-    `What makes ${brandName} unique compared to competitors?`,
-    `Who are the leading players in the ${topics[0] || 'startup'} market?`,
-    `What are users saying about ${brandName} vs other platforms?`,
-    `Which brands have the best reputation in ${topics[0] || 'startup networking'}?`,
-    `How popular is ${brandName} compared to other solutions?`,
-    `What are the most recommended platforms for ${topics[0] || 'startup founders'}?`,
-  ];
+  // Generate 50 comprehensive questions covering market sentiment, comparisons, alternatives, trust, and capability
+  const t = topics[0] || 'startup';
   
-  return baseQuestions.slice(0, 15);
+  const baseQuestions = [
+    // 1-15: General Alternatives and Core Competitors
+    `Who are the most credible alternatives to ${brandName}?`,
+    `Which platforms compete directly with ${brandName} for emerging founders?`,
+    `How does ${brandName} compare to other discovery tools?`,
+    `What are the top brands in the ${t} space?`,
+    `Which platforms are considered the most reliable alternatives to ${brandName}?`,
+    `What are the fastest-growing brands in the ${t} ecosystem right now?`,
+    `How trustworthy is ${brandName} compared to its direct competitors?`,
+    `What brands are considered experts in ${t}?`,
+    `Which platforms offer similar core features to ${brandName}?`,
+    `What makes ${brandName} unique compared to its industry competitors?`,
+    `Who are the leading players in the ${t} market?`,
+    `What are users heavily criticizing about ${brandName} vs other platforms?`,
+    `Which brands have the absolute best reputation in ${t}?`,
+    `How popular is ${brandName} compared to other mainstream solutions?`,
+    `What are the most recommended platforms for users interested in ${t}?`,
+
+    // 16-30: Pricing, Value, and ROI
+    `Is ${brandName} considered too expensive compared to its alternatives?`,
+    `What are the best budget-friendly alternatives to ${brandName}?`,
+    `Does ${brandName} offer better return on investment than its competitors?`,
+    `Which platforms in the ${t} space offer the best value for money?`,
+    `Are there any free or open-source alternatives to ${brandName}?`,
+    `What do enterprise customers use instead of ${brandName}?`,
+    `How does the pricing of ${brandName} compare to the industry standard?`,
+    `Is it worth paying for ${brandName} when there are other options?`,
+    `Which competitors give better discounts or trial periods than ${brandName}?`,
+    `What do reviewers say about the hidden costs of using ${brandName}?`,
+    `Which tools are considered the premium tier in the ${t} ecosystem?`,
+    `How does ${brandName} rank in terms of overall affordability?`,
+    `What alternatives to ${brandName} cater strictly to small businesses?`,
+    `What platforms do users switch to after leaving ${brandName} for price reasons?`,
+    `Which brand offers the best scalable pricing model in ${t}?`,
+
+    // 31-40: Usability, Support, and Features
+    `Which platform has the best customer support instead of ${brandName}?`,
+    `Is ${brandName} easier to use than its top competitors?`,
+    `What features does ${brandName} lack that competitors have?`,
+    `Who has a cleaner UI/UX, ${brandName} or its main rivals?`,
+    `What integrations does ${brandName} miss out on compared to other platforms?`,
+    `Which tools have a steeper learning curve than ${brandName}?`,
+    `What are the major bugs or downfalls of using ${brandName}?`,
+    `What platforms offer better mobile optimization than ${brandName}?`,
+    `How fast is ${brandName}'s product development compared to its competitors?`,
+    `Who offers better community support, ${brandName} or its peers?`,
+
+    // 41-50: Sentiment, Trust, and Long-Term Viability
+    `What are the biggest scandals or controversies surrounding ${brandName} and its competitors?`,
+    `Are people switching away from ${brandName} in recent months?`,
+    `What exactly makes users loyal to ${brandName} over other ${t} tools?`,
+    `Is ${brandName} considered a dying or growing platform?`,
+    `Which companies are stealing market share from ${brandName}?`,
+    `What do Reddit and forums say about using ${brandName}?`,
+    `Who uses ${brandName} the most, and who uses competing products?`,
+    `Are there better all-in-one solutions than ${brandName}?`,
+    `How secure is ${brandName}'s data compared to other tools?`,
+    `What is the long-term outlook for ${brandName} in the ${t} market?`
+  ];
+
+  return baseQuestions;
 }
 
 serve(async (req) => {
@@ -877,8 +921,8 @@ serve(async (req) => {
       initialCompetitors = brand.primary_competitors.filter((c: any) => typeof c === 'string');
     } else if (brand.competitors) {
       try {
-        const competitors = typeof brand.competitors === 'string' 
-          ? JSON.parse(brand.competitors) 
+        const competitors = typeof brand.competitors === 'string'
+          ? JSON.parse(brand.competitors)
           : brand.competitors;
         if (Array.isArray(competitors)) {
           initialCompetitors = competitors
@@ -932,31 +976,37 @@ serve(async (req) => {
       snippet: string;
     }> = [];
 
-    for (let i = 0; i < questions.length; i++) {
-      console.log(`Processing question ${i + 1}/${questions.length}`);
-      // Check if scan was cancelled
-      const { data: scanCheck } = await supabase
-        .from("scans")
-        .select("status")
-        .eq("id", scanId)
-        .single();
+    const BATCH_SIZE = 10;
+    const TIMEOUT_MS = 15000;
+    const MAX_RETRIES = 2;
 
-      if (scanCheck?.status === "cancelled") {
-        await supabase
-          .from("scans")
-          .update({ status: "cancelled", completed_at: new Date().toISOString() })
-          .eq("id", scanId);
-        return new Response(
-          JSON.stringify({ message: "Scan cancelled", scanId }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-        );
-      }
+    for (let i = 0; i < questions.length; i += BATCH_SIZE) {
+      const batch = questions.slice(i, i + BATCH_SIZE);
+      const batchNum = Math.floor(i / BATCH_SIZE) + 1;
+      const totalBatches = Math.ceil(questions.length / BATCH_SIZE);
+      console.log(`[Batch ${batchNum}/${totalBatches}] Processing ${batch.length} questions`);
+      const batchStartTime = Date.now();
 
-      const question = questions[i];
-      
-      try {
-        // Build prompt with improved source extraction
-        const prompt = `You are analyzing search results for: "${question}"
+      const batchPromises = batch.map(async (question, indexInBatch) => {
+        const questionIndex = i + indexInBatch;
+        let attempt = 0;
+        let lastError: any = null;
+
+        while (attempt <= MAX_RETRIES) {
+          try {
+            // Check if scan was cancelled
+            const { data: scanCheck } = await supabase
+              .from("scans")
+              .select("status")
+              .eq("id", scanId)
+              .single();
+
+            if (scanCheck?.status === "cancelled") {
+              return { status: "cancelled" }; // Let batch catch it
+            }
+
+            // Build prompt with improved structured extraction
+            const prompt = `You are analyzing search results for: "${question}"
 
 Brand Context:
 - Name: ${brand.name}
@@ -964,172 +1014,230 @@ ${brand.description ? `- Description: ${brand.description}` : ''}
 ${brand.website_url ? `- Website: ${brand.website_url}` : ''}
 ${brand.country ? `- Location: ${brand.country}` : ''}
 
-Please provide a comprehensive answer to the question. In your response, please:
-1. Mention if ${brand.name} appears in your answer (yes/no)
-2. List any competitors or alternative solutions mentioned
-3. Indicate the sentiment towards ${brand.name} if mentioned (positive/neutral/negative)
-4. Include any sources, links, or citations you reference
+Please provide a comprehensive answer to the question.
 
-At the end of your response, provide a JSON object with sources you cited:
+At the very end of your response, you MUST provide a JSON block enclosed in \`\`\`json ... \`\`\` containing analysis of your own response. It must strictly adhere to this format:
+\`\`\`json
 {
+  "brand_mentioned": true/false,
+  "brand_first_mention": true/false,
+  "sentiment": "positive" | "neutral" | "negative",
+  "mentioned_brands": ["Competitor A", "Competitor B"],
+  "brand_relevant_citations": [
+    {
+      "name": "Source Name",
+      "domain": "domain.com"
+    }
+  ],
   "sources": [
     {
       "name": "Source Name",
       "domain": "domain.com"
     }
+  ],
+  "people_leads": [
+    {
+      "name": "Full Name",
+      "role": "CEO/Founder/etc",
+      "company": "Company Name",
+      "inferred_relevance": "Why this person matters",
+      "snippet": "Short quote where they are mentioned"
+    }
   ]
 }
+\`\`\`
 
 Answer:`;
 
-        const aiResponse = await callAI(prompt, aiProvider);
-        
-        // Extract people from LLM response
-        const peopleCandidates = await extractPeopleFromLLMResponse(aiResponse);
-        if (peopleCandidates.length > 0) {
-          console.log(`Question ${i + 1}: Extracted ${peopleCandidates.length} people`);
-          allExtractedPeople.push(...peopleCandidates);
-        }
-        
-        // Extract data from response
-        const lowerResponse = aiResponse.toLowerCase();
-        const lowerBrandName = brand.name.toLowerCase();
-        const brandMentioned = lowerResponse.includes(lowerBrandName);
-        
-        // Extract sentiment
-        let sentiment: 'positive' | 'neutral' | 'negative' = 'neutral';
-        if (brandMentioned) {
-          const positiveWords = ['great', 'excellent', 'best', 'recommended', 'top', 'leading', 'popular', 'successful', 'innovative', 'outstanding'];
-          const negativeWords = ['poor', 'bad', 'limited', 'lacks', 'issues', 'problems', 'concerns', 'disappointing', 'weak'];
-          
-          const positiveCount = positiveWords.filter(word => lowerResponse.includes(word)).length;
-          const negativeCount = negativeWords.filter(word => lowerResponse.includes(word)).length;
+            // LLM Call strictly wrapped in a timeout race condition
+            const aiResponse = await Promise.race([
+              callAI(prompt, aiProvider),
+              new Promise<string>((_, reject) => setTimeout(() => reject(new Error("LLM Call Timeout")), TIMEOUT_MS))
+            ]);
 
-          if (positiveCount > negativeCount) {
-            sentiment = 'positive';
-          } else if (negativeCount > positiveCount) {
-            sentiment = 'negative';
-          }
-        }
-
-        // Extract sources using improved prompt response
-        const sources: Array<{ name: string; domain: string }> = [];
-        try {
-          // Try to extract JSON sources from response
-          const jsonMatch = aiResponse.match(/\{[\s\S]*"sources"[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            if (parsed.sources && Array.isArray(parsed.sources)) {
-              parsed.sources.forEach((source: any) => {
-                if (source.domain) {
-                  // Normalize domain
-                  let domain = source.domain.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split('?')[0];
-                  if (domain.includes('.')) {
-                    const parts = domain.split('.');
-                    if (parts.length >= 2) {
-                      domain = parts.slice(-2).join('.');
-                    }
-                    sources.push({
-                      name: source.name || domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
-                      domain: domain,
-                    });
-                  }
-                }
-              });
+            // Extract structured JSON data from response
+            let extractedData: any = {};
+            try {
+              const jsonMatch = aiResponse.match(/```json\s*(\{[\s\S]*?\})\s*```/) || aiResponse.match(/\{[\s\S]*"brand_mentioned"[\s\S]*\}/);
+              if (jsonMatch) {
+                extractedData = JSON.parse(jsonMatch[1] || jsonMatch[0]);
+              }
+            } catch (e) {
+              console.warn("JSON structured extraction failed, falling back to basic parsing.");
             }
-          }
-        } catch (e) {
-          // Fallback: extract URLs from response
-          const urlRegex = /(https?:\/\/[^\s\)]+)/g;
-          const urlMatches = aiResponse.matchAll(urlRegex);
-          for (const match of urlMatches) {
-            if (match[1]) {
-              try {
-                const urlObj = new URL(match[1]);
-                let domain = urlObj.hostname.replace('www.', '').toLowerCase();
-                const parts = domain.split('.');
-                if (parts.length >= 2) {
-                  domain = parts.slice(-2).join('.');
-                }
-                if (domain.includes('.')) {
-                  sources.push({
-                    name: domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
-                    domain: domain,
-                  });
-                }
-              } catch {
-                // Invalid URL, skip
+
+            const lowerResponse = aiResponse.toLowerCase();
+            const lowerBrandName = brand.name.toLowerCase();
+
+            const brandMentioned = typeof extractedData.brand_mentioned === 'boolean'
+              ? extractedData.brand_mentioned
+              : lowerResponse.includes(lowerBrandName);
+
+            const brandFirstMention = typeof extractedData.brand_first_mention === 'boolean'
+              ? extractedData.brand_first_mention
+              : false;
+
+            // Extract sentiment
+            let sentiment: 'positive' | 'neutral' | 'negative' = extractedData.sentiment;
+            if (!['positive', 'neutral', 'negative'].includes(sentiment)) {
+              sentiment = 'neutral';
+              if (brandMentioned) {
+                const positiveWords = ['great', 'excellent', 'best', 'recommended', 'top', 'leading', 'popular'];
+                const negativeWords = ['poor', 'bad', 'limited', 'lacks', 'issues', 'problems'];
+                const pCount = positiveWords.filter(word => lowerResponse.includes(word)).length;
+                const nCount = negativeWords.filter(word => lowerResponse.includes(word)).length;
+                if (pCount > nCount) sentiment = 'positive';
+                else if (nCount > pCount) sentiment = 'negative';
               }
             }
+
+            // Helper to normalize domains
+            const normalizeDomain = (domain: string) => {
+              let d = domain.toLowerCase().replace(/^https?:\/\//, '').replace(/^www\./, '').split('/')[0].split('?')[0];
+              if (d.includes('.')) {
+                const parts = d.split('.');
+                if (parts.length >= 2) return parts.slice(-2).join('.');
+              }
+              return d;
+            };
+
+            // Extract sources
+            const sources: Array<{ name: string; domain: string }> = [];
+            const rawSources = Array.isArray(extractedData.sources) ? extractedData.sources : [];
+            rawSources.forEach((source: any) => {
+              if (source.domain) {
+                const domain = normalizeDomain(source.domain);
+                if (domain.includes('.')) {
+                  sources.push({
+                    name: source.name || domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
+                    domain: domain
+                  });
+                }
+              }
+            });
+
+            // Extract brand relevant citations
+            const brandRelevantCitations: Array<{ name: string; domain: string }> = [];
+            const rawBRC = Array.isArray(extractedData.brand_relevant_citations) ? extractedData.brand_relevant_citations : [];
+            rawBRC.forEach((source: any) => {
+              if (source.domain) {
+                const domain = normalizeDomain(source.domain);
+                if (domain.includes('.')) {
+                  brandRelevantCitations.push({
+                    name: source.name || domain.split('.')[0].charAt(0).toUpperCase() + domain.split('.')[0].slice(1),
+                    domain: domain
+                  });
+                }
+              }
+            });
+
+            // Competitors found by LLM directly
+            const llmMentionedBrands: string[] = Array.isArray(extractedData.mentioned_brands) ? extractedData.mentioned_brands : [];
+
+            // Leads found by LLM directly
+            const peopleCandidates: Array<{ name: string; role: string; company: string; inferred_relevance: string; snippet: string }> = 
+              Array.isArray(extractedData.people_leads) ? extractedData.people_leads : [];
+
+            // Deduplicate sources by domain
+            const seenDomains = new Set<string>();
+            const uniqueSources = sources.filter(s => {
+              if (seenDomains.has(s.domain)) return false;
+              seenDomains.add(s.domain);
+              return true;
+            }).slice(0, 15); // Max 15 sources per response
+
+            // Store response
+            const { error: responseError } = await supabase
+              .from("scan_responses")
+              .insert({
+                scan_id: scanId,
+                brand_id: brandId,
+                user_id: brand.user_id,
+                question_template: question,
+                question_text: question,
+                ai_response: aiResponse,
+                brand_mentioned: brandMentioned,
+                sentiment: sentiment,
+                mentioned_brands: [], // Will be populated after competitor extraction
+                created_at: new Date().toISOString(),
+              });
+
+            if (responseError) {
+              console.error("Error storing response:", responseError);
+            }
+
+            return {
+              status: "success",
+              peopleCandidates,
+              responseObj: {
+                question,
+                response: aiResponse,
+                brandMentioned,
+                brandFirstMention,
+                sentiment,
+                sources: uniqueSources,
+                brandRelevantCitations,
+                llmMentionedBrands
+              }
+            };
+          } catch (error: any) {
+            lastError = error;
+            attempt++;
+            if (attempt <= MAX_RETRIES) {
+              console.warn(`[Batch ${batchNum}] Attempt ${attempt} failed for question ${questionIndex + 1}. Retrying via backoff...`);
+              await new Promise(r => setTimeout(r, 1000 * Math.pow(2, attempt - 1))); // Exponential step up waiting times
+            }
           }
         }
         
-        // Deduplicate sources by domain
-        const seenDomains = new Set<string>();
-        const uniqueSources = sources.filter(s => {
-          if (seenDomains.has(s.domain)) return false;
-          seenDomains.add(s.domain);
-          return true;
-        }).slice(0, 15); // Max 15 sources per response
+        console.error(`[Batch ${batchNum}] Failed question ${questionIndex + 1} after ${MAX_RETRIES} strikes.`, lastError);
+        return { status: "failed", error: lastError };
+      });
 
-        // Store response
-        const { error: responseError } = await supabase
-          .from("scan_responses")
-          .insert({
-            scan_id: scanId,
-            brand_id: brandId,
-            user_id: brand.user_id,
-            question_template: question,
-            question_text: question,
-            ai_response: aiResponse,
-            brand_mentioned: brandMentioned,
-            sentiment: sentiment,
-            mentioned_brands: [], // Will be populated after competitor extraction
-            created_at: new Date().toISOString(),
-          });
+      // Synchronize operations over batch arrays so we don't bombard APIs completely blind
+      const batchResults = await Promise.all(batchPromises);
 
-        if (responseError) {
-          console.error("Error storing response:", responseError);
+      // Distill parallel payload down 
+      for (const res of batchResults) {
+        if (res.status === "cancelled") {
+          await supabase
+            .from("scans")
+            .update({ status: "cancelled", completed_at: new Date().toISOString() })
+            .eq("id", scanId);
+          return new Response(
+            JSON.stringify({ message: "Scan cancelled", scanId }),
+            { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+          );
         }
-
-        responses.push({
-          question,
-          response: aiResponse,
-          brandMentioned,
-          sentiment,
-          sources,
-        });
-
-        completedQuestions++;
         
-        // Update scan progress
-        await supabase
-          .from("scans")
-          .update({ completed_questions: completedQuestions })
-          .eq("id", scanId);
-
-      } catch (error: any) {
-        console.error(`Error processing question ${i + 1}:`, error);
-        console.error(`Error details:`, {
-          message: error.message,
-          stack: error.stack,
-          name: error.name,
-        });
-        // Continue with next question
+        if (res.status === "success" && res.responseObj) {
+          if (res.peopleCandidates) {
+            allExtractedPeople.push(...res.peopleCandidates);
+          }
+          responses.push(res.responseObj);
+          completedQuestions++;
+        }
       }
+
+      await supabase
+        .from("scans")
+        .update({ completed_questions: completedQuestions })
+        .eq("id", scanId);
+
+      console.log(`[Batch ${batchNum}] completed in ${(Date.now() - batchStartTime) / 1000}s. Passed: ${batchResults.filter(r => r.status === 'success').length}/${batch.length}`);
     }
 
     console.log(`Completed processing ${completedQuestions}/${questions.length} questions`);
 
     // Deduplicate and store extracted people (only if we found any)
     console.log(`Total people extracted before deduplication: ${allExtractedPeople.length}`);
-    
+
     if (allExtractedPeople.length === 0) {
       console.log("No people extracted from scan responses - this is normal if responses don't mention specific individuals");
     } else {
       const uniquePeople = dedupePeople(allExtractedPeople);
       console.log(`Unique people after deduplication: ${uniquePeople.length}`);
-      
+
       if (uniquePeople.length > 0) {
         console.log(`Storing ${uniquePeople.length} unique people mentions to database`);
         const peopleInserts = uniquePeople.map(person => ({
@@ -1152,7 +1260,7 @@ Answer:`;
             .from("ai_people_mentions")
             .insert(batch)
             .select();
-          
+
           if (peopleError) {
             console.error(`Error storing people batch ${Math.floor(i / batchSize) + 1}:`, peopleError);
           } else {
@@ -1188,7 +1296,7 @@ Answer:`;
       neutral: number;
       negative: number;
     }
-    
+
     const competitorMetrics: Record<string, CompetitorMetric> = {};
 
     finalCompetitors.forEach(compName => {
@@ -1201,20 +1309,33 @@ Answer:`;
       };
     });
 
-    let totalMentionsAcrossAllCompetitors = 0;
+    const totalQueries = responses.length;
 
     responses.forEach(r => {
-      const foundCompetitors = extractCompetitorsFromResponse(r.response, finalCompetitors, brand.name);
-      
+      // Prioritize LLM extracted competitors, fallback to regex
+      let foundCompetitors: string[] = [];
+      if (r.llmMentionedBrands && r.llmMentionedBrands.length > 0) {
+        const cleanLLM = r.llmMentionedBrands.map(cleanCompetitorName).filter(Boolean) as string[];
+        foundCompetitors = finalCompetitors.filter(c => {
+          const cleanC = cleanCompetitorName(c)?.toLowerCase();
+          return cleanLLM.some(llmc => llmc.toLowerCase() === cleanC);
+        });
+        // If LLM matches nothing from finalCompetitors, we try regex just in case
+        if (foundCompetitors.length === 0) {
+          foundCompetitors = extractCompetitorsFromResponse(r.response, finalCompetitors, brand.name);
+        }
+      } else {
+        foundCompetitors = extractCompetitorsFromResponse(r.response, finalCompetitors, brand.name);
+      }
+
       foundCompetitors.forEach(compName => {
         if (competitorMetrics[compName]) {
           competitorMetrics[compName].mentions++;
-          totalMentionsAcrossAllCompetitors++;
-          
+
           if (r.brandMentioned) {
             competitorMetrics[compName].citations++;
           }
-          
+
           if (r.sentiment === 'positive') competitorMetrics[compName].positive++;
           else if (r.sentiment === 'neutral') competitorMetrics[compName].neutral++;
           else if (r.sentiment === 'negative') competitorMetrics[compName].negative++;
@@ -1222,13 +1343,23 @@ Answer:`;
       });
     });
 
+    const brandMentions = responses.filter(r => r.brandMentioned).length;
+    const brandFirstMentions = responses.filter(r => r.brandFirstMention).length;
+
+    let maxCompetitorVisibility = 0;
+    let maxCompetitorMentions = 0;
+
     // Build competitor_scores JSONB
     const competitorScores: Record<string, any> = {};
     Object.entries(competitorMetrics).forEach(([name, metrics]: [string, CompetitorMetric]) => {
-      const visibilityScore = totalMentionsAcrossAllCompetitors > 0
-        ? (metrics.mentions / totalMentionsAcrossAllCompetitors) * 100
+      // COMPETITOR VISIBILITY: competitorMentions / totalQueries * 100
+      const visibilityScore = totalQueries > 0
+        ? (metrics.mentions / totalQueries) * 100
         : 0;
-      
+
+      if (visibilityScore > maxCompetitorVisibility) maxCompetitorVisibility = visibilityScore;
+      if (metrics.mentions > maxCompetitorMentions) maxCompetitorMentions = metrics.mentions;
+
       competitorScores[name] = {
         visibility: visibilityScore,
         mentions: metrics.mentions,
@@ -1236,21 +1367,25 @@ Answer:`;
       };
     });
 
-    // Calculate brand visibility - compare brand mentions vs total mentions (brand + competitors)
-    const brandMentions = responses.filter(r => r.brandMentioned).length;
-    const totalMentions = brandMentions + totalMentionsAcrossAllCompetitors;
-    // If brand is mentioned more than competitors, visibility is high
-    // If competitors dominate, visibility is lower
-    const brandVisibility = totalMentions > 0 
-      ? Math.min(100, Math.max(0, (brandMentions / totalMentions) * 100))
-      : (responses.length > 0 ? (brandMentions / responses.length) * 100 : 0);
+    // BRAND VISIBILITY: brandMentions / totalQueries * 100
+    const brandVisibility = totalQueries > 0 ? (brandMentions / totalQueries) * 100 : 0;
 
-    // Calculate citation share
-    const totalCitations = responses.reduce((sum, r) => sum + r.sources.length, 0);
-    const brandCitations = responses.filter(r => r.brandMentioned).reduce((sum, r) => sum + r.sources.length, 0);
-    const citationShare = totalCitations > 0 ? (brandCitations / totalCitations) * 100 : 0;
+    // ADVANCED METRICS
+    const firstMentionRate = totalQueries > 0 ? (brandFirstMentions / totalQueries) * 100 : 0;
+    const dominanceScore = maxCompetitorMentions > 0 ? (brandMentions / maxCompetitorMentions) : (brandMentions > 0 ? 10 : 0);
+    const visibilityGap = maxCompetitorVisibility - brandVisibility;
 
-    // Calculate sentiment counts
+    competitorScores["_advanced_metrics"] = {
+      firstMentionRate,
+      dominanceScore,
+      visibilityGap
+    };
+
+    // CITATION SHARE: queries with brand relevant citations / totalQueries * 100
+    const brandRelevantQueries = responses.filter(r => r.brandRelevantCitations?.length > 0).length;
+    const citationShare = totalQueries > 0 ? (brandRelevantQueries / totalQueries) * 100 : 0;
+
+    // Calculate sentiment counts using unified denominator directly mapping to response tracking
     const sentimentPositive = responses.filter(r => r.sentiment === 'positive').length;
     const sentimentNeutral = responses.filter(r => r.sentiment === 'neutral').length;
     const sentimentNegative = responses.filter(r => r.sentiment === 'negative').length;
@@ -1429,14 +1564,14 @@ Answer:`;
 
     // Store competitor visibility history
     Object.entries(competitorMetrics).forEach(async ([name, metrics]: [string, CompetitorMetric]) => {
-      const visibilityScore = totalMentionsAcrossAllCompetitors > 0
-        ? (metrics.mentions / totalMentionsAcrossAllCompetitors) * 100
+      const visibilityScore = totalQueries > 0
+        ? (metrics.mentions / totalQueries) * 100
         : 0;
-      
-      const citationShareComp = responses.length > 0
-        ? (metrics.citations / responses.length) * 100
+
+      const citationShareComp = totalQueries > 0
+        ? (metrics.citations / totalQueries) * 100
         : 0;
-      
+
       const sentimentWeighted = ((metrics.positive * 1 + metrics.neutral * 0.5 + metrics.negative * -1) / (metrics.mentions || 1) + 1) * 50;
 
       await supabase
@@ -1458,7 +1593,7 @@ Answer:`;
     // Generate AI insights based on scan results
     console.log("Generating AI insights...");
     let insights: any = {};
-    
+
     try {
       const insightsPrompt = `You are analyzing AI visibility scan results for ${brand.name}.
 
@@ -1473,7 +1608,7 @@ Scan Results Summary:
 Top Competitors Mentioned:
 ${Object.entries(competitorScores).slice(0, 5).map(([name, data]: [string, any]) => `- ${name}: ${data.mentions} mentions, ${data.visibility?.toFixed(1) || 0}% visibility`).join('\n')}
 
-Based on this data, provide actionable insights in JSON format:
+Based on this data, provide highly actionable insights in strict JSON format. Ensure all strings inside arrays are fully formed, concise, and professional bullet points (do NOT output weird fragments or half-sentences).
 {
   "actionable_recommendations": [
     {
@@ -1483,9 +1618,9 @@ Based on this data, provide actionable insights in JSON format:
     }
   ],
   "strengths_and_gaps": {
-    "strengths": ["List 3-5 key strengths identified"],
-    "gaps": ["List 3-5 visibility gaps or weaknesses"],
-    "opportunity_topic": "Main topic/area with highest improvement potential"
+    "strengths": ["List 3-5 complete, concise sentences describing definitive strengths you analyze."],
+    "gaps": ["List 3-5 complete, concise sentences describing specific visibility weaknesses or gaps."],
+    "opportunity_topic": "Main complete sentence declaring the highest improvement potential area"
   },
   "content_ideas": [
     {
@@ -1498,7 +1633,7 @@ Based on this data, provide actionable insights in JSON format:
 Be specific and actionable. Focus on improving AI visibility and brand perception.`;
 
       const insightsResponse = await callAI(insightsPrompt, aiProvider);
-      
+
       // Try to extract JSON from response
       try {
         const jsonMatch = insightsResponse.match(/\{[\s\S]*\}/);
@@ -1514,7 +1649,7 @@ Be specific and actionable. Focus on improving AI visibility and brand perceptio
         insights = {
           actionable_recommendations: [
             {
-              action: brandVisibility < 50 
+              action: brandVisibility < 50
                 ? `Increase brand mentions in AI responses. Currently mentioned in ${brandMentions} out of ${responses.length} queries.`
                 : `Maintain and improve brand visibility. Currently at ${brandVisibility.toFixed(1)}% visibility.`,
               priority: brandVisibility < 30 ? "Urgent" : brandVisibility < 50 ? "High" : "Moderate",
@@ -1529,8 +1664,8 @@ Be specific and actionable. Focus on improving AI visibility and brand perceptio
             }
           ],
           strengths_and_gaps: {
-            strengths: brandMentions > responses.length * 0.7 
-              ? [`Strong brand recognition - mentioned in ${((brandMentions/responses.length)*100).toFixed(0)}% of queries`]
+            strengths: brandMentions > responses.length * 0.7
+              ? [`Strong brand recognition - mentioned in ${((brandMentions / responses.length) * 100).toFixed(0)}% of queries`]
               : [`Brand visibility at ${brandVisibility.toFixed(1)}%`],
             gaps: brandMentions < responses.length * 0.5
               ? [`Low brand mention rate - only ${brandMentions} out of ${responses.length} queries`]
@@ -1601,7 +1736,7 @@ Be specific and actionable. Focus on improving AI visibility and brand perceptio
       cause: error.cause,
     });
     return new Response(
-      JSON.stringify({ 
+      JSON.stringify({
         error: error.message || "Internal server error",
         details: error.stack || String(error),
       }),

@@ -133,7 +133,7 @@ const Index = () => {
           }
         ]}
       />
-      <ParticleBackground particleCount={typeof window !== 'undefined' && window.innerWidth < 768 ? 20 : 40} />
+      <ParticleBackground particleCount={typeof window !== 'undefined' && window.innerWidth < 768 ? 40 : 100} />
       <HomeHeader />
       <div 
         style={{ 
@@ -145,7 +145,7 @@ const Index = () => {
       >
       
       {/* Hero Section - Clean Lumina Style */}
-      <section className="pt-32 pb-20 px-3 lg:px-4 relative overflow-hidden bg-gradient-to-b from-white via-gray-50/20 to-white z-[2]">
+      <section className="pt-32 pb-20 px-3 lg:px-4 relative overflow-hidden bg-gradient-to-b from-transparent via-gray-50/20 to-transparent z-[2]">
         <div className="max-w-7xl mx-auto relative z-[2]">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16 items-center">
             {/* Left Side - Marketing Content */}
@@ -179,14 +179,13 @@ const Index = () => {
 
             {/* Right Side - Dashboard Screenshot - Larger */}
             <div className="lg:col-span-3 relative lg:order-2">
-              <div className="relative rounded-xl overflow-hidden shadow-lg border border-gray-200/80 bg-white p-2">
-                <div className="rounded-lg overflow-hidden bg-gradient-to-br from-gray-50/30 to-white">
+              <div className="relative rounded-xl overflow-hidden shadow-2xl border border-gray-200/80 bg-white p-1.5 sm:p-2">
+                <div className="rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
                   <img 
-                    src="/Screenshot 2025-12-02 180248.png" 
-                    alt="citero Dashboard"
-                    className="w-full h-auto block rounded-lg scale-105"
+                    src="/placeholder-hero.png" 
+                    alt="Citero Dashboard"
+                    className="w-full h-auto object-contain rounded-lg"
                     loading="eager"
-                    style={{ transform: 'scale(1.05)' }}
                   />
                 </div>
               </div>
@@ -199,19 +198,20 @@ const Index = () => {
       </section>
 
       {/* Key Features Section - Alternating Image/Text Layout */}
-      <section id="features" className="py-32 px-3 lg:px-4 bg-white relative overflow-hidden z-10">
+      <section id="features" className="py-32 px-3 lg:px-4 relative overflow-hidden z-10">
         <div className="max-w-7xl mx-auto relative z-10">
           {/* Feature 1: Understand What AI is Saying - Image Left, Text Right */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
             {/* Image Side */}
-            <div className="order-2 lg:order-1">
-              <div className="rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200 shadow-lg">
-                <img 
-                  src="/understand-ai-card.png" 
-                  alt="Understand What AI is Saying Dashboard"
-                  className="w-full h-auto block"
-                  loading="lazy"
-                />
+            <div className="order-2 lg:order-1 relative aspect-square sm:aspect-[4/3] w-full max-w-[550px] mx-auto perspective-1000">
+              {/* Back Card */}
+              <div className="absolute top-0 left-0 w-[85%] sm:w-[80%] bg-white rounded-xl shadow-xl border border-gray-200/80 z-10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
+                 <img src="/placeholder-1-back.png" alt="Platform Insight" className="w-full h-auto" />
+              </div>
+              
+              {/* Front Card */}
+              <div className="absolute top-[35%] sm:top-[40%] -right-2 sm:-right-6 w-[70%] sm:w-[65%] bg-white rounded-xl shadow-2xl border border-gray-200/80 z-20 transition-transform duration-500 hover:-translate-y-2 hover:shadow-3xl overflow-hidden">
+                 <img src="/placeholder-1-front.png" alt="Detailed Insight" className="w-full h-auto" />
               </div>
             </div>
             
@@ -224,24 +224,12 @@ const Index = () => {
                 See how AI platforms describe your brand, and use those insights to shape your strategy.
               </p>
             </div>
-            </div>
-
-          {/* Feature 2: Find Sources - Image Left, Text Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
-            {/* Image Side */}
-            <div className="order-2 lg:order-1">
-              <div className="rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200 shadow-lg">
-                <img 
-                  src="/faq-table.png" 
-                  alt="Find Sources Dashboard"
-                  className="w-full h-auto block"
-                  loading="lazy"
-                />
-            </div>
           </div>
 
+          {/* Feature 2: Find Sources - Text Left, Image Right */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
             {/* Text Side */}
-            <div className="order-1 lg:order-2 lg:pl-8">
+            <div className="lg:pr-8">
               <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
                 Find Sources Referenced by AI
               </h3>
@@ -249,30 +237,44 @@ const Index = () => {
                 Discover the exact sources AI pulls from, so you can optimize the content that drives visibility.
               </p>
             </div>
+
+            {/* Image Side */}
+            <div className="relative aspect-square sm:aspect-[4/3] w-full max-w-[550px] mx-auto perspective-1000">
+              {/* Back Card */}
+              <div className="absolute top-0 right-0 w-[95%] sm:w-[90%] bg-white rounded-xl shadow-xl border border-gray-200/80 z-10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
+                 <img src="/placeholder-2-back.png" alt="Source References" className="w-full h-auto" />
+              </div>
+              
+              {/* Front Card */}
+              <div className="absolute top-[25%] sm:top-[30%] left-0 w-[70%] sm:w-[65%] bg-white rounded-xl shadow-2xl border border-gray-200/80 z-20 transition-transform duration-500 hover:-translate-y-2 hover:shadow-3xl overflow-hidden">
+                 <img src="/placeholder-2-front.png" alt="Target Optimization" className="w-full h-auto" />
+              </div>
+            </div>
+          </div>
+
+          {/* Feature 3: Compare Competitors - Image Left, Text Right */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
+            {/* Image Side */}
+            <div className="order-2 lg:order-1 relative aspect-square sm:aspect-[4/3] w-full max-w-[550px] mx-auto perspective-1000">
+              {/* Back Card */}
+              <div className="absolute top-0 left-0 w-[95%] sm:w-[90%] bg-white rounded-xl shadow-xl border border-gray-200/80 z-10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
+                 <img src="/placeholder-3-back.png" alt="Competitors Analytics" className="w-full h-auto" />
+              </div>
+
+               {/* Front Card */}
+               <div className="absolute top-[25%] sm:top-[30%] right-0 w-[85%] sm:w-[80%] bg-white rounded-xl shadow-2xl border border-gray-200/80 z-20 transition-transform duration-500 hover:-translate-y-2 hover:shadow-3xl overflow-hidden">
+                 <img src="/placeholder-3-front.png" alt="Comparison Stats" className="w-full h-auto" />
+               </div>
             </div>
 
-          {/* Feature 3: Compare Competitors - Text Left, Image Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
             {/* Text Side */}
-            <div className="lg:pr-8">
+            <div className="order-1 lg:order-2 lg:pl-8">
               <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
                 Compare Competitors
               </h3>
               <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
                 Benchmark your brand against competitors and spot opportunities to outrank them.
               </p>
-            </div>
-
-            {/* Image Side */}
-            <div>
-              <div className="rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200 shadow-lg">
-                <img 
-                  src="/compare-competitors.png" 
-                  alt="Compare Competitors Dashboard"
-                  className="w-full h-auto block"
-                  loading="lazy"
-                />
-              </div>
             </div>
           </div>
 
@@ -289,22 +291,23 @@ const Index = () => {
             </div>
             
             {/* Image Side */}
-            <div>
-              <div className="rounded-xl overflow-hidden bg-gradient-to-br from-gray-50 to-gray-100/50 border border-gray-200 shadow-lg">
-                <img 
-                  src="/dashboard-charts.png" 
-                  alt="Actionable Insights and Brand Audits Dashboard"
-                  className="w-full h-auto block"
-                  loading="lazy"
-                />
+            <div className="relative aspect-square sm:aspect-[4/3] w-full max-w-[550px] mx-auto perspective-1000">
+              {/* Back Card */}
+              <div className="absolute top-0 right-0 w-[85%] sm:w-[80%] bg-white rounded-xl shadow-xl border border-gray-200/80 z-10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
+                 <img src="/placeholder-4-back.png" alt="Actionable Insights" className="w-full h-auto" />
               </div>
+
+               {/* Front Card */}
+               <div className="absolute top-[25%] sm:top-[30%] left-0 w-[70%] sm:w-[65%] bg-white rounded-xl shadow-2xl border border-gray-200/80 z-20 transition-transform duration-500 hover:-translate-y-2 hover:shadow-3xl overflow-hidden">
+                 <img src="/placeholder-4-front.png" alt="Brand Audit Actions" className="w-full h-auto" />
+               </div>
             </div>
           </div>
         </div>
       </section>
 
       {/* Product Hunt, IndieWall, Startup Fame, Dofollow.Tools, Aura++, LaunchIgniter & Fazier Badges - Scrolling */}
-      <section className="py-8 px-3 lg:px-4 bg-white relative z-[2] overflow-hidden">
+      <section className="py-8 px-3 lg:px-4 relative z-[2] overflow-hidden">
         <div className="max-w-full mx-auto">
           <div className="flex items-center gap-8 animate-scroll">
             {/* First set of badges */}
@@ -636,7 +639,7 @@ const Index = () => {
       </section>
 
       {/* CTA Banner */}
-      <section className="py-12 md:py-16 px-3 lg:px-4 bg-white border-y border-gray-100 relative overflow-visible z-10 min-h-[400px] md:min-h-[500px] w-full">
+      <section className="py-12 md:py-16 px-3 lg:px-4 border-y border-gray-100/50 relative overflow-visible z-10 min-h-[400px] md:min-h-[500px] w-full">
         <div className="max-w-6xl mx-auto relative z-20">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8 items-center">
             {/* Left side - Graph */}
@@ -647,7 +650,7 @@ const Index = () => {
             {/* Right side - Text and CTA */}
             <div className="flex flex-col justify-center lg:text-left text-center relative z-20 order-1 lg:order-2">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 md:mb-4 tracking-tight leading-tight">
-                Citero tracks how AI describe your brand — and shows you how to increase your AI-driven traffic and visibility.
+                Citero tracks how AI describe your brand, and shows you how to increase your AI-driven traffic and visibility.
               </h2>
               <div className="text-base md:text-lg text-gray-600 md:text-gray-700 mb-4 md:mb-6 leading-relaxed space-y-3">
                 <p>
