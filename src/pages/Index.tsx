@@ -6,7 +6,7 @@ import { SEO } from "@/components/SEO";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { AnimatedGraphBackground } from "@/components/AnimatedGraphBackground";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,6 +18,17 @@ if (!supabase) {
 const Index = () => {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+
+  // Apply zoom exclusively to the homepage to replicate "ctrl -"
+  useEffect(() => {
+    // Explicitly casting as any because 'zoom' is a non-standard property
+    (document.body.style as any).zoom = "0.8";
+
+    return () => {
+      // Revert the zoom when unmounting/leaving homepage
+      (document.body.style as any).zoom = "1";
+    };
+  }, []);
 
   // Handle plan subscription click
   const handlePlanClick = async (planType: string) => {
@@ -77,7 +88,7 @@ const Index = () => {
         title="citero - Track & Optimize Your Brand's AI Visibility | GEO Tracking Platform"
         description="Multiply your traffic from AI agents. Track how ChatGPT, Gemini, Claude, and Perplexity describe your brand. Get AI visibility insights, competitor analysis, and actionable recommendations to turn AI mentions into traffic and customers."
         keywords="AI visibility tracking, GEO tracking, Generative Engine Optimization, AI search optimization, brand tracking, ChatGPT visibility, Gemini tracking, Claude tracking, Perplexity tracking, AI mentions, AI brand monitoring"
-        canonical="https://citero.ai"
+        canonical="https://citero.online"
         structuredData={[
           {
             "@context": "https://schema.org",
@@ -85,7 +96,7 @@ const Index = () => {
             "name": "citero",
             "applicationCategory": "BusinessApplication",
             "description": "Track and optimize your brand's AI visibility across ChatGPT, Gemini, Claude, and Perplexity. Get actionable insights to turn AI mentions into traffic and customers.",
-            "url": "https://citero.ai",
+            "url": "https://citero.online",
             "offers": {
               "@type": "Offer",
               "price": "99",
@@ -135,14 +146,6 @@ const Index = () => {
       />
       <ParticleBackground particleCount={typeof window !== 'undefined' && window.innerWidth < 768 ? 40 : 100} />
       <HomeHeader />
-      <div 
-        style={{ 
-          transform: 'scale(0.75)', 
-          transformOrigin: 'top center', 
-          width: '133.33%', 
-          marginLeft: '-16.67%'
-        }}
-      >
       
       {/* Hero Section - Clean Lumina Style */}
       <section className="pt-32 pb-20 px-3 lg:px-4 relative overflow-hidden bg-gradient-to-b from-transparent via-gray-50/20 to-transparent z-[2]">
@@ -699,11 +702,11 @@ const Index = () => {
               <ul className="space-y-4 mb-8">
                 <li className="flex items-start gap-3 text-sm text-gray-700">
                   <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>50 AI prompt scans/month</span>
+                  <span>150 AI prompt scans/month</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-gray-700">
                   <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>10 competitor comparisons</span>
+                  <span>20+ competitor comparisons</span>
                 </li>
                 <li className="flex items-start gap-3 text-sm text-gray-700">
                   <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
@@ -820,7 +823,6 @@ const Index = () => {
       </section>
 
       <HomeFooter />
-      </div>
     </div>
   );
 };
