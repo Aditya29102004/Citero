@@ -208,13 +208,20 @@ export const HomeHeader = () => {
             >
               Feedback
             </button>
-            <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
+            <a href="/#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors">
               FAQ
             </a>
           </nav>
 
           {/* CTA Buttons */}
           <div className="hidden md:flex items-center gap-3">
+            <Button 
+              variant="outline"
+              onClick={() => navigate("/demo")}
+              className="border-gray-250 text-gray-700 hover:text-gray-900 hover:bg-gray-50 rounded-lg cursor-pointer h-9 px-4 text-sm font-medium"
+            >
+              Book a Demo
+            </Button>
             {isLoggedIn ? (
               <>
                 {hasSubscription && (
@@ -283,6 +290,16 @@ export const HomeHeader = () => {
               <button
                 type="button"
                 onClick={() => {
+                  navigate("/demo");
+                  setMobileMenuOpen(false);
+                }}
+                className="text-sm font-semibold text-indigo-600 hover:text-indigo-850 text-left cursor-pointer bg-transparent border-none w-full text-left"
+              >
+                Book a Demo
+              </button>
+              <button
+                type="button"
+                onClick={() => {
                   navigate("/blog");
                   setMobileMenuOpen(false);
                 }}
@@ -300,7 +317,7 @@ export const HomeHeader = () => {
               >
                 Feedback
               </button>
-              <a href="#faq" className="text-sm font-medium text-gray-600 hover:text-gray-900">
+              <a href="/#faq" onClick={() => setMobileMenuOpen(false)} className="text-sm font-medium text-gray-600 hover:text-gray-900 text-left">
                 FAQ
               </a>
               <div className="flex flex-col gap-2 pt-2">

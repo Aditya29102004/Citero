@@ -14,6 +14,7 @@ export const HomeFooter = () => {
             <ul className="space-y-3 text-sm text-gray-600">
               <li><a href="#features" className="hover:text-gray-900 transition-colors">Dashboard</a></li>
               <li><Link to="/pricing" className="hover:text-gray-900 transition-colors">Pricing</Link></li>
+              <li><Link to="/demo" className="hover:text-gray-900 transition-colors text-indigo-600 font-semibold">Book a Demo</Link></li>
             </ul>
           </div>
 

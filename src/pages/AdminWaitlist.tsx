@@ -85,7 +85,7 @@ const AdminWaitlist = () => {
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setWaitlistEntries(data || []);
+      setWaitlistEntries((data || []) as WaitlistEntry[]);
     } catch (error: any) {
       console.error("Error fetching waitlist:", error);
       toast.error(error.message || "Failed to fetch waitlist entries");

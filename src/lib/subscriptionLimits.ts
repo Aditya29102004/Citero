@@ -266,7 +266,7 @@ export async function canRunComparison(userId: string): Promise<{ allowed: boole
  */
 export async function isAIProviderAllowed(
   userId: string,
-  provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter'
+  provider: 'openai' | 'gemini' | 'deepseek' | 'openrouter' | 'claude' | 'perplexity'
 ): Promise<{ allowed: boolean; reason?: string }> {
   const limits = await getUserSubscriptionLimits(userId);
   
@@ -274,10 +274,19 @@ export async function isAIProviderAllowed(
     return { allowed: false, reason: "No active subscription. Please subscribe to use AI providers." };
   }
 
-  if (!limits.allowedAIProviders.includes(provider)) {
+  const planProvider =
+    provider === 'claude' || provider === 'perplexity' ? 'openrouter' : provider;
+
+  if (!limits.allowedAIProviders.includes(planProvider)) {
+    const label =
+      provider === 'openai'
+        ? 'ChatGPT'
+        : provider === 'gemini'
+          ? 'Gemini'
+          : provider.charAt(0).toUpperCase() + provider.slice(1);
     return {
       allowed: false,
-      reason: `${provider === 'openai' ? 'ChatGPT' : provider === 'gemini' ? 'Gemini' : provider.charAt(0).toUpperCase() + provider.slice(1)} is not available on your plan. Basic plan includes GPT-4o and Gemini only. Upgrade to Pro for all providers.`,
+      reason: `${label} is not available on your plan. Basic plan includes GPT-4o and Gemini only. Upgrade to Pro for all providers.`,
     };
   }
 

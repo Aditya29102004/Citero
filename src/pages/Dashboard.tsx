@@ -857,8 +857,6 @@ const Dashboard = () => {
           }
         } else if (c && typeof c === 'object' && c.name) {
           competitorName = c.name;
-        } else if (typeof c === 'string') {
-          competitorName = c;
         }
         
         if (competitorName && isValidCompetitorName(competitorName)) {
@@ -1202,7 +1200,7 @@ const Dashboard = () => {
             <main className="flex-1 overflow-auto bg-gray-50/50">
               <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8 lg:py-10">
                 <div className="mb-8">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-6">Dashboard</h1>
+                  <h1 className="text-3xl font-medium text-gray-900 mb-6">Dashboard</h1>
                   <div className="flex gap-4">
                     <div className="w-[180px] h-10 bg-gray-100 rounded-md animate-pulse"></div>
                     <div className="w-[180px] h-10 bg-gray-100 rounded-md animate-pulse"></div>
@@ -1274,7 +1272,7 @@ const Dashboard = () => {
                   {/* Header & Run Scan Button */}
                   <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                     <div>
-                      <h1 className="text-4xl font-extrabold text-[#0f172a] tracking-tight">Dashboard</h1>
+                      <h1 className="text-4xl font-medium text-[#0f172a] tracking-tight">Dashboard</h1>
                     </div>
                     {selectedBrandId && (
                       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
@@ -1459,7 +1457,7 @@ const Dashboard = () => {
                 {/* Title and Run Button */}
                 <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-8">
                   <div>
-                    <h1 className="text-4xl font-extrabold text-[#0f172a] tracking-tight">Dashboard</h1>
+                    <h1 className="text-4xl font-medium text-[#0f172a] tracking-tight">Dashboard</h1>
                   </div>
                   
                   {/* Run Scan Button */}

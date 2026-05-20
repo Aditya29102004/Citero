@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, TrendingUp, BarChart3, Users, Search, Lightbulb, Mail, ChevronDown, ChevronUp, CheckCircle2 } from "lucide-react";
+import { ArrowRight, TrendingUp, BarChart3, Users, Search, Lightbulb, Mail, ChevronDown, ChevronUp, CheckCircle2, ChevronLeft, ChevronRight } from "lucide-react";
 import { HomeHeader } from "@/components/HomeHeader";
 import { HomeFooter } from "@/components/HomeFooter";
 import { SEO } from "@/components/SEO";
@@ -18,6 +18,58 @@ if (!supabase) {
 const Index = () => {
   const navigate = useNavigate();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState(0);
+
+  const features = [
+    {
+      id: 0,
+      category: "AI Visibility",
+      heading: "Understand exactly what AI says about your brand.",
+      title: "AI Visibility Tracking",
+      description: "ChatGPT, Gemini, and Claude increasingly shape user perceptions. Track where and how you are mentioned.",
+      icon: Search,
+      images: {
+        back: "/visibility-back.png",
+        front: "/visibility.png"
+      }
+    },
+    {
+      id: 1,
+      category: "Sources & Citations",
+      heading: "Find sources referenced by AI engines.",
+      title: "Find Referencing Sources",
+      description: "Discover which websites and documents AI engines use as primary references, so you can optimize them directly.",
+      icon: BarChart3,
+      images: {
+        back: "/sources-back.png",
+        front: "/sources.png"
+      }
+    },
+    {
+      id: 2,
+      category: "Competitor Intel",
+      heading: "Benchmark your brand against competitors.",
+      title: "Compare Competitors",
+      description: "See your competitor citation share and find gaps to steal traffic and customers.",
+      icon: Users,
+      images: {
+        back: "/competitors-back.png",
+        front: "/competitors.png"
+      }
+    },
+    {
+      id: 3,
+      category: "Actionable Audits",
+      heading: "Weekly prioritized action items & full brand audits.",
+      title: "Turn Insights into Action",
+      description: "Get weekly prioritized action items and full brand audits that show you exactly how to rank higher in AI responses.",
+      icon: Lightbulb,
+      images: {
+        back: "/audits-back.png",
+        front: "/audits.png"
+      }
+    }
+  ];
 
   // Apply zoom exclusively to the homepage to replicate "ctrl -"
   useEffect(() => {
@@ -83,12 +135,12 @@ const Index = () => {
   ];
 
   return (
-    <div className="bg-white overflow-x-hidden relative min-h-screen">
+    <div className="bg-white relative min-h-screen">
       <SEO
         title="citero - Track & Optimize Your Brand's AI Visibility | GEO Tracking Platform"
         description="Multiply your traffic from AI agents. Track how ChatGPT, Gemini, Claude, and Perplexity describe your brand. Get AI visibility insights, competitor analysis, and actionable recommendations to turn AI mentions into traffic and customers."
         keywords="AI visibility tracking, GEO tracking, Generative Engine Optimization, AI search optimization, brand tracking, ChatGPT visibility, Gemini tracking, Claude tracking, Perplexity tracking, AI mentions, AI brand monitoring"
-        canonical="https://citero.online"
+        canonical="https://citero.ai"
         structuredData={[
           {
             "@context": "https://schema.org",
@@ -154,8 +206,9 @@ const Index = () => {
             {/* Left Side - Marketing Content */}
             <div className="lg:col-span-2 flex flex-col justify-center lg:text-left text-center space-y-6 pt-8 lg:pt-12">
               {/* Main Headline */}
-              <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold text-gray-900 tracking-tight leading-[1.2]">
-              Multiply Your Traffic from AI Agents
+              <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 tracking-tight leading-[1.2]">
+              Your competitors are being cited by AI. 
+              Are you?
             </h1>
             
               {/* Description */}
@@ -177,140 +230,259 @@ const Index = () => {
                 Get Started
                 <ArrowRight className="ml-2 h-4 w-4" />
               </Button>
+              <Button 
+                onClick={() => navigate("/demo")}
+                variant="outline"
+                size="default" 
+                  className="border-slate-250 hover:bg-slate-50 text-slate-700 rounded-lg px-6 py-3 text-base font-medium transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+              >
+                Book a Demo
+              </Button>
+            </div>
+
+            {/* Stats Block */}
+            <div className="flex items-center justify-center lg:justify-start gap-4 sm:gap-6 pt-6 mt-4">
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-slate-900 leading-tight">150+</span>
+                <span className="text-[15px] text-slate-500">brands tracked</span>
+              </div>
+              <div className="w-[1.5px] h-8 bg-slate-200/80 rounded-full mx-1"></div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-slate-900 leading-tight">4</span>
+                <span className="text-[15px] text-slate-500">AI platforms</span>
+              </div>
+              <div className="w-[1.5px] h-8 bg-slate-200/80 rounded-full mx-1"></div>
+              <div className="flex flex-col">
+                <span className="text-2xl font-bold text-slate-900 leading-tight">24/7</span>
+                <span className="text-[15px] text-slate-500">live scanning</span>
+              </div>
             </div>
           </div>
 
             {/* Right Side - Dashboard Screenshot - Larger */}
-            <div className="lg:col-span-3 relative lg:order-2">
-              <div className="relative rounded-xl overflow-hidden shadow-2xl border border-gray-200/80 bg-white p-1.5 sm:p-2">
-                <div className="rounded-lg overflow-hidden bg-gray-50 flex items-center justify-center">
+            <div className="lg:col-span-3 relative lg:order-2 z-10">
+              <div className="relative rounded-xl lg:rounded-l-2xl lg:rounded-r-none overflow-hidden shadow-2xl border border-gray-200/80 lg:border-r-0 bg-white p-1.5 sm:p-2 w-full lg:w-[135%] xl:w-[150%] max-w-none lg:translate-x-12 xl:translate-x-20 transition-transform duration-350">
+                <div className="rounded-lg lg:rounded-r-none overflow-hidden bg-gray-50 flex items-center justify-center">
                   <img 
-                    src="/placeholder-hero.png" 
+                    src="/hero-dashboard.png" 
                     alt="Citero Dashboard"
-                    className="w-full h-auto object-contain rounded-lg"
+                    className="w-full h-auto object-contain rounded-lg lg:rounded-r-none"
                     loading="eager"
                   />
                 </div>
               </div>
               {/* Decorative gradient elements */}
-              <div className="absolute -top-6 -right-6 w-40 h-40 bg-gradient-to-br from-blue-100/60 to-purple-100/60 rounded-full blur-3xl opacity-40 -z-10"></div>
+              <div className="absolute -top-6 right-0 lg:-right-12 w-40 h-40 bg-gradient-to-br from-blue-100/60 to-purple-100/60 rounded-full blur-3xl opacity-40 -z-10"></div>
               <div className="absolute -bottom-6 -left-6 w-48 h-48 bg-gradient-to-br from-green-100/60 to-blue-100/60 rounded-full blur-3xl opacity-40 -z-10"></div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Key Features Section - Alternating Image/Text Layout */}
-      <section id="features" className="py-32 px-3 lg:px-4 relative overflow-hidden z-10">
+      {/* Notion-style Interactive Features Section */}
+      <section id="features" className="py-28 px-3 lg:px-4 relative overflow-hidden bg-slate-50/30 z-10">
         <div className="max-w-7xl mx-auto relative z-10">
-          {/* Feature 1: Understand What AI is Saying - Image Left, Text Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
-            {/* Image Side */}
-            <div className="order-2 lg:order-1 relative aspect-square sm:aspect-[4/3] w-full max-w-[550px] mx-auto perspective-1000">
-              {/* Back Card */}
-              <div className="absolute top-0 left-0 w-[85%] sm:w-[80%] bg-white rounded-xl shadow-xl border border-gray-200/80 z-10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
-                 <img src="/placeholder-1-back.png" alt="Platform Insight" className="w-full h-auto" />
-              </div>
-              
-              {/* Front Card */}
-              <div className="absolute top-[35%] sm:top-[40%] -right-2 sm:-right-6 w-[70%] sm:w-[65%] bg-white rounded-xl shadow-2xl border border-gray-200/80 z-20 transition-transform duration-500 hover:-translate-y-2 hover:shadow-3xl overflow-hidden">
-                 <img src="/placeholder-1-front.png" alt="Detailed Insight" className="w-full h-auto" />
-              </div>
-            </div>
+          
+          {/* Overarching Section Title */}
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight mb-4">
+              Track & Optimize Brand Perception 24/7
+            </h2>
+            <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+              Everything you need to capture traffic, monitor competitors, and grow your presence across conversational search engines.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center bg-white p-6 sm:p-10 rounded-3xl border border-gray-100 shadow-[0_8px_30px_rgb(0,0,0,0.02)]">
             
-            {/* Text Side */}
-            <div className="order-1 lg:order-2 lg:pl-8">
-              <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
-                Understand What AI is Saying About Your Brand
-              </h3>
-              <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-                See how AI platforms describe your brand, and use those insights to shape your strategy.
-              </p>
-            </div>
-          </div>
-
-          {/* Feature 2: Find Sources - Text Left, Image Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
-            {/* Text Side */}
-            <div className="lg:pr-8">
-              <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
-                Find Sources Referenced by AI
-              </h3>
-              <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-                Discover the exact sources AI pulls from, so you can optimize the content that drives visibility.
-              </p>
-            </div>
-
-            {/* Image Side */}
-            <div className="relative aspect-square sm:aspect-[4/3] w-full max-w-[550px] mx-auto perspective-1000">
-              {/* Back Card */}
-              <div className="absolute top-0 right-0 w-[95%] sm:w-[90%] bg-white rounded-xl shadow-xl border border-gray-200/80 z-10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
-                 <img src="/placeholder-2-back.png" alt="Source References" className="w-full h-auto" />
-              </div>
+            {/* Left Side: Notion-style Navigation & Headings */}
+            <div className="lg:col-span-5 flex flex-col justify-start space-y-8">
               
-              {/* Front Card */}
-              <div className="absolute top-[25%] sm:top-[30%] left-0 w-[70%] sm:w-[65%] bg-white rounded-xl shadow-2xl border border-gray-200/80 z-20 transition-transform duration-500 hover:-translate-y-2 hover:shadow-3xl overflow-hidden">
-                 <img src="/placeholder-2-front.png" alt="Target Optimization" className="w-full h-auto" />
-              </div>
-            </div>
-          </div>
-
-          {/* Feature 3: Compare Competitors - Image Left, Text Right */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-32">
-            {/* Image Side */}
-            <div className="order-2 lg:order-1 relative aspect-square sm:aspect-[4/3] w-full max-w-[550px] mx-auto perspective-1000">
-              {/* Back Card */}
-              <div className="absolute top-0 left-0 w-[95%] sm:w-[90%] bg-white rounded-xl shadow-xl border border-gray-200/80 z-10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
-                 <img src="/placeholder-3-back.png" alt="Competitors Analytics" className="w-full h-auto" />
+              {/* Active Headline Block */}
+              <div className="space-y-2">
+                <h3 className="text-3xl font-semibold text-gray-900 tracking-tight leading-tight">
+                  {features[activeTab].heading}
+                </h3>
               </div>
 
-               {/* Front Card */}
-               <div className="absolute top-[25%] sm:top-[30%] right-0 w-[85%] sm:w-[80%] bg-white rounded-xl shadow-2xl border border-gray-200/80 z-20 transition-transform duration-500 hover:-translate-y-2 hover:shadow-3xl overflow-hidden">
-                 <img src="/placeholder-3-front.png" alt="Comparison Stats" className="w-full h-auto" />
-               </div>
-            </div>
+              {/* Options List */}
+              <div className="space-y-4 border-t border-gray-100 pt-6">
+                {features.map((feature, index) => {
+                  const isActive = activeTab === index;
 
-            {/* Text Side */}
-            <div className="order-1 lg:order-2 lg:pl-8">
-              <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
-                Compare Competitors
-              </h3>
-              <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-                Benchmark your brand against competitors and spot opportunities to outrank them.
-              </p>
-            </div>
-          </div>
-
-          {/* Feature 4: Get Actions & Brand Audits - Text Left, Image Right (Last) */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center mb-16">
-            {/* Text Side */}
-            <div className="lg:pr-8">
-              <h3 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-4 tracking-tight leading-tight">
-                Turn Insights Into Action
-              </h3>
-              <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-                Get prioritized actions and comprehensive brand audits that show you exactly how to improve your AI visibility. Every insight comes with clear, actionable steps to systematically boost your presence and turn mentions into measurable growth.
-              </p>
-            </div>
-            
-            {/* Image Side */}
-            <div className="relative aspect-square sm:aspect-[4/3] w-full max-w-[550px] mx-auto perspective-1000">
-              {/* Back Card */}
-              <div className="absolute top-0 right-0 w-[85%] sm:w-[80%] bg-white rounded-xl shadow-xl border border-gray-200/80 z-10 transition-transform duration-500 hover:-translate-y-2 hover:shadow-2xl overflow-hidden">
-                 <img src="/placeholder-4-back.png" alt="Actionable Insights" className="w-full h-auto" />
+                  return (
+                    <div 
+                      key={feature.id}
+                      onClick={() => setActiveTab(index)}
+                      className={`group cursor-pointer p-4 rounded-2xl transition-all duration-300 border ${
+                        isActive 
+                          ? "bg-slate-50/50 border-slate-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)]" 
+                          : "border-transparent hover:bg-slate-50/30"
+                      }`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="flex-1 space-y-1">                           <h4 className={`text-lg font-semibold transition-colors duration-200 ${
+                            isActive ? "text-slate-900" : "text-slate-600 group-hover:text-slate-900"
+                          }`}>
+                            {feature.title}
+                          </h4>
+                          
+                          {/* Animated description wrapper */}
+                          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                            isActive ? "max-h-24 opacity-100 mt-2" : "max-h-0 opacity-0"
+                          }`}>
+                            <p className="text-sm md:text-base text-slate-500 font-normal leading-relaxed">
+                              {feature.description}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
 
-               {/* Front Card */}
-               <div className="absolute top-[25%] sm:top-[30%] left-0 w-[70%] sm:w-[65%] bg-white rounded-xl shadow-2xl border border-gray-200/80 z-20 transition-transform duration-500 hover:-translate-y-2 hover:shadow-3xl overflow-hidden">
-                 <img src="/placeholder-4-front.png" alt="Brand Audit Actions" className="w-full h-auto" />
-               </div>
             </div>
+
+            <div className="lg:col-span-7 flex items-center justify-center relative group/nav">
+              
+              {/* Navigation Left Arrow */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTab((prev) => (prev === 0 ? features.length - 1 : prev - 1));
+                }}
+                className="absolute left-0 z-30 w-10 h-10 bg-white text-gray-805 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)] border border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200"
+                aria-label="Previous Feature"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </button>
+
+              <div className="flex items-center justify-center">
+                <img 
+                  key={activeTab}
+                  src={features[activeTab].images.front} 
+                  alt={features[activeTab].title} 
+                  className="max-h-[480px] w-auto object-contain animate-fade-in" 
+                />
+              </div>
+
+              {/* Navigation Right Arrow */}
+              <button 
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setActiveTab((prev) => (prev === features.length - 1 ? 0 : prev + 1));
+                }}
+                className="absolute right-0 z-30 w-10 h-10 bg-white text-gray-805 rounded-full flex items-center justify-center shadow-[0_4px_16px_rgba(0,0,0,0.06)] border border-gray-100 hover:scale-105 active:scale-95 transition-all duration-200"
+                aria-label="Next Feature"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </button>
+            </div>
+
           </div>
         </div>
       </section>
 
-      {/* Product Hunt, IndieWall, Startup Fame, Dofollow.Tools, Aura++, LaunchIgniter & Fazier Badges - Scrolling */}
-      <section className="py-8 px-3 lg:px-4 relative z-[2] overflow-hidden">
+      {/* Agents for Every Marketing Channel Section */}
+      <section className="py-24 px-4 md:px-6 relative overflow-hidden z-10 w-full bg-white">
+        <div className="max-w-6xl mx-auto">
+          
+          {/* Section Header */}
+          <div className="mb-16">
+            <h2 className="text-4xl md:text-5xl font-semibold text-slate-900 tracking-tight font-display max-w-3xl leading-[1.15]">
+              Agents for every marketing channel
+            </h2>
+          </div>
+
+          {/* Three-Column Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+            
+            {/* Column 1 - AEO & SEO */}
+            <div className="flex flex-col space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-slate-950">Prompt Simulator</h3>
+                <p className="text-sm text-slate-500 font-medium">See what AI says whether you appear, at what position, and what your competitors' answers look like. Test before you optimize.</p>
+              </div>
+              
+              {/* Image Placeholder */}
+              <div className="border border-dashed border-slate-200 rounded-2xl aspect-[4/3] bg-slate-50/10 flex flex-col items-center justify-center text-slate-400 font-normal text-xs mt-2 select-none w-full relative overflow-hidden">
+                <img 
+                  src="/aeo.png" 
+                  alt="AEO & SEO" 
+                  className="absolute inset-0 w-full h-full object-cover bg-white opacity-0 transition-opacity duration-300"
+                  onLoad={(e) => {
+                    (e.currentTarget as HTMLElement).classList.remove('opacity-0');
+                    (e.currentTarget as HTMLElement).classList.add('opacity-100');
+                  }}
+                />
+                <span className="relative z-10">aeo.png</span>
+                <span className="text-[9px] text-slate-350 mt-1 relative z-10">4 : 3 aspect ratio</span>
+              </div>
+            </div>
+
+            {/* Column 2 - Content & Demand */}
+            <div className="flex flex-col space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-slate-950">AI Blog Generator</h3>
+                <p className="text-sm text-slate-500 font-medium">Citero finds your citation gaps and generates blog posts specifically structured to get picked up by ChatGPT and Gemini.</p>
+              </div>
+              
+              {/* Image Placeholder */}
+              <div className="border border-dashed border-slate-200 rounded-2xl aspect-[4/3] bg-slate-50/10 flex flex-col items-center justify-center text-slate-400 font-normal text-xs mt-2 select-none w-full relative overflow-hidden">
+                <img 
+                  src="/content.png" 
+                  alt="Content & Demand" 
+                  className="absolute inset-0 w-full h-full object-cover bg-white opacity-0 transition-opacity duration-300"
+                  onLoad={(e) => {
+                    (e.currentTarget as HTMLElement).classList.remove('opacity-0');
+                    (e.currentTarget as HTMLElement).classList.add('opacity-100');
+                  }}
+                />
+                <span className="relative z-10">content.png</span>
+                <span className="text-[9px] text-slate-350 mt-1 relative z-10">4 : 3 aspect ratio</span>
+              </div>
+            </div>
+
+            {/* Column 3 - PR & Communications */}
+            <div className="flex flex-col space-y-4">
+              <div className="space-y-1">
+                <h3 className="text-xl font-bold text-slate-950">Founder's Note</h3>
+                <p className="text-sm text-slate-500 font-medium">Every user gets direct access to the founder and GEO experts. </p>
+              </div>
+              
+              {/* Image Placeholder */}
+              <div className="border border-dashed border-slate-200 rounded-2xl aspect-[4/3] bg-slate-50/10 flex flex-col items-center justify-center text-slate-400 font-normal text-xs mt-2 select-none w-full relative overflow-hidden">
+                <img 
+                  src="/pr.png" 
+                  alt="PR & Communications" 
+                  className="absolute inset-0 w-full h-full object-cover bg-white opacity-0 transition-opacity duration-300"
+                  onLoad={(e) => {
+                    (e.currentTarget as HTMLElement).classList.remove('opacity-0');
+                    (e.currentTarget as HTMLElement).classList.add('opacity-100');
+                  }}
+                />
+                <span className="relative z-10">pr.png</span>
+                <span className="text-[9px] text-slate-350 mt-1 relative z-10">4 : 3 aspect ratio</span>
+              </div>
+            </div>
+
+          </div>
+
+          {/* Concluding Section Statement - Below the grid */}
+          <div className="mt-20 border-t border-slate-100 pt-16 space-y-4 max-w-3xl">
+            <h3 className="text-4xl md:text-5xl font-semibold text-gray-900 tracking-tight leading-[1.15]">
+              AI is replacing Google. Is your brand ready?
+            </h3>
+            <p className="text-slate-500 font-medium text-lg md:text-xl leading-relaxed max-w-2xl">
+              800M+ people use ChatGPT monthly. If you're not cited, you don't exist.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Product Hunt, IndieWall, Startup Fame, Dofollow.Tools, Aura++ & Fazier Badges - Scrolling */}
+      <section className="py-8 px-3 lg:px-4 relative z-[2] overflow-hidden opacity-[0.20] hover:opacity-[0.40] transition-opacity duration-300">
         <div className="max-w-full mx-auto">
           <div className="flex items-center gap-8 animate-scroll">
             {/* First set of badges */}
@@ -376,19 +548,6 @@ const Index = () => {
               <img 
                 src="https://auraplusplus.com/images/badges/featured-on-light.svg" 
                 alt="Featured on Aura++" 
-              />
-            </a>
-            <a 
-              href="https://launchigniter.com/product/citero?ref=badge-citero" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0"
-            >
-              <img 
-                src="https://launchigniter.com/api/badge/citero?theme=neutral" 
-                alt="Featured on LaunchIgniter" 
-                width="212" 
-                height="55" 
               />
             </a>
             <a 
@@ -519,19 +678,6 @@ const Index = () => {
               />
             </a>
             <a 
-              href="https://launchigniter.com/product/citero?ref=badge-citero" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0"
-            >
-              <img 
-                src="https://launchigniter.com/api/badge/citero?theme=neutral" 
-                alt="Featured on LaunchIgniter" 
-                width="212" 
-                height="55" 
-              />
-            </a>
-            <a 
               href="https://fazier.com/launches/www.citero.online" 
               target="_blank"
               rel="noopener noreferrer"
@@ -641,186 +787,53 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Banner */}
-      <section className="py-12 md:py-16 px-3 lg:px-4 border-y border-gray-100/50 relative overflow-visible z-10 min-h-[400px] md:min-h-[500px] w-full">
-        <div className="max-w-6xl mx-auto relative z-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-8 items-center">
-            {/* Left side - Graph */}
-            <div className="relative h-[300px] md:h-[400px] lg:h-[450px] w-full order-2 lg:order-1 overflow-hidden">
-              <AnimatedGraphBackground />
-            </div>
+      {/* CTA Banner Section */}
+      <section className="py-20 px-4 md:px-6 relative overflow-hidden z-10 w-full bg-white border-t border-gray-100/50">
+        <div className="max-w-6xl mx-auto relative min-h-[400px]">
+          
+          {/* Absolute background live graph overlay - spans full banner width */}
+          <AnimatedGraphBackground className="absolute inset-0 z-0 pointer-events-none" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center relative z-10 pointer-events-none">
             
-            {/* Right side - Text and CTA */}
-            <div className="flex flex-col justify-center lg:text-left text-center relative z-20 order-1 lg:order-2">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-3 md:mb-4 tracking-tight leading-tight">
-                Citero tracks how AI describe your brand, and shows you how to increase your AI-driven traffic and visibility.
+            {/* Left side - Spacer for desktop to let the background spiky graph show through */}
+            <div className="lg:col-span-6 relative h-[320px] md:h-[380px] lg:h-[400px] w-full order-2 lg:order-1"></div>
+            
+            {/* Right side - Elite Typographic Content & CTA */}
+            <div className="lg:col-span-6 flex flex-col justify-center text-left space-y-6 order-1 lg:order-2 pointer-events-auto">
+
+              <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight font-display leading-[1.15]">
+                Citero tracks how AI describes your brand, and shows you how to increase your AI-driven traffic.
               </h2>
-              <div className="text-base md:text-lg text-gray-600 md:text-gray-700 mb-4 md:mb-6 leading-relaxed space-y-3">
+              
+              <div className="text-sm md:text-base text-slate-500 font-normal leading-relaxed space-y-4">
                 <p>
                   AI models increasingly decide which products users trust and discover. If AI is describing you incorrectly, or not mentioning you at all, you're losing traffic, leads, and credibility.
                 </p>
                 <p>
                   AI answers change constantly. Asking ChatGPT manually doesn't show hidden citations, competitor visibility, long-term trends, sentiment analysis, or which websites influence AI models.
                 </p>
-                <p className="font-medium text-gray-900">
+                <p className="font-semibold text-gray-900">
                   Citero automates all of this.
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 lg:justify-start justify-center">
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <Button 
                   onClick={() => navigate("/auth")}
                   size="default" 
-                  className="bg-gray-900 hover:bg-gray-800 text-white rounded-lg px-6 py-3 text-sm font-medium shadow-lg hover:shadow-xl transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]"
+                  className="bg-slate-900 hover:bg-slate-800 text-white rounded-xl px-6 py-3 text-sm font-medium shadow-md shadow-slate-950/10 transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] flex items-center justify-center self-start"
                 >
                   Get Started
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </div>
             </div>
+
           </div>
         </div>
       </section>
 
-      {/* Pricing Section */}
-      <section id="pricing" className="py-16 px-3 lg:px-4 bg-gray-50/30 relative overflow-hidden z-10">
-        <div className="max-w-6xl mx-auto relative z-10">
-          <div className="text-center mb-12">
-            <h2 className="text-2xl md:text-3xl font-bold text-gray-900 mb-3 tracking-tight">
-              Choose the plan that fits you
-            </h2>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto mb-12">
-            {/* Basic Plan */}
-            <div className="p-8 bg-white/90 backdrop-blur-md border-2 border-gray-200 rounded-2xl hover:shadow-xl transition-all duration-200 hover:-translate-y-1">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Basic</h3>
-              <p className="text-sm text-gray-500 mb-6">Perfect for getting started</p>
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-gray-900">$99</span>
-                <span className="text-gray-600 text-xl">/mo</span>
-              </div>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3 text-sm text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>150 AI prompt scans/month</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>20+ competitor comparisons</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>Top source insights</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>5 blog per month</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-gray-700">
-                  <CheckCircle2 className="h-5 w-5 text-gray-900 flex-shrink-0 mt-0.5" />
-                  <span>Access to GPT-4o or Gemini</span>
-                </li>
-              </ul>
-              <Button 
-                onClick={() => handlePlanClick("basic_normal")}
-                className="w-full bg-gray-900 hover:bg-gray-800 text-white rounded-lg text-base py-5 font-medium shadow-md hover:shadow-lg transition-all"
-              >
-                Subscribe Now
-              </Button>
-            </div>
-
-            {/* Custom Plan - Highlighted */}
-            <div className="p-8 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl relative hover:shadow-2xl transition-all duration-200 hover:-translate-y-1 border-2 border-gray-900">
-              <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
-                <span className="bg-white text-gray-900 text-xs font-bold px-4 py-1.5 rounded-full shadow-lg">
-                  Most Popular
-                </span>
-              </div>
-              <h3 className="text-2xl font-bold text-white mb-2">Custom</h3>
-              <p className="text-sm text-gray-300 mb-6">For teams that need more</p>
-              <div className="mb-8">
-                <span className="text-5xl font-bold text-white">Custom</span>
-                <span className="text-gray-300 text-xl ml-2">pricing</span>
-              </div>
-              <ul className="space-y-4 mb-8">
-                <li className="flex items-start gap-3 text-sm text-white">
-                  <CheckCircle2 className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
-                  <span>Unlimited scans</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-white">
-                  <CheckCircle2 className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
-                  <span>Dedicated GEO specialist</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-white">
-                  <CheckCircle2 className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
-                  <span>Custom sources & sentiment models</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-white">
-                  <CheckCircle2 className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
-                  <span>20+ competitor benchmarks</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-white">
-                  <CheckCircle2 className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
-                  <span>Advanced GEO insights (cross-AI comparison)</span>
-                </li>
-                <li className="flex items-start gap-3 text-sm text-white">
-                  <CheckCircle2 className="h-5 w-5 text-white flex-shrink-0 mt-0.5" />
-                  <span>Weekly reports + blog recommendations</span>
-                </li>
-              </ul>
-              <Button 
-                onClick={() => handlePlanClick("enterprise")}
-                className="w-full bg-white hover:bg-gray-100 text-gray-900 rounded-lg text-base py-5 font-medium shadow-md hover:shadow-lg transition-all"
-              >
-                Contact Sales
-              </Button>
-            </div>
-          </div>
-
-          {/* Founder Circle Offer */}
-          <div className="max-w-4xl mx-auto mt-12">
-            <div className="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-2xl p-8 md:p-10 text-white shadow-2xl relative overflow-hidden border-2 border-gray-800">
-              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
-              <div className="relative z-10">
-                <div className="mb-6">
-                  <h3 className="text-3xl md:text-4xl font-bold text-white mb-2">Founder Circle</h3>
-                  <p className="text-base text-gray-300">
-                    Exclusive pricing for early adopters
-                  </p>
-                </div>
-                <div className="bg-white/10 rounded-xl p-6 mb-6 border border-white/20">
-                  <p className="text-sm text-gray-300 mb-3">Basic Plan</p>
-                  <div className="flex items-baseline gap-2 mb-4">
-                    <p className="text-4xl font-bold text-white">$49</p>
-                    <p className="text-lg text-gray-300">/mo</p>
-                  </div>
-                  <p className="text-xs text-gray-400 mb-4">Founder Circle pricing - Limited time offer</p>
-                  <Button 
-                    onClick={() => handlePlanClick("basic_founder")}
-                    className="w-full bg-white hover:bg-gray-100 text-gray-900 rounded-lg text-sm py-3 font-medium shadow-md hover:shadow-lg transition-all"
-                  >
-                    Subscribe Now
-                  </Button>
-                </div>
-                <ul className="space-y-3 text-sm text-gray-300">
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-white flex-shrink-0 mt-0.5" />
-                    <span>Custom onboarding call</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-white flex-shrink-0 mt-0.5" />
-                    <span>Feedback loop access</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <CheckCircle2 className="h-4 w-4 text-white flex-shrink-0 mt-0.5" />
-                    <span>"Featured Brand" badge in marketing</span>
-                  </li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
 
       <HomeFooter />
     </div>

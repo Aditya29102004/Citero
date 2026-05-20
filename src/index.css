@@ -102,21 +102,25 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-family: 'Inter', sans-serif;
     margin: 0;
     padding: 0;
     overflow-x: hidden;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Outfit', sans-serif;
+    letter-spacing: -0.02em;
   }
 
   html {
     margin: 0;
     padding: 0;
     overflow-x: hidden;
-    height: 100%;
     scroll-behavior: smooth;
   }
 
   #root {
-    height: 100%;
     overflow-x: hidden;
   }
 

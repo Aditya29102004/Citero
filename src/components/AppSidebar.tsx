@@ -78,26 +78,26 @@ export function AppSidebar() {
   };
 
   return (
-    <Sidebar className={collapsed ? "w-16" : ""}>
-      <SidebarHeader className="border-b border-gray-200/80 px-6 py-5">
+    <Sidebar className={`border-r-0 ${collapsed ? "w-16" : ""}`} style={{ "--sidebar-background": "#F5F5F5" } as React.CSSProperties}>
+      <SidebarHeader className="px-5 py-4 pb-2">
         <div className="flex items-center justify-between">
-          {!collapsed && <h2 className="text-xl font-bold text-gray-900 tracking-tight">citero</h2>}
+          {!collapsed && <h2 className="text-[22px] font-bold text-gray-900 tracking-tight">citero</h2>}
           {collapsed && <div className="w-6 h-6 bg-gray-900 rounded"></div>}
         </div>
       </SidebarHeader>
-      <SidebarContent className="px-3 py-4">
+      <SidebarContent className="px-3 py-0 gap-0 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
         {/* Analytics Section */}
-        <SidebarGroup className="mb-6">
-          <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <SidebarGroup className="p-0 m-0">
+          <SidebarGroupLabel className="px-3 mb-1 mt-2 !h-auto text-[13px] font-medium text-gray-500 capitalize tracking-normal bg-transparent">
             {!collapsed && "Analytics"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => navigate("/brands")}
                   isActive={location.pathname === "/brands"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <FileText className="h-4 w-4" />
                   {!collapsed && <span>Brands</span>}
@@ -108,7 +108,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   onClick={() => navigate("/dashboard")}
                   isActive={location.pathname === "/dashboard"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Home className="h-4 w-4" />
                   {!collapsed && <span>Dashboard</span>}
@@ -119,7 +119,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   onClick={() => navigate("/competitors")}
                   isActive={location.pathname === "/competitors"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <GitCompare className="h-4 w-4" />
                   {!collapsed && <span>Competitors</span>}
@@ -129,7 +129,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   onClick={() => navigate("/sentiment")}
                   isActive={location.pathname === "/sentiment"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <TrendingUp className="h-4 w-4" />
                   {!collapsed && <span>Sentiment</span>}
@@ -139,7 +139,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   onClick={() => navigate("/sources")}
                   isActive={location.pathname === "/sources"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <BarChart3 className="h-4 w-4" />
                   {!collapsed && <span>Sources</span>}
@@ -150,7 +150,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     onClick={() => navigate("/leads")}
                     isActive={location.pathname === "/leads"}
-                    className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                    className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                   >
                     <UserPlus className="h-4 w-4" />
                     {!collapsed && <span>Leads</span>}
@@ -162,17 +162,17 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Action Section */}
-        <SidebarGroup className="mb-6">
-          <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <SidebarGroup className="p-0 m-0">
+          <SidebarGroupLabel className="px-3 mb-1 mt-2 !h-auto text-[13px] font-medium text-gray-500 capitalize tracking-normal bg-transparent">
             {!collapsed && "Action"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => navigate("/blogs")}
                   isActive={location.pathname === "/blogs"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <FileText className="h-4 w-4" />
                   {!collapsed && <span>Blogs</span>}
@@ -182,7 +182,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   onClick={() => navigate("/audits")}
                   isActive={location.pathname === "/audits"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Search className="h-4 w-4" />
                   {!collapsed && <span>Audits</span>}
@@ -192,7 +192,7 @@ export function AppSidebar() {
                 <SidebarMenuButton
                   onClick={() => navigate("/prompts")}
                   isActive={location.pathname === "/prompts"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Zap className="h-4 w-4" />
                   {!collapsed && <span>Prompt Simulator</span>}
@@ -203,17 +203,17 @@ export function AppSidebar() {
         </SidebarGroup>
 
         {/* Team Section */}
-        <SidebarGroup className="mb-6">
-          <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <SidebarGroup className="p-0 m-0">
+          <SidebarGroupLabel className="px-3 mb-1 mt-2 !h-auto text-[13px] font-medium text-gray-500 capitalize tracking-normal bg-transparent">
             {!collapsed && "Team"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => navigate("/team")}
                   isActive={location.pathname === "/team"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Users className="h-4 w-4" />
                   {!collapsed && <span>Team Members</span>}
@@ -225,17 +225,17 @@ export function AppSidebar() {
 
         {/* Admin Section (if admin) */}
         {isAdmin && (
-          <SidebarGroup className="mb-6">
-            <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          <SidebarGroup className="mb-3">
+            <SidebarGroupLabel className="px-3 mb-1 text-[11px] font-semibold text-gray-500 uppercase tracking-wider">
               {!collapsed && "Admin"}
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu className="space-y-1">
+              <SidebarMenu className="gap-0.5">
                 <SidebarMenuItem>
                   <SidebarMenuButton
                     onClick={() => navigate("/admin/waitlist")}
                     isActive={location.pathname === "/admin/waitlist"}
-                    className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                    className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                   >
                     <Users className="h-4 w-4" />
                     {!collapsed && <span>Waitlist</span>}
@@ -245,7 +245,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     onClick={() => navigate("/admin/founders-note")}
                     isActive={location.pathname === "/admin/founders-note"}
-                    className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                    className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                   >
                     <PenTool className="h-4 w-4" />
                     {!collapsed && <span>Founder's Note</span>}
@@ -255,7 +255,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     onClick={() => navigate("/admin/users")}
                     isActive={location.pathname === "/admin/users"}
-                    className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                    className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                   >
                     <UserCog className="h-4 w-4" />
                     {!collapsed && <span>Users</span>}
@@ -267,17 +267,17 @@ export function AppSidebar() {
         )}
 
         {/* Founder's Note Section (for all users) */}
-        <SidebarGroup className="mb-6">
-          <SidebarGroupLabel className="px-3 mb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <SidebarGroup className="p-0 m-0">
+          <SidebarGroupLabel className="px-3 mb-1 mt-2 !h-auto text-[13px] font-medium text-gray-500 capitalize tracking-normal bg-transparent">
             {!collapsed && "Guidance"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="space-y-1">
+            <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   onClick={() => navigate("/founders-note")}
                   isActive={location.pathname === "/founders-note"}
-                  className="rounded-lg px-3 py-2.5 transition-all duration-200"
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <MessageSquare className="h-4 w-4" />
                   {!collapsed && <span>Founder's Note</span>}
@@ -286,50 +286,42 @@ export function AppSidebar() {
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
+        {/* System Section */}
+        <SidebarGroup className="p-0 m-0 mt-2 mb-4">
+          <SidebarGroupContent>
+            <SidebarMenu className="gap-0.5">
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => setCollapsed(!collapsed)}
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
+                >
+                  {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+                  {!collapsed && <span>Collapse</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => navigate("/settings")}
+                  isActive={location.pathname === "/settings"}
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
+                >
+                  <Settings className="h-4 w-4" />
+                  {!collapsed && <span>Settings</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton 
+                  onClick={handleLogout}
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
+                >
+                  <LogOut className="h-4 w-4" />
+                  {!collapsed && <span>Logout</span>}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
-      
-      <SidebarFooter className="border-t border-gray-200/80 px-3 py-4">
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => setCollapsed(!collapsed)}
-              className="rounded-lg px-3 py-2.5 transition-all duration-200"
-            >
-              {collapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
-              {!collapsed && <span>Collapse</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => navigate("/settings")}
-              isActive={location.pathname === "/settings"}
-              className="rounded-lg px-3 py-2.5 transition-all duration-200"
-            >
-              <Settings className="h-4 w-4" />
-              {!collapsed && <span>Settings</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              onClick={() => navigate("/knowledge-base")}
-              isActive={location.pathname === "/knowledge-base"}
-              className="rounded-lg px-3 py-2.5 transition-all duration-200"
-            >
-              <BookOpen className="h-4 w-4" />
-              {!collapsed && <span>Knowledge Base</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-          <SidebarMenuItem>
-            <SidebarMenuButton 
-              onClick={handleLogout}
-              className="rounded-lg px-3 py-2.5 transition-all duration-200"
-            >
-              <LogOut className="h-4 w-4" />
-              {!collapsed && <span>Logout</span>}
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarFooter>
     </Sidebar>
   );
 }

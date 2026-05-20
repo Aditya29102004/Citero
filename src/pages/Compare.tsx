@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, type Dispatch, type SetStateAction } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Session } from "@supabase/supabase-js";
@@ -56,7 +56,10 @@ const Compare = () => {
     if (data) setBrands(data);
   };
 
-  const fetchBrandData = async (brandId: string, setData: Function) => {
+  const fetchBrandData = async (
+    brandId: string,
+    setData: Dispatch<SetStateAction<Record<string, unknown> | null>>
+  ) => {
     const { data: brand } = await supabase
       .from("brands")
       .select("*")

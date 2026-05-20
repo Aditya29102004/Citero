@@ -22,7 +22,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { canRunScan, isAIProviderAllowed, getUserSubscriptionLimits, getUserScanUsage, SubscriptionLimits } from "@/lib/subscriptionLimits";
-import { AIProviderSelect } from "@/components/AIProviderSelect";
+import { AIProviderSelect, type AIProvider } from "@/components/AIProviderSelect";
 
 const BrandDashboard = () => {
   const navigate = useNavigate();
@@ -33,7 +33,7 @@ const BrandDashboard = () => {
   const [brand, setBrand] = useState<any>(null);
   const [latestScore, setLatestScore] = useState<any>(null);
   const [latestScan, setLatestScan] = useState<any>(null);
-  const [aiProvider, setAiProvider] = useState<'openai' | 'gemini' | 'deepseek' | 'openrouter'>('openai');
+  const [aiProvider, setAiProvider] = useState<AIProvider>('openai');
   const [subscriptionLimits, setSubscriptionLimits] = useState<SubscriptionLimits | null>(null);
   const [scanUsage, setScanUsage] = useState<number>(0);
 

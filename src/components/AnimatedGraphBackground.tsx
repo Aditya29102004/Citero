@@ -55,14 +55,21 @@ export const AnimatedGraphBackground = ({ className = '' }: AnimatedGraphBackgro
     // Initialize data points
     const initDataPoints = () => {
       dataPoints.length = 0;
-      // Use CSS dimensions (not canvas.width/height which are scaled by DPR)
-      // Ensure graph fits within canvas bounds by using available width minus padding
-      graphWidth = Math.max(0, cssWidth - padding.left - padding.right);
+      
+      // Determine if desktop or mobile screen
+      const isDesktop = cssWidth >= 1024;
+      
+      // On desktop, the active spiky graph stays on the left half (42% of width)
+      // On mobile, the graph can take the full width of the spacer element
+      graphWidth = isDesktop 
+        ? Math.max(0, cssWidth * 0.42)
+        : Math.max(0, cssWidth - padding.left - padding.right);
+        
       graphHeight = Math.max(0, cssHeight - padding.top - padding.bottom);
       graphX = padding.left;
       graphY = padding.top;
       
-      // Distribute points evenly across the graph width
+      // Distribute points evenly across the active graph width
       for (let i = 0; i < pointCount; i++) {
         // Calculate x position ensuring it stays within bounds
         const x = graphX + (i / Math.max(1, pointCount - 1)) * graphWidth;
@@ -149,13 +156,19 @@ export const AnimatedGraphBackground = ({ className = '' }: AnimatedGraphBackgro
         point.y = Math.max(graphY + 5, Math.min(graphY + graphHeight - 5, point.y));
       });
 
-      // Draw background with subtle pattern
-      ctx.fillStyle = 'rgba(249, 250, 251, 0.5)';
+      // Draw background with subtle pattern - make fully transparent to blend
+      ctx.fillStyle = 'rgba(255, 255, 255, 0)';
       ctx.fillRect(graphX, graphY, graphWidth, graphHeight);
 
-      // Draw grid lines - more visible and prominent
-      ctx.strokeStyle = 'rgba(156, 163, 175, 0.4)';
-      ctx.lineWidth = 1.5;
+      // Create linear gradient gridline stroke that extends to the right and fades out behind texts
+      const gridGrad = ctx.createLinearGradient(graphX, 0, cssWidth - padding.right, 0);
+      gridGrad.addColorStop(0, 'rgba(156, 163, 175, 0.12)'); // visible in active graph area
+      gridGrad.addColorStop(0.35, 'rgba(156, 163, 175, 0.10)'); // starts to fade
+      gridGrad.addColorStop(0.65, 'rgba(156, 163, 175, 0.02)'); // extremely soft over the text area
+      gridGrad.addColorStop(1, 'rgba(156, 163, 175, 0)'); // fully fades out
+
+      ctx.strokeStyle = gridGrad;
+      ctx.lineWidth = 1;
       
       // Horizontal grid lines (Y-axis)
       const horizontalLines = 6;
@@ -163,29 +176,18 @@ export const AnimatedGraphBackground = ({ className = '' }: AnimatedGraphBackgro
         const y = graphY + (graphHeight / horizontalLines) * i;
         ctx.beginPath();
         ctx.moveTo(graphX, y);
-        ctx.lineTo(graphX + graphWidth, y);
+        ctx.lineTo(cssWidth - padding.right, y); // extend all the way to the right edge
         ctx.stroke();
         
-        // Y-axis labels - more visible (ensure they stay within bounds)
+        // Y-axis labels - sleek and elegant with % suffix
         if (i < horizontalLines) {
-          ctx.fillStyle = 'rgba(75, 85, 99, 0.8)';
-          ctx.font = 'bold 12px system-ui';
+          ctx.fillStyle = 'rgba(148, 163, 184, 0.8)'; // slate-400
+          ctx.font = '500 10px Inter, system-ui';
           ctx.textAlign = 'right';
           ctx.textBaseline = 'middle';
           const value = 100 - (i / horizontalLines) * 200;
-          // Ensure label doesn't overflow left boundary
           const labelX = Math.max(padding.left - 12, 5);
-          ctx.fillText(value.toString(), labelX, y);
-          
-          // Add subtle line highlight
-          if (i === horizontalLines / 2) {
-            ctx.strokeStyle = 'rgba(156, 163, 175, 0.3)';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(graphX, y);
-            ctx.lineTo(graphX + graphWidth, y);
-            ctx.stroke();
-          }
+          ctx.fillText(value.toString() + '%', labelX, y);
         }
       }
 
@@ -199,9 +201,9 @@ export const AnimatedGraphBackground = ({ className = '' }: AnimatedGraphBackgro
         ctx.stroke();
       }
 
-      // Draw X and Y axes - more prominent
-      ctx.strokeStyle = 'rgba(75, 85, 99, 0.7)';
-      ctx.lineWidth = 2.5;
+      // Draw X and Y axes - thin and clean
+      ctx.strokeStyle = 'rgba(156, 163, 175, 0.2)';
+      ctx.lineWidth = 1.2;
       
       // Y-axis
       ctx.beginPath();
@@ -215,56 +217,40 @@ export const AnimatedGraphBackground = ({ className = '' }: AnimatedGraphBackgro
       ctx.lineTo(graphX + graphWidth, graphY + graphHeight);
       ctx.stroke();
 
-      // Draw axis labels - more visible and styled
-      ctx.fillStyle = 'rgba(75, 85, 99, 0.9)';
-      ctx.font = 'bold 13px system-ui';
+      // Draw axis labels - styled beautifully
+      ctx.fillStyle = 'rgba(148, 163, 184, 0.8)';
+      ctx.font = '500 10px Inter, system-ui';
       ctx.textAlign = 'center';
       ctx.textBaseline = 'top';
       
-      // X-axis labels with background - ensure they fit within bounds
+      // X-axis labels (Months instead of generic Q quarters)
       for (let i = 0; i <= verticalLines; i++) {
         const x = graphX + (graphWidth / verticalLines) * i;
-        // Ensure x is within bounds
         if (x < graphX || x > graphX + graphWidth) continue;
         
-        const label = `Q${i + 1}`;
-        const labelY = graphY + graphHeight + 10;
-        const labelHeight = 18;
+        const label = `Month ${i + 1}`;
+        const labelY = graphY + graphHeight + 12;
         
-        // Ensure labels don't overflow bottom boundary
-        if (labelY + labelHeight > cssHeight - 5) continue;
-        
-        // Add subtle background to labels
-        ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
-        ctx.fillRect(x - 12, labelY, 24, labelHeight);
-        
-        ctx.fillStyle = 'rgba(75, 85, 99, 0.9)';
-        ctx.fillText(label, x, labelY + 3);
+        ctx.fillText(label, x, labelY);
       }
       
-      // Y-axis label - more prominent (ensure it stays within bounds)
-      const labelX = Math.max(25, padding.left / 2);
-      ctx.save();
-      ctx.translate(labelX, graphY + graphHeight / 2);
-      ctx.rotate(-Math.PI / 2);
-      ctx.textAlign = 'center';
-      ctx.fillStyle = 'rgba(75, 85, 99, 0.9)';
-      ctx.font = 'bold 13px system-ui';
-      ctx.fillText('Growth', 0, 0);
-      ctx.restore();
+      // Title label at top-left
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.8)'; // slate-900
+      ctx.font = '600 11px Inter, system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText('AI GEO VISIBILITY INDEX', graphX, graphY - 15);
 
-      // Fill area under graph with more visible gradient - black theme
+      // Fill area under graph with gorgeous translucent dark gray gradient
       const gradient = ctx.createLinearGradient(graphX, graphY, graphX, graphY + graphHeight);
-      gradient.addColorStop(0, 'rgba(17, 24, 39, 0.25)');
-      gradient.addColorStop(0.5, 'rgba(17, 24, 39, 0.15)');
-      gradient.addColorStop(1, 'rgba(17, 24, 39, 0.08)');
+      gradient.addColorStop(0, 'rgba(15, 23, 42, 0.08)'); // Translucent slate-900
+      gradient.addColorStop(0.5, 'rgba(15, 23, 42, 0.03)');
+      gradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
       
       ctx.fillStyle = gradient;
       ctx.beginPath();
       ctx.moveTo(dataPoints[0].x, graphY + graphHeight);
       ctx.lineTo(dataPoints[0].x, dataPoints[0].y);
       
-      // Use straight lines instead of bezier curves for spiky appearance
       for (let i = 1; i < dataPoints.length; i++) {
         ctx.lineTo(dataPoints[i].x, dataPoints[i].y);
       }
@@ -273,57 +259,47 @@ export const AnimatedGraphBackground = ({ className = '' }: AnimatedGraphBackgro
       ctx.closePath();
       ctx.fill();
 
-      // Draw graph line - spiky/angular lines with shadow effect - black theme
-      // Shadow
-      ctx.beginPath();
-      ctx.strokeStyle = 'rgba(17, 24, 39, 0.3)';
-      ctx.lineWidth = 5;
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'miter'; // Sharp corners for spiky look
+      // Draw graph line - beautiful charcoal/black line with sharp corners
+      const lineGrad = 'rgba(15, 23, 42, 0.95)'; // Deep slate-900 charcoal
+
+      // Premium glowing drop shadow under the line
+      ctx.save();
+      ctx.shadowColor = 'rgba(15, 23, 42, 0.15)';
+      ctx.shadowBlur = 8;
+      ctx.shadowOffsetY = 3;
       
-      if (dataPoints.length > 0) {
-        ctx.moveTo(dataPoints[0].x, dataPoints[0].y + 2);
-        // Use straight lines instead of bezier curves for spiky appearance
-        for (let i = 1; i < dataPoints.length; i++) {
-          ctx.lineTo(dataPoints[i].x, dataPoints[i].y + 2);
-        }
-      }
-      ctx.stroke();
-      
-      // Main line - spiky/angular - black
       ctx.beginPath();
-      ctx.strokeStyle = 'rgba(17, 24, 39, 0.95)';
+      ctx.strokeStyle = lineGrad;
       ctx.lineWidth = 3.5;
       ctx.lineCap = 'round';
-      ctx.lineJoin = 'miter'; // Sharp corners for spiky look
+      ctx.lineJoin = 'miter'; // Keep the sharp/spiky corners as requested
       
       if (dataPoints.length > 0) {
         ctx.moveTo(dataPoints[0].x, dataPoints[0].y);
-        // Use straight lines instead of bezier curves for spiky appearance
         for (let i = 1; i < dataPoints.length; i++) {
           ctx.lineTo(dataPoints[i].x, dataPoints[i].y);
         }
       }
       ctx.stroke();
+      ctx.restore();
 
-      // Draw data points - show all points for spiky graph (9 points total) - black theme
-      dataPoints.forEach((point, i) => {
-        // Draw all points since we only have 9 now
-        // Outer glow
+      // Draw data points - beautiful charcoal beads
+      dataPoints.forEach((point) => {
+        // Outer glow circle
         ctx.beginPath();
         ctx.arc(point.x, point.y, 6, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(17, 24, 39, 0.2)';
+        ctx.fillStyle = 'rgba(15, 23, 42, 0.08)';
         ctx.fill();
         
-        // Main point - black
+        // Inner core point
         ctx.beginPath();
-        ctx.arc(point.x, point.y, 5, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(17, 24, 39, 1)';
+        ctx.arc(point.x, point.y, 4, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(15, 23, 42, 1)'; // Deep slate-900 charcoal
         ctx.fill();
         
-        // White border
-        ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
-        ctx.lineWidth = 2.5;
+        // Crisp white ring border
+        ctx.strokeStyle = '#ffffff';
+        ctx.lineWidth = 1.5;
         ctx.stroke();
       });
 

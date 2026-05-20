@@ -126,13 +126,13 @@ const Payment = () => {
 
       // Handle both response formats
       const subscription = subscriptionData?.subscription || subscriptionData;
-      const keyId = subscriptionData?.keyId || razorpayKeyId;
-      
-      console.log("Using subscription:", subscription);
-      console.log("Using keyId:", keyId);
 
       // Get Razorpay Key ID from environment or use the one from response
-      const razorpayKeyId = import.meta.env.VITE_RAZORPAY_KEY_ID || keyId;
+      const razorpayKeyId =
+        import.meta.env.VITE_RAZORPAY_KEY_ID || subscriptionData?.keyId;
+
+      console.log("Using subscription:", subscription);
+      console.log("Using keyId:", razorpayKeyId);
 
       if (!razorpayKeyId) {
         throw new Error("Razorpay Key ID not configured");

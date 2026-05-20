@@ -18,6 +18,7 @@ interface SourceCitation {
   last_seen: string;
   category: string;
   first_seen: string;
+  rank?: number;
 }
 
 interface CitationHistory {
@@ -90,7 +91,7 @@ const Sources = () => {
 
       if (sourcesError) {
         // Handle table doesn't exist errors gracefully
-        if (sourcesError.code === 'PGRST116' || sourcesError.code === '42P01' || sourcesError.status === 404 || sourcesError.message?.includes('does not exist') || sourcesError.message?.includes('relation')) {
+        if (sourcesError.code === 'PGRST116' || sourcesError.code === '42P01' || sourcesError.message?.includes('does not exist') || sourcesError.message?.includes('relation')) {
           // Table doesn't exist yet - that's okay, just use empty arrays
           setTopSources([]);
           setSourceCategories({});
@@ -148,7 +149,8 @@ const Sources = () => {
         if (history && history.length > 0) {
           // Group by scan date and aggregate top 5 sources
           const top5Domains = sources.slice(0, 5).map(s => s.domain);
-          const scanMap = new Map<string, Record<string, number>>();
+          type ScanTrendPoint = { date: string; [domain: string]: number | string };
+          const scanMap = new Map<string, ScanTrendPoint>();
 
           scans.forEach(scan => {
             const scanDate = new Date(scan.started_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -159,14 +161,18 @@ const Sources = () => {
             if (top5Domains.includes(entry.domain) && entry.scan_id) {
               const scanData = scanMap.get(entry.scan_id);
               if (scanData) {
-                scanData[entry.domain] = (scanData[entry.domain] || 0) + entry.daily_mentions;
+                const existing = scanData[entry.domain];
+                const prev = typeof existing === 'number' ? existing : 0;
+                scanData[entry.domain] = prev + entry.daily_mentions;
               }
             }
           });
 
           const trendData = Array.from(scanMap.values()).filter(d => {
             // Only include dates with at least one source mention
-            return Object.keys(d).some(key => key !== 'date' && d[key] > 0);
+            return Object.keys(d).some(
+              key => key !== 'date' && typeof d[key] === 'number' && (d[key] as number) > 0
+            );
           });
 
           setCitationTrend(trendData);

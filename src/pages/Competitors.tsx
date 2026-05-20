@@ -269,7 +269,7 @@ const Competitors = () => {
         
         if (error) {
           // Handle table doesn't exist errors gracefully (404, PGRST116, 42P01)
-          if (error.code === 'PGRST116' || error.code === '42P01' || error.status === 404 || error.message?.includes('does not exist') || error.message?.includes('relation')) {
+          if (error.code === 'PGRST116' || error.code === '42P01' || error.message?.includes('does not exist') || error.message?.includes('relation')) {
             // Table doesn't exist yet - that's okay, just use empty array
             visibilityHistory = [];
           } else {

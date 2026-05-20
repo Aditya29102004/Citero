@@ -25,6 +25,7 @@ const Refund = React.lazy(() => import("./pages/Refund"));
 const About = React.lazy(() => import("./pages/About"));
 const Privacy = React.lazy(() => import("./pages/Privacy"));
 const Contact = React.lazy(() => import("./pages/Contact"));
+const GetDemo = React.lazy(() => import("./pages/GetDemo"));
 const Payment = React.lazy(() => import("./pages/Payment"));
 const Pricing = React.lazy(() => import("./pages/Pricing"));
 const Profile = React.lazy(() => import("./pages/Profile"));
@@ -100,6 +101,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/privacy" element={<Privacy />} />
             <Route path="/contact" element={<Contact />} />
+            <Route path="/demo" element={<GetDemo />} />
             <Route path="/payment" element={<Payment />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/profile" element={<Profile />} />
