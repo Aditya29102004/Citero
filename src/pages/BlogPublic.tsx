@@ -50,30 +50,19 @@ const BlogPublic = () => {
   const fetchBlogs = async () => {
     try {
       setLoading(true);
-      // Fetch published blogs - try public access first
+      // Fetch published official platform blogs
       const { data, error } = await supabase
         .from("blogs")
-        .select("id, title, topic, created_at, published_at, word_count, seo_keywords, content, status")
+        .select("id, title, topic, created_at, published_at, word_count, seo_keywords, content, status, is_platform_blog")
         .eq("status", "published")
+        .eq("is_platform_blog", true)
         .order("published_at", { ascending: false })
         .limit(50);
 
-      if (!error && data && data.length > 0) {
+      if (!error && data) {
         setBlogs(data);
       } else {
-        // If no published blogs, try to get any blogs (for demo purposes)
-        const { data: anyBlogs, error: anyError } = await supabase
-          .from("blogs")
-          .select("id, title, topic, created_at, published_at, word_count, seo_keywords, content, status")
-          .order("created_at", { ascending: false })
-          .limit(50);
-
-        if (!anyError && anyBlogs && anyBlogs.length > 0) {
-          setBlogs(anyBlogs);
-        } else {
-          // No blogs available - set empty array
-          setBlogs([]);
-        }
+        setBlogs([]);
       }
     } catch (error) {
       console.log("Blogs not accessible:", error);

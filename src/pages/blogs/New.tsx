@@ -179,9 +179,9 @@ const NewBlog = () => {
               </Button>
 
               {generating ? (
-                <Card className="p-12 border border-gray-200 bg-white">
+                <Card className="p-12 border border-slate-200 bg-white rounded-xl shadow-sm">
                   <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-6"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-slate-900 mx-auto mb-6"></div>
                     <AnimatedText
                       texts={[
                         "Analyzing your brand data...",

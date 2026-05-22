@@ -7,8 +7,6 @@ import { AppSidebar } from "@/components/AppSidebar";
 import { DashboardHeader } from "@/components/DashboardHeader";
 import { BlogEditor } from "@/components/blogs/BlogEditor";
 import { BlogToolbar } from "@/components/blogs/BlogToolbar";
-import { BlogInsightCard } from "@/components/blogs/BlogInsightCard";
-import { Card } from "@/components/ui/card";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -23,8 +21,6 @@ const EditBlog = () => {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [seoKeywords, setSeoKeywords] = useState<string[]>([]);
-  const [insights, setInsights] = useState<any>(null);
-  const [insightsLoading, setInsightsLoading] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -165,41 +161,19 @@ const EditBlog = () => {
     }
   };
 
-  const handleGenerateInsights = async () => {
-    setInsightsLoading(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("generate-blog-insights", {
-        body: { blogId: id, content, title },
-      });
-
-      if (error) throw error;
-      setInsights(data?.insights || {});
-    } catch (error: any) {
-      console.error("Error generating insights:", error);
-      toast.error("Failed to generate insights");
-    } finally {
-      setInsightsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    if (blog && content) {
-      handleGenerateInsights();
-    }
-  }, [blog, content]);
 
   if (loading) {
     return (
       <SidebarProvider>
-        <div className="flex min-h-screen w-full bg-white">
+        <div className="flex min-h-screen w-full bg-slate-50/50">
           <AppSidebar />
           <div className="flex-1 flex flex-col min-w-0">
             <DashboardHeader />
-            <main className="flex-1 overflow-auto bg-white">
+            <main className="flex-1 overflow-auto bg-slate-50/50">
               <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
                 <div className="text-center py-20">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900 mx-auto mb-4"></div>
-                  <p className="text-gray-600">Loading blog...</p>
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-slate-900 mx-auto mb-4"></div>
+                  <p className="text-slate-600 font-medium">Loading blog...</p>
                 </div>
               </div>
             </main>
@@ -217,20 +191,14 @@ const EditBlog = () => {
 
   return (
     <SidebarProvider>
-      <div className="flex min-h-screen w-full bg-white">
+      <div className="flex min-h-screen w-full bg-slate-50/50">
         <AppSidebar />
         <div className="flex-1 flex flex-col min-w-0">
           <DashboardHeader />
-          <main className="flex-1 overflow-auto bg-white">
-            <div className="flex h-screen">
+          <main className="flex-1 flex flex-col overflow-hidden bg-white">
+            <div className="flex-1 flex min-h-0">
               {/* Editor Section */}
               <div className="flex-1 flex flex-col min-w-0">
-                <div className="p-4 border-b border-gray-200 bg-white">
-                  <Button onClick={() => navigate("/blogs")} variant="ghost" size="sm">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Back to Blogs
-                  </Button>
-                </div>
                 <BlogToolbar
                   wordCount={wordCount}
                   onSave={handleSave}
@@ -239,6 +207,7 @@ const EditBlog = () => {
                   onExportPDF={handleExportPDF}
                   status={blog.status}
                   saving={saving}
+                  onBack={() => navigate("/blogs")}
                 />
                 <BlogEditor
                   title={title}
@@ -249,11 +218,6 @@ const EditBlog = () => {
                   seoKeywords={seoKeywords}
                   onAddKeyword={(keyword) => setSeoKeywords([...seoKeywords, keyword])}
                 />
-              </div>
-
-              {/* Insights Sidebar */}
-              <div className="w-80 border-l border-gray-200 bg-gray-50 p-6 overflow-y-auto">
-                <BlogInsightCard insights={insights || {}} loading={insightsLoading} />
               </div>
             </div>
           </main>

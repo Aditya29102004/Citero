@@ -405,7 +405,7 @@ const Index = () => {
             {/* Card 1 - Prompt Simulator (Wide Horizontal Card) */}
             <div className="w-full rounded-3xl overflow-hidden border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-[#fafafa] flex flex-col md:flex-row h-auto md:h-[400px] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
               {/* Left side text */}
-              <div className="flex-1 p-8 md:p-12 flex flex-col justify-between items-start">
+              <div className="w-full md:w-[39%] flex-shrink-0 p-8 md:p-12 flex flex-col justify-between items-start">
                 <div className="space-y-4">
                   <span className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Prompt Simulator</span>
                   <h3 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-[1.25] font-display max-w-md">
@@ -422,11 +422,11 @@ const Index = () => {
                 </div>
               </div>
               {/* Right side mockup */}
-              <div className="flex-1 p-6 md:p-12 flex items-center justify-center relative overflow-hidden h-[280px] md:h-full">
+              <div className="w-full md:w-[61%] flex-shrink-0 bg-[#e4ee28] p-0 flex items-center justify-center relative overflow-hidden h-[280px] md:h-full">
                 <img 
                   src="/aeo.png" 
                   alt="Prompt Simulator Dashboard" 
-                  className="w-full h-auto max-h-full object-contain opacity-0 transition-opacity duration-300"
+                  className="w-full h-full object-contain object-right-bottom opacity-0 transition-opacity duration-300"
                   onLoad={(e) => {
                     (e.currentTarget as HTMLElement).classList.remove('opacity-0');
                     (e.currentTarget as HTMLElement).classList.add('opacity-100');
@@ -458,11 +458,11 @@ const Index = () => {
                   </div>
                 </div>
                 {/* Bottom mockup */}
-                <div className="p-6 md:p-8 flex items-center justify-center relative overflow-hidden h-[300px] md:h-[320px] w-full">
+                <div className="bg-[#f67070] p-0 flex items-center justify-center relative overflow-hidden h-[220px] md:h-[312px] w-full">
                   <img 
                     src="/content.png" 
                     alt="AI Blog Generator Editor" 
-                    className="w-full h-auto max-h-full object-contain opacity-0 transition-opacity duration-300"
+                    className="w-full h-full object-contain object-bottom opacity-0 transition-opacity duration-300"
                     onLoad={(e) => {
                       (e.currentTarget as HTMLElement).classList.remove('opacity-0');
                       (e.currentTarget as HTMLElement).classList.add('opacity-100');
@@ -491,11 +491,11 @@ const Index = () => {
                   </div>
                 </div>
                 {/* Bottom mockup */}
-                <div className="p-6 md:p-8 flex items-center justify-center relative overflow-hidden h-[300px] md:h-[320px] w-full">
+                <div className="bg-[#5c56ce] p-0 flex items-center justify-center relative overflow-hidden h-[240px] md:h-[344px] w-full">
                   <img 
                     src="/pr.png" 
                     alt="Founder's Note Board" 
-                    className="w-full h-auto max-h-full object-contain opacity-0 transition-opacity duration-300"
+                    className="w-full h-full object-contain object-bottom opacity-0 transition-opacity duration-300"
                     onLoad={(e) => {
                       (e.currentTarget as HTMLElement).classList.remove('opacity-0');
                       (e.currentTarget as HTMLElement).classList.add('opacity-100');
@@ -841,18 +841,15 @@ const Index = () => {
             <div className="lg:col-span-6 flex flex-col justify-center text-left space-y-6 order-1 lg:order-2 pointer-events-auto">
 
               <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight font-display leading-[1.15]">
-                Citero tracks how AI describes your brand, and shows you how to increase your AI-driven traffic.
+                Your customers are already asking AI which brands to trust.
               </h2>
               
               <div className="text-sm md:text-base text-slate-500 font-normal leading-relaxed space-y-4">
                 <p>
-                  AI models increasingly decide which products users trust and discover. If AI is describing you incorrectly, or not mentioning you at all, you're losing traffic, leads, and credibility.
-                </p>
-                <p>
-                  AI answers change constantly. Asking ChatGPT manually doesn't show hidden citations, competitor visibility, long-term trends, sentiment analysis, or which websites influence AI models.
+                  When users ask AI what product to buy, which company to trust, or what platform to use recommendations decide who wins.
                 </p>
                 <p className="font-semibold text-gray-900">
-                  Citero automates all of this.
+                  Citero helps you monitor, analyze, and improve how AI recommends your brand.
                 </p>
               </div>
 

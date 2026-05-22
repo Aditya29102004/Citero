@@ -76,6 +76,7 @@ export type Database = {
         blog_goal: string | null
         tone: string | null
         competitor_focus: string | null
+        is_platform_blog: boolean
       }>
       brand_visibility_scores: TableDef<{
         brand_id: string
