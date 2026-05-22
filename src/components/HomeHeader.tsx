@@ -179,7 +179,7 @@ export const HomeHeader = () => {
             className="flex items-center gap-2.5 cursor-pointer" 
             onClick={() => navigate("/")}
           >
-            <img src="/logo.svg" alt="citero logo" className="w-8 h-8 rounded-lg object-contain drop-shadow-sm" />
+            <img src="/logo.png" alt="citero logo" className="w-8 h-8 rounded-lg object-contain drop-shadow-sm" />
             <span className="text-xl font-bold text-gray-900 tracking-tight">
               citero
             </span>

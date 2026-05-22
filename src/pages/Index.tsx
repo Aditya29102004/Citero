@@ -6,7 +6,7 @@ import { SEO } from "@/components/SEO";
 import { ParticleBackground } from "@/components/ParticleBackground";
 import { AnimatedGraphBackground } from "@/components/AnimatedGraphBackground";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -207,9 +207,8 @@ const Index = () => {
             <div className="lg:col-span-2 flex flex-col justify-center lg:text-left text-center space-y-6 pt-8 lg:pt-12">
               {/* Main Headline */}
               <h1 className="text-4xl md:text-5xl lg:text-6xl font-semibold text-gray-900 tracking-tight leading-[1.2]">
-              Your competitors are being cited by AI. 
-              Are you?
-            </h1>
+                Your competitors are being cited by AI. <span className="text-emerald-600">Are you?</span>
+              </h1>
             
               {/* Description */}
               <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-xl lg:max-w-none">
@@ -306,38 +305,43 @@ const Index = () => {
               </div>
 
               {/* Options List */}
-              <div className="space-y-4 border-t border-gray-100 pt-6">
+              <div className="space-y-3 border-t border-gray-100 pt-6">
                 {features.map((feature, index) => {
                   const isActive = activeTab === index;
 
                   return (
-                    <div 
-                      key={feature.id}
-                      onClick={() => setActiveTab(index)}
-                      className={`group cursor-pointer p-4 rounded-2xl transition-all duration-300 border ${
-                        isActive 
-                          ? "bg-slate-50/50 border-slate-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)]" 
-                          : "border-transparent hover:bg-slate-50/30"
-                      }`}
-                    >
-                      <div className="flex items-start gap-4">
-                        <div className="flex-1 space-y-1">                           <h4 className={`text-lg font-semibold transition-colors duration-200 ${
-                            isActive ? "text-slate-900" : "text-slate-600 group-hover:text-slate-900"
-                          }`}>
-                            {feature.title}
-                          </h4>
-                          
-                          {/* Animated description wrapper */}
-                          <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
-                            isActive ? "max-h-24 opacity-100 mt-2" : "max-h-0 opacity-0"
-                          }`}>
-                            <p className="text-sm md:text-base text-slate-500 font-normal leading-relaxed">
-                              {feature.description}
-                            </p>
+                    <Fragment key={feature.id}>
+                      <div 
+                        onClick={() => setActiveTab(index)}
+                        className={`group cursor-pointer p-4 rounded-2xl transition-all duration-300 border ${
+                          isActive 
+                            ? "bg-slate-50/50 border-slate-100/80 shadow-[0_2px_8px_rgba(0,0,0,0.02)]" 
+                            : "border-transparent hover:bg-slate-50/30"
+                        }`}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="flex-1 space-y-1">
+                            <h4 className={`text-lg font-semibold transition-colors duration-200 ${
+                              isActive ? "text-slate-900" : "text-slate-600 group-hover:text-slate-900"
+                            }`}>
+                              {feature.title}
+                            </h4>
+                            
+                            {/* Animated description wrapper */}
+                            <div className={`overflow-hidden transition-all duration-300 ease-in-out ${
+                              isActive ? "max-h-24 opacity-100 mt-2" : "max-h-0 opacity-0"
+                            }`}>
+                              <p className="text-sm md:text-base text-slate-500 font-normal leading-relaxed">
+                                {feature.description}
+                              </p>
+                            </div>
                           </div>
                         </div>
                       </div>
-                    </div>
+                      {index < features.length - 1 && (
+                        <div className="border-b border-gray-200 mx-2" />
+                      )}
+                    </Fragment>
                   );
                 })}
               </div>
@@ -395,78 +399,112 @@ const Index = () => {
             </h2>
           </div>
 
-          {/* Three-Column Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+          {/* Card-based Layout matching user reference */}
+          <div className="flex flex-col gap-8 w-full">
             
-            {/* Column 1 - AEO & SEO */}
-            <div className="flex flex-col space-y-4">
-              <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-950">Prompt Simulator</h3>
-                <p className="text-sm text-slate-500 font-medium">See what AI says whether you appear, at what position, and what your competitors' answers look like. Test before you optimize.</p>
+            {/* Card 1 - Prompt Simulator (Wide Horizontal Card) */}
+            <div className="w-full rounded-3xl overflow-hidden border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-[#fafafa] flex flex-col md:flex-row h-auto md:h-[400px] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+              {/* Left side text */}
+              <div className="flex-1 p-8 md:p-12 flex flex-col justify-between items-start">
+                <div className="space-y-4">
+                  <span className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Prompt Simulator</span>
+                  <h3 className="text-3xl md:text-4xl font-bold text-slate-900 tracking-tight leading-[1.25] font-display max-w-md">
+                    See what AI says whether you appear, and at what position.
+                  </h3>
+                </div>
+                <div className="mt-8 md:mt-0">
+                  <div 
+                    onClick={() => navigate("/auth")}
+                    className="w-12 h-12 rounded-full bg-slate-950 hover:bg-slate-800 text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                  >
+                    <ArrowRight className="h-5 w-5" />
+                  </div>
+                </div>
               </div>
-              
-              {/* Image Placeholder */}
-              <div className="border border-dashed border-slate-200 rounded-2xl aspect-[4/3] bg-slate-50/10 flex flex-col items-center justify-center text-slate-400 font-normal text-xs mt-2 select-none w-full relative overflow-hidden">
+              {/* Right side mockup */}
+              <div className="flex-1 p-6 md:p-12 flex items-center justify-center relative overflow-hidden h-[280px] md:h-full">
                 <img 
                   src="/aeo.png" 
-                  alt="AEO & SEO" 
-                  className="absolute inset-0 w-full h-full object-cover bg-white opacity-0 transition-opacity duration-300"
+                  alt="Prompt Simulator Dashboard" 
+                  className="w-full h-auto max-h-full object-contain opacity-0 transition-opacity duration-300"
                   onLoad={(e) => {
                     (e.currentTarget as HTMLElement).classList.remove('opacity-0');
                     (e.currentTarget as HTMLElement).classList.add('opacity-100');
                   }}
                 />
-                <span className="relative z-10">aeo.png</span>
-                <span className="text-[9px] text-slate-350 mt-1 relative z-10">4 : 3 aspect ratio</span>
               </div>
             </div>
 
-            {/* Column 2 - Content & Demand */}
-            <div className="flex flex-col space-y-4">
-              <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-950">AI Blog Generator</h3>
-                <p className="text-sm text-slate-500 font-medium">Citero finds your citation gaps and generates blog posts specifically structured to get picked up by ChatGPT and Gemini.</p>
-              </div>
+            {/* Row 2 - Two Vertical Cards Side-by-Side */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 w-full">
               
-              {/* Image Placeholder */}
-              <div className="border border-dashed border-slate-200 rounded-2xl aspect-[4/3] bg-slate-50/10 flex flex-col items-center justify-center text-slate-400 font-normal text-xs mt-2 select-none w-full relative overflow-hidden">
-                <img 
-                  src="/content.png" 
-                  alt="Content & Demand" 
-                  className="absolute inset-0 w-full h-full object-cover bg-white opacity-0 transition-opacity duration-300"
-                  onLoad={(e) => {
-                    (e.currentTarget as HTMLElement).classList.remove('opacity-0');
-                    (e.currentTarget as HTMLElement).classList.add('opacity-100');
-                  }}
-                />
-                <span className="relative z-10">content.png</span>
-                <span className="text-[9px] text-slate-350 mt-1 relative z-10">4 : 3 aspect ratio</span>
+              {/* Card 2 - AI Blog Generator */}
+              <div className="rounded-3xl overflow-hidden border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-[#fafafa] flex flex-col h-auto md:h-[540px] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+                {/* Top text part */}
+                <div className="p-8 md:p-10 flex flex-col justify-between items-start flex-grow">
+                  <div className="w-full">
+                    <div className="flex justify-between items-center w-full mb-4">
+                      <span className="text-sm font-semibold tracking-wider text-slate-400 uppercase">AI Blog Generator</span>
+                      <div 
+                        onClick={() => navigate("/auth")}
+                        className="w-10 h-10 rounded-full bg-slate-950 hover:bg-slate-800 text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 tracking-tight leading-snug max-w-sm">
+                      Citero finds citation gaps and generates blogs structured for ChatGPT.
+                    </h3>
+                  </div>
+                </div>
+                {/* Bottom mockup */}
+                <div className="p-6 md:p-8 flex items-center justify-center relative overflow-hidden h-[300px] md:h-[320px] w-full">
+                  <img 
+                    src="/content.png" 
+                    alt="AI Blog Generator Editor" 
+                    className="w-full h-auto max-h-full object-contain opacity-0 transition-opacity duration-300"
+                    onLoad={(e) => {
+                      (e.currentTarget as HTMLElement).classList.remove('opacity-0');
+                      (e.currentTarget as HTMLElement).classList.add('opacity-100');
+                    }}
+                  />
+                </div>
               </div>
-            </div>
 
-            {/* Column 3 - PR & Communications */}
-            <div className="flex flex-col space-y-4">
-              <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-950">Founder's Note</h3>
-                <p className="text-sm text-slate-500 font-medium">Every user gets direct access to the founder and GEO experts. </p>
+              {/* Card 3 - Founder's Note */}
+              <div className="rounded-3xl overflow-hidden border border-slate-100/80 shadow-[0_8px_30px_rgb(0,0,0,0.02)] bg-[#fafafa] flex flex-col h-auto md:h-[540px] transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.05)]">
+                {/* Top text part */}
+                <div className="p-8 md:p-10 flex flex-col justify-between items-start flex-grow">
+                  <div className="w-full">
+                    <div className="flex justify-between items-center w-full mb-4">
+                      <span className="text-sm font-semibold tracking-wider text-slate-400 uppercase">Founder's Note</span>
+                      <div 
+                        onClick={() => navigate("/auth")}
+                        className="w-10 h-10 rounded-full bg-slate-950 hover:bg-slate-800 text-white flex items-center justify-center transition-transform hover:scale-105 active:scale-95 cursor-pointer"
+                      >
+                        <ArrowRight className="h-4 w-4" />
+                      </div>
+                    </div>
+                    <h3 className="text-2xl font-bold text-slate-900 tracking-tight leading-snug max-w-sm">
+                      Every user gets direct access to the founder and GEO experts.
+                    </h3>
+                  </div>
+                </div>
+                {/* Bottom mockup */}
+                <div className="p-6 md:p-8 flex items-center justify-center relative overflow-hidden h-[300px] md:h-[320px] w-full">
+                  <img 
+                    src="/pr.png" 
+                    alt="Founder's Note Board" 
+                    className="w-full h-auto max-h-full object-contain opacity-0 transition-opacity duration-300"
+                    onLoad={(e) => {
+                      (e.currentTarget as HTMLElement).classList.remove('opacity-0');
+                      (e.currentTarget as HTMLElement).classList.add('opacity-100');
+                    }}
+                  />
+                </div>
               </div>
-              
-              {/* Image Placeholder */}
-              <div className="border border-dashed border-slate-200 rounded-2xl aspect-[4/3] bg-slate-50/10 flex flex-col items-center justify-center text-slate-400 font-normal text-xs mt-2 select-none w-full relative overflow-hidden">
-                <img 
-                  src="/pr.png" 
-                  alt="PR & Communications" 
-                  className="absolute inset-0 w-full h-full object-cover bg-white opacity-0 transition-opacity duration-300"
-                  onLoad={(e) => {
-                    (e.currentTarget as HTMLElement).classList.remove('opacity-0');
-                    (e.currentTarget as HTMLElement).classList.add('opacity-100');
-                  }}
-                />
-                <span className="relative z-10">pr.png</span>
-                <span className="text-[9px] text-slate-350 mt-1 relative z-10">4 : 3 aspect ratio</span>
-              </div>
-            </div>
 
+            </div>
           </div>
 
           {/* Concluding Section Statement - Below the grid */}
@@ -482,9 +520,9 @@ const Index = () => {
       </section>
 
       {/* Product Hunt, IndieWall, Startup Fame, Dofollow.Tools, Aura++ & Fazier Badges - Scrolling */}
-      <section className="py-8 px-3 lg:px-4 relative z-[2] overflow-hidden opacity-[0.20] hover:opacity-[0.40] transition-opacity duration-300">
-        <div className="max-w-full mx-auto">
-          <div className="flex items-center gap-8 animate-scroll">
+      <section className="py-8 px-3 lg:px-4 relative z-[2] overflow-hidden opacity-[0.20] hover:opacity-[0.40] transition-opacity duration-300 w-full max-w-full">
+        <div className="max-w-full mx-auto overflow-hidden">
+          <div className="flex flex-nowrap items-center gap-8 animate-scroll w-max">
             {/* First set of badges */}
             <a 
               href="https://www.producthunt.com/products/citero-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-citero-ai" 

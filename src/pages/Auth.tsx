@@ -230,18 +230,13 @@ const Auth = () => {
   return (
     <div className="min-h-screen flex bg-white font-sans">
       {/* Left Side - Premium Brand Panel */}
-      <div className="hidden lg:flex lg:w-[45%] bg-slate-50/50 border-r border-slate-100 flex-col justify-between p-12 relative overflow-hidden">
-        
-        {/* Ambient background grid & radial glows */}
-        <div className="absolute inset-0 bg-[linear-gradient(to_right,#f1f5f9_1px,transparent_1px),linear-gradient(to_bottom,#f1f5f9_1px,transparent_1px)] bg-[size:4rem_4rem] opacity-30"></div>
-        <div className="absolute -top-12 -right-12 w-80 h-80 bg-indigo-100/50 rounded-full blur-3xl opacity-60 -z-10 animate-pulse" style={{ animationDuration: '6s' }}></div>
-        <div className="absolute -bottom-12 -left-12 w-80 h-80 bg-purple-100/50 rounded-full blur-3xl opacity-60 -z-10 animate-pulse" style={{ animationDuration: '8s' }}></div>
+      <div className="hidden lg:flex lg:w-[45%] bg-white flex-col justify-between p-12 relative overflow-hidden">
 
         {/* Platform Showcase Mockup */}
         <div className="relative w-full max-w-[520px] mx-auto z-10 my-auto py-12">
-          <div className="rounded-2xl bg-white p-3 shadow-[0_24px_60px_rgba(0,0,0,0.03)] border border-slate-100 transition-all duration-500 hover:-translate-y-1">
+          <div className="rounded-2xl bg-white p-3 shadow-[0_24px_60px_rgba(0,0,0,0.03)]">
             <img 
-              src="/placeholder-1-front.png" 
+              src="/auth-showcase.png" 
               alt="Citero platform mockup" 
               className="w-full h-auto rounded-xl object-contain"
             />

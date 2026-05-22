@@ -56,7 +56,7 @@ export const HomeFooter = () => {
         <div className="pt-8 border-t border-gray-200">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-2.5">
-              <img src="/logo.svg" alt="citero logo" className="w-6 h-6 rounded-md object-contain drop-shadow-sm" />
+              <img src="/logo.png" alt="citero logo" className="w-6 h-6 rounded-md object-contain drop-shadow-sm" />
               <span className="text-sm font-semibold text-gray-900">citero</span>
             </div>
             <div className="flex items-center gap-4">
