@@ -64,6 +64,79 @@ const Sources = () => {
     }
   }, [selectedBrandId]);
 
+  // Realtime subscription and fallback polling for updates on scan completion
+  useEffect(() => {
+    if (!selectedBrandId) return;
+
+    let lastCompletedScanId: string | null = null;
+
+    const checkAndFetchNewScan = async () => {
+      try {
+        const { data: latestScan } = await supabase
+          .from("scans")
+          .select("id")
+          .eq("brand_id", selectedBrandId)
+          .eq("status", "completed")
+          .order("completed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (latestScan && latestScan.id !== lastCompletedScanId) {
+          lastCompletedScanId = latestScan.id;
+          fetchSourcesData();
+        }
+      } catch (err) {
+        console.error("Error checking latest completed scan:", err);
+      }
+    };
+
+    // Initialize the last completed scan ID on mount or brand change
+    supabase
+      .from("scans")
+      .select("id")
+      .eq("brand_id", selectedBrandId)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          lastCompletedScanId = data.id;
+        }
+      });
+
+    // Realtime channel for observing scan updates
+    const channel = supabase
+      .channel(`scans-updates-sources-${selectedBrandId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'scans',
+          filter: `brand_id=eq.${selectedBrandId}`
+        },
+        (payload) => {
+          const newScan = payload.new as any;
+          if (newScan && newScan.status === 'completed' && newScan.id !== lastCompletedScanId) {
+            lastCompletedScanId = newScan.id;
+            fetchSourcesData();
+          }
+        }
+      )
+      .subscribe();
+
+    // 15s background optional fallback poll (uses lightweight index check)
+    const fallbackPollInterval = setInterval(() => {
+      checkAndFetchNewScan();
+    }, 15000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(fallbackPollInterval);
+    };
+  }, [selectedBrandId]);
+
   const fetchBrands = async () => {
     const { data } = await supabase
       .from("brands")

@@ -42,7 +42,6 @@ const Prompts = React.lazy(() => import("./pages/Prompts"));
 const Team = React.lazy(() => import("./pages/Team"));
 const Settings = React.lazy(() => import("./pages/Settings"));
 const KnowledgeBase = React.lazy(() => import("./pages/KnowledgeBase"));
-const Leads = React.lazy(() => import("./pages/Leads"));
 const Logo = React.lazy(() => import("./pages/Logo"));
 const Feedback = React.lazy(() => import("./pages/Feedback"));
 const WebsiteOnboarding = React.lazy(() => import("./pages/onboarding/Website"));
@@ -87,7 +86,6 @@ const App = () => (
             <Route path="/team" element={<Team />} />
             <Route path="/settings" element={<Settings />} />
             <Route path="/knowledge-base" element={<KnowledgeBase />} />
-            <Route path="/leads" element={<Leads />} />
             <Route path="/admin/waitlist" element={<AdminWaitlist />} />
             <Route path="/admin/founders-note" element={<FoundersNoteAdmin />} />
             <Route path="/admin/users" element={<UserManagement />} />

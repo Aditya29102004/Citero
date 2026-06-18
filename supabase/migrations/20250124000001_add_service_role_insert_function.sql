@@ -30,7 +30,7 @@ BEGIN
     sentiment_negative,
     competitor_scores,
     citation_sources,
-    platform
+    provider
   ) VALUES (
     p_brand_id,
     p_scan_number,

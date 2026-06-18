@@ -10,7 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, TrendingUp, TrendingDown, Minus } from "lucide-react";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { ComposedChart, Area, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { toast } from "sonner";
 import {
   extractCompetitorsFromResponse,
@@ -30,6 +30,7 @@ const Competitors = () => {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedBrandId, setSelectedBrandId] = useState<string>("");
+  const [brandName, setBrandName] = useState<string>("");
   const [brands, setBrands] = useState<Array<{ id: string; name: string }>>([]);
   const [competitors, setCompetitors] = useState<any[]>([]);
   const [competitorTrend, setCompetitorTrend] = useState<any[]>([]);
@@ -78,6 +79,7 @@ const Competitors = () => {
         setBrands(data);
         if (!selectedBrandId) {
           setSelectedBrandId(data[0].id);
+          setBrandName(data[0].name);
         }
       }
     } catch (error) {
@@ -122,6 +124,7 @@ const Competitors = () => {
       }
 
       const brandName = brandData?.name || "";
+      setBrandName(brandName);
       
       console.log("Brand data fetched:", {
         name: brandName,
@@ -235,7 +238,7 @@ const Competitors = () => {
       // Fetch scans for the brand
       const { data: scans } = await supabase
         .from("scans")
-        .select("id, started_at, status, completed_at")
+        .select("id, started_at, status, completed_at, visibility_score")
         .eq("brand_id", selectedBrandId)
         .eq("status", "completed")
         .order("started_at", { ascending: false })
@@ -426,12 +429,16 @@ const Competitors = () => {
 
       // Calculate trends for each competitor
       const competitorsWithTrends = rankedCompetitors.map(comp => {
-        // Find previous visibility from history
-        const previousEntry = visibilityHistory?.find(
-          h => h.competitor_name.toLowerCase() === comp.name.toLowerCase()
-        );
-        
-        const previousVisibility = previousEntry?.visibility_score || 0;
+        let previousVisibility = 0;
+        if (comp.name.toLowerCase() === brandName.toLowerCase()) {
+          previousVisibility = scans[1]?.visibility_score || 0;
+        } else {
+          // Find previous visibility from history
+          const previousEntry = visibilityHistory?.find(
+            h => h.competitor_name.toLowerCase() === comp.name.toLowerCase()
+          );
+          previousVisibility = previousEntry?.visibility_score || 0;
+        }
         const trend = calculateTrend(comp.visibilityScore, previousVisibility);
 
         return {
@@ -456,10 +463,14 @@ const Competitors = () => {
         
         // Add top 5 competitors
         competitorsWithTrends.slice(0, 5).forEach(comp => {
-          const historyEntry = scanHistory.find(h => 
-            h.competitor_name.toLowerCase() === comp.name.toLowerCase()
-          );
-          dayData[comp.name] = historyEntry?.visibility_score || 0;
+          if (comp.name.toLowerCase() === brandName.toLowerCase()) {
+            dayData[comp.name] = scan.visibility_score || 0;
+          } else {
+            const historyEntry = scanHistory.find(h => 
+              h.competitor_name.toLowerCase() === comp.name.toLowerCase()
+            );
+            dayData[comp.name] = historyEntry?.visibility_score || 0;
+          }
         });
 
         trendData.push(dayData);
@@ -673,7 +684,11 @@ const Competitors = () => {
               {/* Brand Selector */}
               {brands.length > 0 && (
                 <div className="mb-6">
-                  <Select value={selectedBrandId} onValueChange={setSelectedBrandId}>
+                  <Select value={selectedBrandId} onValueChange={(value) => {
+                    setSelectedBrandId(value);
+                    const brand = brands.find(b => b.id === value);
+                    if (brand) setBrandName(brand.name);
+                  }}>
                     <SelectTrigger className="w-[250px]">
                       <SelectValue placeholder="Select a brand" />
                     </SelectTrigger>
@@ -778,10 +793,14 @@ const Competitors = () => {
                       </div>
                     ) : (
                       <ResponsiveContainer width="100%" height={400}>
-                        <LineChart data={competitorTrend} margin={{ top: 10, right: 20, left: 0, bottom: 5 }}>
+                        <ComposedChart data={competitorTrend} margin={{ top: 20, right: 20, left: 0, bottom: 5 }}>
                           <defs>
-                            <filter id="shadowCompetitorTabs" height="200%">
-                              <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#0f172a" floodOpacity="0.1"/>
+                            <linearGradient id="colorYourBrand" x1="0" y1="0" x2="0" y2="1">
+                              <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.25}/>
+                              <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
+                            </linearGradient>
+                            <filter id="shadow" height="200%">
+                              <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#3b82f6" floodOpacity="0.2"/>
                             </filter>
                           </defs>
                           <CartesianGrid strokeDasharray="3 3" stroke="#f1f5f9" vertical={false} />
@@ -801,6 +820,7 @@ const Competitors = () => {
                             tickLine={false} 
                             axisLine={false} 
                             tickMargin={12}
+                            width={40}
                           />
                           <Tooltip 
                             contentStyle={{
@@ -822,47 +842,42 @@ const Competitors = () => {
                             iconSize={10} 
                             fontSize={12} 
                           />
-                          {competitors.slice(0, 5).map((comp, idx) => {
-                            const colors = ['#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
-                            return (
-                              <Line
-                                key={comp.name}
-                                type="monotone"
-                                dataKey={comp.name}
-                                stroke={colors[idx % colors.length]}
-                                strokeWidth={3}
-                                dot={{ r: 4, fill: '#fff', stroke: colors[idx % colors.length], strokeWidth: 2 }}
-                                activeDot={{ r: 6, fill: colors[idx % colors.length], stroke: '#fff', strokeWidth: 2 }}
-                                style={{ filter: 'url(#shadowCompetitorTabs)' }}
-                              />
-                            );
-                          })}
-                        </LineChart>
+                          {/* Area for Brand */}
+                          <Area 
+                            type="monotone" 
+                            dataKey={brandName} 
+                            stroke="#3b82f6" 
+                            fillOpacity={1} 
+                            fill="url(#colorYourBrand)" 
+                            strokeWidth={3}
+                            dot={{ r: 4, fill: '#fff', stroke: '#3b82f6', strokeWidth: 2 }}
+                            activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff', strokeWidth: 2 }}
+                            name="Your Brand"
+                            style={{ filter: 'url(#shadow)' }}
+                          />
+                          {/* Lines for Competitors */}
+                          {competitors
+                            .filter(comp => comp.name.toLowerCase() !== brandName.toLowerCase())
+                            .slice(0, 4)
+                            .map((comp, idx) => {
+                              const colors = ['#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+                              return (
+                                <Line
+                                  key={comp.name}
+                                  type="monotone"
+                                  dataKey={comp.name}
+                                  stroke={colors[idx % colors.length]}
+                                  strokeWidth={2}
+                                  dot={{ r: 3, fill: '#fff', stroke: colors[idx % colors.length], strokeWidth: 1.5 }}
+                                  activeDot={{ r: 5, fill: colors[idx % colors.length], stroke: '#fff', strokeWidth: 1.5 }}
+                                  name={comp.name}
+                                />
+                              );
+                            })}
+                        </ComposedChart>
                       </ResponsiveContainer>
                     )}
                   </Card>
-
-                  {/* Strength/Weakness Report */}
-                  {competitorInsights && (
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <Card className="p-6 border border-green-200 bg-green-50">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Strengths</h3>
-                        <ul className="space-y-2">
-                          {competitorInsights.strengths?.map((strength: string, idx: number) => (
-                            <li key={idx} className="text-sm text-gray-700">• {strength}</li>
-                          ))}
-                        </ul>
-                      </Card>
-                      <Card className="p-6 border border-red-200 bg-red-50">
-                        <h3 className="text-lg font-semibold text-gray-900 mb-4">Weaknesses</h3>
-                        <ul className="space-y-2">
-                          {competitorInsights.weaknesses?.map((weakness: string, idx: number) => (
-                            <li key={idx} className="text-sm text-gray-700">• {weakness}</li>
-                          ))}
-                        </ul>
-                      </Card>
-                    </div>
-                  )}
                 </div>
               )}
             </div>

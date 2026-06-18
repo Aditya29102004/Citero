@@ -128,7 +128,27 @@ const BrandDashboard = () => {
         .limit(1)
         .maybeSingle();
 
-      if (scanData) setLatestScan(scanData);
+      if (scanData) {
+        const isRunning = scanData.status === 'running' || scanData.status === 'pending';
+        if (isRunning) {
+          const startedAt = new Date(scanData.started_at || scanData.created_at).getTime();
+          if (Date.now() - startedAt > 5 * 60 * 1000) {
+            console.log("Stuck scan detected in BrandDashboard, marking as failed:", scanData.id);
+            await supabase
+              .from("scans")
+              .update({ 
+                status: "failed", 
+                completed_at: new Date().toISOString(), 
+                ai_summary: "Error: Scan timed out or worker crashed" 
+              })
+              .eq("id", scanData.id);
+            // Re-fetch
+            fetchBrandData();
+            return;
+          }
+        }
+        setLatestScan(scanData);
+      }
     } catch (error: any) {
       console.error("Error fetching brand data:", error);
     }
@@ -480,8 +500,8 @@ const BrandDashboard = () => {
                       <div className="mt-4 space-y-2">
                         <div className="flex items-center justify-between text-xs text-gray-500">
                           <span>Scanning...</span>
-                          <span>
-                            {(latestScan.completed_questions || 0) * 3}/{(latestScan.total_questions || 0) * 3}
+                           <span>
+                            {(latestScan.completed_questions || 0) * 10}/150
                           </span>
                         </div>
                         <Progress 

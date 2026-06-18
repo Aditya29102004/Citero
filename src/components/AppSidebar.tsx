@@ -145,18 +145,7 @@ export function AppSidebar() {
                   {!collapsed && <span>Sources</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              {hasSubscription && (
-                <SidebarMenuItem>
-                  <SidebarMenuButton
-                    onClick={() => navigate("/leads")}
-                    isActive={location.pathname === "/leads"}
-                    className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
-                  >
-                    <UserPlus className="h-4 w-4" />
-                    {!collapsed && <span>Leads</span>}
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              )}
+
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

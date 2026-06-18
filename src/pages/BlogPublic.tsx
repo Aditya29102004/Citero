@@ -31,6 +31,51 @@ const renderMarkdown = (text: string): string => {
     .replace(/^(.+)$/gim, '<p class="mb-4 text-gray-700 leading-relaxed">$1</p>');
 };
 
+const DEFAULT_FEATURED_BLOG = {
+  id: "default-seo-geo-guide",
+  title: "The Complete Guide to Generative Engine Optimization (GEO): How to Get Cited in ChatGPT & Gemini",
+  topic: "GEO Strategy",
+  content: `# The Complete Guide to Generative Engine Optimization (GEO)
+
+Traditional search engine optimization (SEO) is undergoing the most significant shift since the birth of search. With over 800 million active users checking ChatGPT, Gemini, Claude, and Perplexity for product recommendations, brand citations have become the new currency of organic traffic.
+
+If your brand is not mentioned in these generative AI answers, you are effectively invisible to a major segment of your audience.
+
+Here is how Generative Engine Optimization (GEO) works and how you can optimize your digital footprint to get cited:
+
+## 1. What is Generative Engine Optimization (GEO)?
+GEO is the process of optimizing your website and content structure so that LLMs (Large Language Models) ingest, understand, and reference your brand as a primary source for conversational answers. 
+
+Unlike traditional SEO which relies heavily on page titles and backlinks, GEO focuses on authority context, structured formatting, and citation compatibility.
+
+## 2. Key GEO Optimization Strategies
+
+### A. Format Content for LLM Ingestion
+Generative engines process information structured in logical patterns. To optimize for them:
+* **Direct Q&A Sections:** Use clear headers like "How does [Brand] solve team alignment?" followed by a single-sentence direct answer.
+* **Markdown Bullet Points:** Bullet points are easier for retrieval-augmented generation (RAG) pipelines to extract and cite.
+* **Define Key Concepts Early:** Place definitions at the very beginning of your pages.
+
+### B. Cite High-Authority Datasets
+LLMs validate facts by cross-referencing public repositories. Linking to reliable external databases like Wikipedia, GitHub, GitBook, and academic papers signals to the AI model that your content is trustworthy and reference-worthy.
+
+### C. Build Cohesive Topic Clusters
+Rather than writing sparse, disconnected blog posts, compile thorough knowledge bases. The deeper your contextual mapping on a specific query space, the more likely the model will cite you as a category authority.
+
+---
+
+## 3. Measuring Your AI Visibility
+Tracking your search footprint manually is impossible. Using automated trackers like **Citero** allows you to simulate queries across multiple engines, trace source references, and build visual dashboards to benchmark competitor citation growth.
+
+Start auditing your GEO index today to stay ahead of the AI shift.`,
+  created_at: "2026-06-18T22:37:51.000Z",
+  published_at: "2026-06-18T22:37:51.000Z",
+  word_count: 385,
+  seo_keywords: ["Generative Engine Optimization", "GEO", "AI Search Optimization", "SGE SEO"],
+  status: "published",
+  is_platform_blog: true
+};
+
 const BlogPublic = () => {
   const navigate = useNavigate();
   const [blogs, setBlogs] = useState<any[]>([]);
@@ -59,10 +104,10 @@ const BlogPublic = () => {
         .order("published_at", { ascending: false })
         .limit(50);
 
-      if (!error && data) {
+      if (!error && data && data.length > 0) {
         setBlogs(data);
       } else {
-        setBlogs([]);
+        setBlogs([DEFAULT_FEATURED_BLOG]);
       }
     } catch (error) {
       console.log("Blogs not accessible:", error);

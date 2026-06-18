@@ -71,6 +71,29 @@ const Index = () => {
     }
   ];
 
+  const [blogPosts, setBlogPosts] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchLatestBlogs = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("blogs")
+          .select("id, title, topic, content, created_at, published_at, word_count, seo_keywords")
+          .eq("status", "published")
+          .eq("is_platform_blog", true)
+          .order("published_at", { ascending: false })
+          .limit(3);
+
+        if (!error && data) {
+          setBlogPosts(data);
+        }
+      } catch (err) {
+        console.error("Error fetching homepage blogs:", err);
+      }
+    };
+    fetchLatestBlogs();
+  }, []);
+
   // Apply zoom exclusively to the homepage to replicate "ctrl -"
   useEffect(() => {
     // Explicitly casting as any because 'zoom' is a non-standard property
@@ -778,6 +801,113 @@ const Index = () => {
               />
             </a>
           </div>
+        </div>
+      </section>
+
+      {/* Blog/Insights Section */}
+      <section id="insights" className="py-24 px-3 lg:px-4 relative overflow-hidden bg-white z-10 border-t border-gray-100">
+        <div className="max-w-6xl mx-auto relative z-10">
+          
+          {/* Header */}
+          <div className="text-center mb-16 max-w-2xl mx-auto space-y-3">
+            <h2 className="text-3xl md:text-4xl font-semibold text-slate-900 tracking-tight font-display">
+              Latest Insights from Citero
+            </h2>
+            <p className="text-base text-slate-500 font-normal leading-relaxed">
+              Explore resources, guides, and strategic guidelines for winning organic recommendations in generative search.
+            </p>
+          </div>
+
+          {/* Grid of Articles */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+            {blogPosts.length > 0 ? (
+              blogPosts.map((post) => {
+                const preview = post.content
+                  ? post.content.replace(/[#*`]/g, "").replace(/\n/g, " ").trim().substring(0, 150) + "..."
+                  : "";
+                return (
+                  <article
+                    key={post.id}
+                    onClick={() => navigate("/blog")}
+                    className="bg-white border border-slate-200/80 rounded-2xl p-6 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between animate-fade-in"
+                  >
+                    <div>
+                      {post.topic && (
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-2">
+                          {post.topic}
+                        </span>
+                      )}
+                      <h3 className="text-lg font-bold text-slate-900 mb-3 hover:text-slate-700 transition-colors line-clamp-2">
+                        {post.title}
+                      </h3>
+                      {preview && (
+                        <p className="text-sm text-slate-550 leading-relaxed mb-4 line-clamp-3">
+                          {preview}
+                        </p>
+                      )}
+                    </div>
+                    <div className="flex items-center justify-between text-[11px] text-slate-400 pt-4 border-t border-slate-100 mt-4">
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="h-3.5 w-3.5" />
+                        <span>
+                          {new Date(post.published_at || post.created_at).toLocaleDateString("en-US", {
+                            month: "short",
+                            day: "numeric",
+                            year: "numeric"
+                          })}
+                        </span>
+                      </div>
+                      <span>{post.word_count > 0 ? `${post.word_count.toLocaleString()} words` : ""}</span>
+                    </div>
+                  </article>
+                );
+              })
+            ) : (
+              // Default Fallback Featured SEO Blog
+              <article
+                onClick={() => navigate("/blog")}
+                className="bg-white border border-slate-200/80 rounded-2xl p-8 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 cursor-pointer flex flex-col justify-between md:col-span-2 lg:col-span-3 max-w-4xl mx-auto w-full animate-fade-in"
+              >
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center w-full">
+                  <div className="md:col-span-2 space-y-3 text-left">
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">
+                      Featured Guide
+                    </span>
+                    <h3 className="text-2xl font-bold text-slate-900 hover:text-slate-700 transition-colors leading-tight">
+                      The Complete Guide to Generative Engine Optimization (GEO): How to Get Cited in ChatGPT & Gemini
+                    </h3>
+                    <p className="text-sm text-slate-500 leading-relaxed line-clamp-3">
+                      Traditional SEO is shifting. Generative engines like ChatGPT, Gemini, and Claude decide who gets recommended. GEO is the practice of optimizing your brand context and structured footprints so AI agents cite your content as their primary source.
+                    </p>
+                  </div>
+                  <div className="md:col-span-1 bg-slate-50 border border-slate-150 p-5 rounded-xl flex flex-col justify-between h-full text-left">
+                    <div className="text-xs text-slate-400 font-mono space-y-1 mb-4">
+                      <div>// CITERO ADVISORY</div>
+                      <div>Type: Technical SEO</div>
+                      <div>Read time: 5 mins</div>
+                    </div>
+                    <div className="flex items-center text-sm font-semibold text-emerald-600 group hover:underline">
+                      Read featured article
+                      <ArrowRight className="h-4 w-4 ml-1.5 transition-transform group-hover:translate-x-0.5" />
+                    </div>
+                  </div>
+                </div>
+              </article>
+            )}
+          </div>
+
+          {/* Call to action to view more */}
+          <div className="text-center">
+            <Button
+              variant="outline"
+              onClick={() => navigate("/blog")}
+              className="border-slate-200 hover:bg-slate-50 text-slate-700 rounded-xl px-5 py-2.5 text-xs font-semibold shadow-sm inline-flex items-center gap-1.5"
+            >
+              Browse All Platform Articles
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Button>
+          </div>
+
         </div>
       </section>
 

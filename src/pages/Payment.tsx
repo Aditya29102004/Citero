@@ -17,7 +17,7 @@ const PLAN_CONFIGS: Record<string, { name: string; price: number; description: s
   basic_normal: {
     name: "Basic Plan",
     price: 8900,
-    description: "50 AI prompt scans/month, 3 competitor comparisons, 5 top source insights",
+    description: "150 AI prompt scans/month, 3 competitor comparisons, 5 top source insights",
     planKey: "basic_normal",
   },
   pro_normal: {
@@ -29,7 +29,7 @@ const PLAN_CONFIGS: Record<string, { name: string; price: number; description: s
   basic_founder: {
     name: "Basic Plan (Founder Circle)",
     price: 4400,
-    description: "50 AI prompt scans/month, 3 competitor comparisons, 5 top source insights - Founder Circle pricing",
+    description: "150 AI prompt scans/month, 3 competitor comparisons, 5 top source insights - Founder Circle pricing",
     planKey: "basic_founder",
   },
   pro_founder: {

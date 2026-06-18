@@ -52,6 +52,79 @@ const Sentiment = () => {
     }
   }, [selectedBrandId]);
 
+  // Realtime subscription and fallback polling for updates on scan completion
+  useEffect(() => {
+    if (!selectedBrandId) return;
+
+    let lastCompletedScanId: string | null = null;
+
+    const checkAndFetchNewScan = async () => {
+      try {
+        const { data: latestScan } = await supabase
+          .from("scans")
+          .select("id")
+          .eq("brand_id", selectedBrandId)
+          .eq("status", "completed")
+          .order("completed_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (latestScan && latestScan.id !== lastCompletedScanId) {
+          lastCompletedScanId = latestScan.id;
+          fetchSentimentData();
+        }
+      } catch (err) {
+        console.error("Error checking latest completed scan:", err);
+      }
+    };
+
+    // Initialize the last completed scan ID on mount or brand change
+    supabase
+      .from("scans")
+      .select("id")
+      .eq("brand_id", selectedBrandId)
+      .eq("status", "completed")
+      .order("completed_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          lastCompletedScanId = data.id;
+        }
+      });
+
+    // Realtime channel for observing scan updates
+    const channel = supabase
+      .channel(`scans-updates-sentiment-${selectedBrandId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'scans',
+          filter: `brand_id=eq.${selectedBrandId}`
+        },
+        (payload) => {
+          const newScan = payload.new as any;
+          if (newScan && newScan.status === 'completed' && newScan.id !== lastCompletedScanId) {
+            lastCompletedScanId = newScan.id;
+            fetchSentimentData();
+          }
+        }
+      )
+      .subscribe();
+
+    // 15s background optional fallback poll (uses lightweight index check)
+    const fallbackPollInterval = setInterval(() => {
+      checkAndFetchNewScan();
+    }, 15000);
+
+    return () => {
+      supabase.removeChannel(channel);
+      clearInterval(fallbackPollInterval);
+    };
+  }, [selectedBrandId]);
+
   const fetchBrands = async () => {
     const { data } = await supabase
       .from("brands")
@@ -707,44 +780,7 @@ const Sentiment = () => {
                     </Card>
                   )}
 
-                  {/* Recent AI Mentions */}
-                  {recentMentions.length > 0 && (
-                    <Card className="p-6 border border-gray-200 bg-white">
-                      <h3 className="text-lg font-semibold text-gray-900 mb-6">Recent AI Mentions ({recentMentions.length})</h3>
-                      <div className="overflow-x-auto">
-                        <table className="w-full">
-                          <thead>
-                            <tr className="border-b border-gray-200">
-                              <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Question</th>
-                              <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Sentiment</th>
-                              <th className="text-left py-3 px-4 text-sm font-medium text-gray-600">Mentioned?</th>
-                              <th className="text-right py-3 px-4 text-sm font-medium text-gray-600">Date</th>
-                            </tr>
-                          </thead>
-                          <tbody>
-                            {recentMentions.map((mention, idx) => (
-                              <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                                <td className="py-3 px-4 text-sm text-gray-900 max-w-md">{mention.question}</td>
-                                <td className="py-3 px-4">
-                                  <span className={`inline-flex px-2 py-1 rounded-full text-xs font-medium ${getSentimentColor(mention.sentiment)}`}>
-                                    {mention.sentiment}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4">
-                                  <span className={`text-sm font-medium ${mention.mentioned ? 'text-green-600' : 'text-gray-500'}`}>
-                                    {mention.mentioned ? 'Yes' : 'No'}
-                                  </span>
-                                </td>
-                                <td className="py-3 px-4 text-sm text-gray-500 text-right">
-                                  {new Date(mention.date).toLocaleDateString()}
-                                </td>
-                              </tr>
-                            ))}
-                          </tbody>
-                        </table>
-                      </div>
-                    </Card>
-                  )}
+
                 </div>
               )}
             </div>

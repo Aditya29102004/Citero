@@ -218,15 +218,29 @@ const Dashboard = () => {
             .from("scans")
             .select("*")
             .eq("brand_id", selectedBrandId)
-            .eq("status", "running")
+            .in("status", ["running", "pending"])
             .order("started_at", { ascending: false })
             .limit(1)
             .maybeSingle();
           
           if (runningScan) {
-            // Set immediately to restore UI state
-            setCurrentScan(runningScan);
-            return;
+            // Check if stuck (older than 5 minutes)
+            const startedAt = new Date(runningScan.started_at || runningScan.created_at).getTime();
+            if (Date.now() - startedAt > 5 * 60 * 1000) {
+              console.log("Stuck scan detected, marking as failed:", runningScan.id);
+              await supabase
+                .from("scans")
+                .update({ 
+                  status: "failed", 
+                  completed_at: new Date().toISOString(), 
+                  ai_summary: "Error: Scan timed out or worker crashed" 
+                })
+                .eq("id", runningScan.id);
+            } else {
+              // Set immediately to restore UI state
+              setCurrentScan(runningScan);
+              return;
+            }
           }
         } catch (error) {
           console.error("Error checking running scan:", error);
@@ -326,15 +340,37 @@ const Dashboard = () => {
         const statusChanged = currentScan?.status !== data.status;
         const isDifferentScan = currentScan?.id !== data.id;
         const progressChanged = currentScan?.completed_questions !== data.completed_questions;
-        const isRunning = data.status === 'running';
+        const isRunning = data.status === 'running' || data.status === 'pending';
+        
+        if (isRunning) {
+          // Check if stuck
+          const startedAt = new Date(data.started_at || data.created_at).getTime();
+          if (Date.now() - startedAt > 5 * 60 * 1000) {
+            console.log("Stuck scan detected in fetchLatestScan, marking as failed:", data.id);
+            await supabase
+              .from("scans")
+              .update({ 
+                status: "failed", 
+                completed_at: new Date().toISOString(), 
+                ai_summary: "Error: Scan timed out or worker crashed" 
+              })
+              .eq("id", data.id);
+            setCurrentScan(null);
+            return;
+          }
+        }
         
         // Always update running scans to show progress, or if status/id changed
         if (isRunning || statusChanged || isDifferentScan || !currentScan || progressChanged) {
           setCurrentScan(data);
+          
+          if (statusChanged && data.status === 'completed' && session?.user?.id) {
+            fetchDashboardData({ userId: session.user.id, provider: providerRef.current, timeRange: timeRangeRef.current, forceRefresh: true });
+          }
         }
       } else {
         // Only clear currentScan if it's not running (to avoid flickering)
-        if (currentScan?.status !== 'running') {
+        if (currentScan?.status !== 'running' && currentScan?.status !== 'pending') {
           setCurrentScan(null);
         }
       }
@@ -559,10 +595,10 @@ const Dashboard = () => {
       // Use all scan results
       let scanResults = allScanResults || [];
 
-      // Filter explicitly by platform using the explicit provider argument (no stale closure)
+      // Filter explicitly by platform/provider using the explicit provider argument (no stale closure)
       if (provider && scanResults.length > 0) {
         scanResults = scanResults.filter((result: any) => {
-          const resultPlatform = result.platform || 'openai';
+          const resultPlatform = result.provider || result.platform || 'openai';
           return resultPlatform === provider;
         });
       }
@@ -987,7 +1023,7 @@ const Dashboard = () => {
   };
 
   const handleCancelScan = async () => {
-    if (!currentScan || currentScan.status !== 'running') {
+    if (!currentScan || (currentScan.status !== 'running' && currentScan.status !== 'pending')) {
       return;
     }
 
@@ -1099,12 +1135,12 @@ const Dashboard = () => {
             .from("scans")
             .select("*")
             .eq("brand_id", selectedBrandId)
-            .eq("status", "running")
+            .in("status", ["running", "pending"])
             .order("started_at", { ascending: false })
             .limit(1)
             .maybeSingle();
           
-          if (scanData && scanData.status === 'running') {
+          if (scanData && (scanData.status === 'running' || scanData.status === 'pending')) {
             // Found running scan, update state immediately with real data
             setCurrentScan(scanData);
             return;
@@ -1235,7 +1271,7 @@ const Dashboard = () => {
             <DashboardHeader />
             <main className="flex-1 overflow-auto bg-gray-50/50">
               <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8 lg:py-10">
-                {currentScan?.status === 'running' && (
+                {(currentScan?.status === 'running' || currentScan?.status === 'pending') && (
                   <Alert className="mb-6 border-blue-200/80 bg-gradient-to-r from-blue-50 to-blue-50/50 shadow-md rounded-xl overflow-hidden">
                     <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                     <AlertDescription className="ml-2">
@@ -1245,7 +1281,7 @@ const Dashboard = () => {
                         </span>
                         <div className="flex items-center gap-3">
                           <span className="text-sm text-blue-700 font-semibold bg-blue-100 px-3 py-1 rounded-lg">
-                            {(currentScan.completed_questions || 0) * 3} / {(currentScan.total_questions || 0) * 3} prompts answered
+                            {(currentScan.completed_questions || 0) * 10} / 150 prompts answered
                           </span>
                           <Button
                             onClick={handleCancelScan}
@@ -1363,7 +1399,7 @@ const Dashboard = () => {
                           }
                         }}
                         subscriptionLimits={subscriptionLimits}
-                        disabled={runningScan || currentScan?.status === 'running'}
+                        disabled={runningScan || currentScan?.status === 'running' || currentScan?.status === 'pending'}
                         className="w-[180px] h-11 rounded-xl bg-white border-gray-200 text-[13.5px] transition-all"
                       />
                     )}
@@ -1416,7 +1452,7 @@ const Dashboard = () => {
           <main className="flex-1 overflow-auto bg-gray-50/50">
             <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8 lg:py-10">
               {/* Scan Progress Indicator */}
-              {currentScan?.status === 'running' && (
+              {(currentScan?.status === 'running' || currentScan?.status === 'pending') && (
                 <Alert className="mb-6 border-blue-200/80 bg-gradient-to-r from-blue-50 to-blue-50/50 shadow-md rounded-xl overflow-hidden">
                   <Loader2 className="h-5 w-5 animate-spin text-blue-600" />
                   <AlertDescription className="ml-2">
@@ -1426,7 +1462,7 @@ const Dashboard = () => {
                       </span>
                       <div className="flex items-center gap-3">
                         <span className="text-sm text-blue-700 font-semibold bg-blue-100 px-3 py-1 rounded-lg">
-                          {(currentScan.completed_questions || 0) * 3} / {(currentScan.total_questions || 0) * 3} prompts answered
+                          {(currentScan.completed_questions || 0) * 10} / 150 prompts answered
                         </span>
                         <Button
                           onClick={handleCancelScan}
@@ -1478,12 +1514,13 @@ const Dashboard = () => {
                         disabled={
                           runningScan || 
                           currentScan?.status === 'running' || 
+                          currentScan?.status === 'pending' || 
                           (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth)
                         }
                         className="bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 shadow-sm transition-all duration-200 h-11 px-6 font-semibold hover:scale-[1.02] active:scale-[0.98] rounded-xl"
                       >
-                        <RefreshCw className={`h-4 w-4 mr-2 ${runningScan || currentScan?.status === 'running' ? 'animate-spin' : ''}`} />
-                        {currentScan?.status === 'running' ? 'Scanning...' : 
+                        <RefreshCw className={`h-4 w-4 mr-2 ${runningScan || currentScan?.status === 'running' || currentScan?.status === 'pending' ? 'animate-spin' : ''}`} />
+                        {currentScan?.status === 'running' || currentScan?.status === 'pending' ? 'Scanning...' : 
                          (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth) ? 'Limit Reached' : 'Run GEO Scan'}
                       </Button>
                       
@@ -1555,7 +1592,7 @@ const Dashboard = () => {
                         }
                       }}
                       subscriptionLimits={subscriptionLimits}
-                      disabled={runningScan || currentScan?.status === 'running'}
+                      disabled={runningScan || currentScan?.status === 'running' || currentScan?.status === 'pending'}
                       className="w-[180px] h-11 rounded-xl bg-white border-gray-200 text-[13.5px] transition-all"
                     />
                   )}
@@ -1575,7 +1612,7 @@ const Dashboard = () => {
                 
                 {!dashboardData?.isEmpty && (
                    <p className="mt-5 text-sm text-gray-700 font-medium">
-                     Report based on {dashboardData.totalPrompts || 0} prompts.{dashboardData.totalPrompts > 0 ? ` Showing AI visibility trends.` : ''}
+                     Report based on 150 prompts. Showing AI visibility trends.
                    </p>
                 )}
               </div>

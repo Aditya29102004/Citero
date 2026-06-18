@@ -18,7 +18,7 @@ export interface SubscriptionLimits {
 
 export const PLAN_LIMITS: Record<'basic' | 'pro' | 'enterprise', Omit<SubscriptionLimits, 'planType' | 'isFounder'>> = {
   basic: {
-    scansPerMonth: 50,
+    scansPerMonth: 150,
     competitorComparisons: 3,
     topSourceInsights: 5,
     emailReportsPerWeek: 1,
