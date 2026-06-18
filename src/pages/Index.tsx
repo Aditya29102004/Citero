@@ -611,17 +611,8 @@ const Index = () => {
                 alt="Featured on Aura++" 
               />
             </a>
-            <a 
-              href="https://fazier.com/launches/www.citero.online" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0"
-            >
-              <img 
-                src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=neutral" 
-                alt="Fazier badge" 
-                width="120" 
-              />
+            <a href="https://fazier.com/launches/www.citero.online" target="_blank" className="flex-shrink-0">
+              <img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=neutral" width="120" alt="Fazier badge" />
             </a>
             <a 
               href="https://similarlabs.com/?ref=embed" 
@@ -738,17 +729,8 @@ const Index = () => {
                 alt="Featured on Aura++" 
               />
             </a>
-            <a 
-              href="https://fazier.com/launches/www.citero.online" 
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex-shrink-0"
-            >
-              <img 
-                src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=neutral" 
-                alt="Fazier badge" 
-                width="120" 
-              />
+            <a href="https://fazier.com/launches/www.citero.online" target="_blank" className="flex-shrink-0">
+              <img src="https://fazier.com/api/v1//public/badges/launch_badges.svg?badge_type=launched&theme=neutral" width="120" alt="Fazier badge" />
             </a>
             <a 
               href="https://similarlabs.com/?ref=embed" 
