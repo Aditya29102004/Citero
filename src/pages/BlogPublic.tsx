@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { HomeHeader } from "@/components/HomeHeader";
 import { Button } from "@/components/ui/button";
@@ -78,6 +78,7 @@ Start auditing your GEO index today to stay ahead of the AI shift.`,
 
 const BlogPublic = () => {
   const navigate = useNavigate();
+  const { id } = useParams();
   const [blogs, setBlogs] = useState<any[]>([]);
   const [filteredBlogs, setFilteredBlogs] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -87,6 +88,73 @@ const BlogPublic = () => {
   useEffect(() => {
     fetchBlogs();
   }, []);
+
+  // Update selected blog based on URL parameter id
+  useEffect(() => {
+    const loadSelectedBlog = async () => {
+      if (!id) {
+        setSelectedBlog(null);
+        return;
+      }
+
+      if (id === "default-seo-geo-guide") {
+        setSelectedBlog(DEFAULT_FEATURED_BLOG);
+        return;
+      }
+
+      // First check if it exists in the fetched blogs list
+      const found = blogs.find((b) => b.id === id);
+      if (found) {
+        setSelectedBlog(found);
+        return;
+      }
+
+      // If not found in memory (could be direct navigation), fetch from database
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from("blogs")
+          .select("id, title, topic, created_at, published_at, word_count, seo_keywords, content, status, is_platform_blog")
+          .eq("id", id)
+          .eq("status", "published")
+          .single();
+
+        if (error) {
+          console.error("Error fetching single blog:", error);
+          navigate("/blog", { replace: true });
+        } else if (data) {
+          setSelectedBlog(data);
+        } else {
+          navigate("/blog", { replace: true });
+        }
+      } catch (err) {
+        console.error("Exception fetching single blog:", err);
+        navigate("/blog", { replace: true });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSelectedBlog();
+  }, [id, blogs, navigate]);
+
+  // Dynamically update document title and description for SEO based on active blog post
+  useEffect(() => {
+    if (selectedBlog) {
+      document.title = `${selectedBlog.title} | Citero Blog`;
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        const preview = extractPreview(selectedBlog.content || "", 160);
+        metaDescription.setAttribute("content", preview);
+      }
+    } else {
+      document.title = "Citero Blog - AI Visibility & GEO Insights";
+      const metaDescription = document.querySelector('meta[name="description"]');
+      if (metaDescription) {
+        metaDescription.setAttribute("content", "Insights and strategies about AI visibility, brand tracking, and digital marketing.");
+      }
+    }
+  }, [selectedBlog]);
 
   useEffect(() => {
     filterBlogs();
@@ -169,7 +237,7 @@ const BlogPublic = () => {
           <div className="max-w-4xl mx-auto px-4 py-12">
             <Button
               variant="ghost"
-              onClick={() => setSelectedBlog(null)}
+              onClick={() => navigate("/blog")}
               className="mb-6 text-gray-600 hover:text-gray-900"
             >
               ← Back to Blog Posts
@@ -281,7 +349,7 @@ const BlogPublic = () => {
                     <article
                       key={blog.id}
                       className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-xl transition-all duration-200 hover:-translate-y-1 cursor-pointer group"
-                      onClick={() => setSelectedBlog(blog)}
+                      onClick={() => navigate(`/blog/${blog.id}`)}
                     >
                       {blog.topic && (
                         <div className="mb-3">
