@@ -21,7 +21,7 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 import { Label } from "@/components/ui/label";
 import { AIProviderSelect } from "@/components/AIProviderSelect";
 import { canRunScan, isAIProviderAllowed, getUserSubscriptionLimits, getUserScanUsage, SubscriptionLimits } from "@/lib/subscriptionLimits";
-import { AlertCircle, RefreshCw } from "lucide-react";
+import { AlertCircle, RefreshCw, Lock } from "lucide-react";
 
 // Color palette for competitors (consistent per competitor)
 const COMPETITOR_COLORS = [
@@ -1800,8 +1800,35 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {/* KPI Cards */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
+              {subscriptionLimits && subscriptionLimits.planType === null ? (
+                <div className="relative border border-slate-200 bg-white rounded-2xl p-12 text-center shadow-sm max-w-2xl mx-auto my-6 flex flex-col items-center justify-center animate-fade-in z-10">
+                  <div className="h-14 w-14 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4">
+                    <Lock className="h-6 w-6 text-indigo-650 animate-pulse" />
+                  </div>
+                  <h2 className="text-2xl font-bold text-slate-900 mb-2">GEO Tracking Dashboard Locked</h2>
+                  <p className="text-slate-500 text-sm max-w-md mb-8 leading-relaxed font-medium">
+                    You've successfully completed onboarding. Detailed search share-of-voice charts, daily citation tracking, and on-demand scans are locked. Upgrade to unlock full analytics.
+                  </p>
+                  <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+                    <Button 
+                      onClick={() => navigate("/pricing")}
+                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-6 px-8 rounded-xl shadow-sm hover:scale-[1.01] transition-all border-none"
+                    >
+                      Upgrade to Paid Plan
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      onClick={() => navigate("/audits")}
+                      className="border-slate-200 text-slate-700 hover:bg-slate-50 py-6 px-8 rounded-xl font-medium"
+                    >
+                      Go to Brand Audits (1 Free)
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <>
+                  {/* KPI Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
                 {/* Brand Visibility */}
                 <Card className="relative overflow-hidden p-6 border border-gray-200 bg-white">
                   <div className="relative">
@@ -2372,9 +2399,11 @@ const Dashboard = () => {
                   </div>
                 </Card>
               )}
-            </div>
-          </main>
+            </>
+          )}
         </div>
+      </main>
+    </div>
       </div>
     </SidebarProvider>
   );

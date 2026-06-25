@@ -441,7 +441,7 @@ const Audits = () => {
                   <Button
                     onClick={handleRunAudit}
                     disabled={running}
-                    className="bg-black hover:bg-black/90 text-white font-semibold shadow-md py-6 px-6 rounded-lg transition-all duration-200 border-none flex items-center gap-2 hover:scale-[1.02] text-sm"
+                    className="bg-black hover:bg-black/90 disabled:opacity-70 disabled:pointer-events-none text-white font-semibold shadow-md py-6 px-6 rounded-lg transition-all duration-200 border-none flex items-center gap-2 hover:scale-[1.02] text-sm"
                   >
                     <RefreshCw className={`h-4.5 w-4.5 ${running ? "animate-spin" : ""}`} />
                     {running ? "Analyzing Brand..." : "Run Brand Audit"}

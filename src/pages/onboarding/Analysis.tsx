@@ -220,17 +220,18 @@ export default function AnalysisOnboarding() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center py-4">
                 
                 {/* Visual Scanner */}
-                <div className="flex flex-col items-center justify-center bg-slate-55/50 rounded-2xl p-6 border border-slate-200 relative h-64 shadow-inner">
+                <div className="flex flex-col items-center justify-center bg-slate-50/50 rounded-2xl p-6 border border-slate-200 relative h-64 shadow-inner">
                   
                   {/* Concentric pulsing rings */}
-                  <div className="relative w-32 h-32 flex items-center justify-center">
-                    <div className="absolute inset-0 rounded-full border border-indigo-200 animate-ping opacity-30"></div>
-                    <div className="absolute inset-3 rounded-full border border-indigo-300 animate-pulse opacity-45"></div>
-                    <div className="absolute inset-6 rounded-full border border-indigo-150 bg-indigo-50/50 flex items-center justify-center">
-                      <Activity className="h-8 w-8 text-indigo-655 animate-pulse" />
+                  <div className="relative w-32 h-32 flex items-center justify-center bg-white rounded-full border border-slate-100 shadow-sm">
+                    {/* Pulsing Concentric bg fills */}
+                    <div className="absolute inset-0 rounded-full bg-indigo-50/30 animate-pulse"></div>
+                    <div className="absolute inset-4 rounded-full bg-indigo-50/60 animate-pulse" style={{ animationDelay: '0.5s' }}></div>
+                    <div className="absolute inset-8 rounded-full bg-indigo-100/80 border border-indigo-200/50 flex items-center justify-center shadow-inner">
+                      <Activity className="h-7 w-7 text-indigo-650 animate-pulse" />
                     </div>
-                    {/* Rotating scan indicator */}
-                    <div className="absolute inset-0 rounded-full border border-transparent border-t-indigo-600/80 animate-spin" style={{ animationDuration: '2.5s' }}></div>
+                    {/* Elegant rotating outer scanner dial */}
+                    <div className="absolute inset-0 rounded-full border-2 border-slate-100 border-t-indigo-600 animate-spin" style={{ animationDuration: '2s' }}></div>
                   </div>
 
                   {/* Step status list */}
@@ -309,12 +310,12 @@ export default function AnalysisOnboarding() {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
                 
                 {/* Score Card */}
-                <div className="bg-gradient-to-br from-slate-900 to-slate-850 rounded-2xl p-6 text-center text-white shadow-sm flex flex-col justify-center h-44 border border-slate-800">
-                  <div className="inline-flex items-center justify-center w-12 h-12 bg-white/10 rounded-full mx-auto mb-3">
-                    <Award className="h-6 w-6 text-white" />
+                <div className="bg-white border border-slate-200 rounded-2xl p-6 text-center shadow-sm flex flex-col justify-center h-44 hover:shadow-md transition-shadow">
+                  <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-50 border border-blue-100 rounded-full mx-auto mb-3">
+                    <Award className="h-6 w-6 text-blue-600 animate-pulse" />
                   </div>
-                  <div className="text-4xl font-extrabold mb-1 tracking-tight">{brandScore}</div>
-                  <div className="text-slate-300 text-xs font-semibold">Brand Diagnostic Score</div>
+                  <div className="text-4xl font-extrabold text-slate-900 mb-1 tracking-tight">{brandScore}</div>
+                  <div className="text-slate-500 text-xs font-semibold">Brand Diagnostic Score</div>
                   <div className="text-slate-400 text-[10px] uppercase font-bold mt-1">Setup Rating: Good</div>
                 </div>
 

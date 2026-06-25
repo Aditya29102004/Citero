@@ -224,11 +224,9 @@ export const HomeHeader = () => {
             </Button>
             {isLoggedIn ? (
               <>
-                {hasSubscription && (
-                  <>
                     <Button 
                       variant="ghost"
-                      onClick={() => navigate("/dashboard")}
+                      onClick={() => navigate(hasSubscription ? "/dashboard" : "/audits")}
                       className="text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg"
                     >
                       Dashboard
@@ -241,8 +239,6 @@ export const HomeHeader = () => {
                       <User className="h-4 w-4 mr-2" />
                       Profile
                     </Button>
-                  </>
-                )}
                 <Button 
                   type="button"
                   variant="ghost"
@@ -323,12 +319,10 @@ export const HomeHeader = () => {
               <div className="flex flex-col gap-2 pt-2">
                 {isLoggedIn ? (
                   <>
-                    {hasSubscription && (
-                      <>
                         <Button 
                           variant="ghost"
                           onClick={() => {
-                            navigate("/dashboard");
+                            navigate(hasSubscription ? "/dashboard" : "/audits");
                             setMobileMenuOpen(false);
                           }}
                           className="text-gray-600 hover:text-gray-900 hover:bg-gray-50"
@@ -346,8 +340,6 @@ export const HomeHeader = () => {
                           <User className="h-4 w-4 mr-2" />
                           Profile
                         </Button>
-                      </>
-                    )}
                     <Button 
                       type="button"
                       variant="ghost"
