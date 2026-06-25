@@ -99,40 +99,35 @@ const Dashboard = () => {
           console.error("Error ensuring profile:", profileError);
         }
         
-        // Check if user has an active subscription
-        const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
-        const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
-        const hasActiveSubscription = subscriptionLimits.planType !== null;
-        
-        // If no subscription, redirect immediately and don't render anything
-        if (!hasActiveSubscription) {
-          navigate("/pricing", { replace: true });
-          setLoading(false);
-          return;
-        }
-        
-        // Subscription verified - mark as verified before proceeding
-        setSubscriptionVerified(true);
-        setSubscriptionLimits(subscriptionLimits);
-        
-        // Only check onboarding if user has a subscription
-          let onboardingComplete = false;
-          try {
-            onboardingComplete = await Promise.race([
-              checkOnboardingComplete(),
-              new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
-            ]);
-            
-            if (!onboardingComplete) {
+        // Check onboarding completion status first
+        let onboardingComplete = false;
+        try {
+          onboardingComplete = await Promise.race([
+            checkOnboardingComplete(),
+            new Promise<boolean>((resolve) => setTimeout(() => resolve(false), 5000))
+          ]);
+          
+          if (!onboardingComplete) {
             navigate("/onboarding/website", { replace: true });
-              setLoading(false);
-              return;
-            }
-          } catch (onboardingError) {
-            console.error("Error checking onboarding:", onboardingError);
+            setLoading(false);
+            return;
+          }
+        } catch (onboardingError) {
+          console.error("Error checking onboarding:", onboardingError);
           navigate("/onboarding/website", { replace: true });
           setLoading(false);
           return;
+        }
+
+        // Get subscription limits, allowing demo access for completed onboarding
+        const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
+        const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
+        
+        setSubscriptionVerified(true);
+        setSubscriptionLimits(subscriptionLimits);
+        
+        if (subscriptionLimits.planType === null) {
+          setAiProvider('gemini');
         }
         
         await fetchUserBrands(session.user.id);
@@ -148,24 +143,24 @@ const Dashboard = () => {
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session) {
-        // Check subscription status on auth state change
         try {
           const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
-          // Remove the 3-second timeout that could falsely trigger a redirect on slow connections
           const subscriptionLimits = await getUserSubscriptionLimits(session.user.id);
-          
-          const hasActiveSubscription = subscriptionLimits.planType !== null;
-          
-          if (!hasActiveSubscription) {
-            navigate("/pricing", { replace: true });
-            return;
-          }
-          
           setSubscriptionLimits(subscriptionLimits);
           setSubscriptionVerified(true);
+          
+          if (subscriptionLimits.planType === null) {
+            setAiProvider('gemini');
+          }
+
+          // Check onboarding status
+          const onboardingComplete = await checkOnboardingComplete();
+          if (!onboardingComplete) {
+            navigate("/onboarding/website", { replace: true });
+            return;
+          }
         } catch (error) {
-          console.error("Error checking subscription on auth change:", error);
-          // Do not redirect on error to prevent kicking users out during transient network issues
+          console.error("Error checking auth status on state change:", error);
         }
         
         await ensureProfile(
@@ -776,6 +771,157 @@ const Dashboard = () => {
         return '';
       }).filter((n: string) => n.length > 0));
 
+      // If we have no scans and this is a free account, generate mock data!
+      const limits = await getUserSubscriptionLimits(userId);
+      const comps = initialCompetitors.filter(name => isValidCompetitorName(name) && name.toLowerCase() !== (selectedBrandName || "").toLowerCase());
+      
+
+      
+      if ((!allScanResults || allScanResults.length === 0) && limits.planType === null) {
+        const displayName = selectedBrandName || "Usebear";
+        console.log("Generating customized mock data for free trial/demo user of brand:", displayName);
+        
+        const cleanComps = ["HubSpot", "ActiveCampaign", "Marketo", "Salesforce", "Semrush"];
+        
+        // Competitor trends ending Apr 20
+        const competitorTrend = [
+          { date: "Dec 2", "Your Brand": 90.0, "HubSpot": 50.0, "ActiveCampaign": 40.0, "Marketo": 25.0, "Salesforce": 15.0, "Semrush": 8.0 },
+          { date: "Dec 15", "Your Brand": 92.5, "HubSpot": 52.0, "ActiveCampaign": 42.0, "Marketo": 26.0, "Salesforce": 16.5, "Semrush": 8.5 },
+          { date: "Jan 10", "Your Brand": 95.0, "HubSpot": 55.0, "ActiveCampaign": 41.5, "Marketo": 27.5, "Salesforce": 17.0, "Semrush": 9.0 },
+          { date: "Feb 5", "Your Brand": 97.0, "HubSpot": 54.0, "ActiveCampaign": 43.0, "Marketo": 28.0, "Salesforce": 18.5, "Semrush": 9.5 },
+          { date: "Mar 12", "Your Brand": 98.5, "HubSpot": 56.5, "ActiveCampaign": 44.0, "Marketo": 29.0, "Salesforce": 19.0, "Semrush": 9.8 },
+          { date: "Apr 5", "Your Brand": 99.0, "HubSpot": 57.0, "ActiveCampaign": 44.5, "Marketo": 29.5, "Salesforce": 19.5, "Semrush": 10.0 },
+          { date: "Apr 20", "Your Brand": 100.0, "HubSpot": 58.0, "ActiveCampaign": 45.0, "Marketo": 30.0, "Salesforce": 20.0, "Semrush": 10.0 }
+        ];
+
+        // Citation trends ending Apr 20
+        const citationTrend = [
+          { date: "Dec 2", "Citation Share": 85.0 },
+          { date: "Dec 15", "Citation Share": 88.0 },
+          { date: "Jan 10", "Citation Share": 91.5 },
+          { date: "Feb 5", "Citation Share": 94.0 },
+          { date: "Mar 12", "Citation Share": 96.5 },
+          { date: "Apr 5", "Citation Share": 98.0 },
+          { date: "Apr 20", "Citation Share": 100.0 }
+        ];
+
+        // Sentiment Data
+        const sentimentData = [
+          { name: "Positive", value: 28.7, color: "#10b981", percentage: "28.7" },
+          { name: "Neutral", value: 68.8, color: "#6b7280", percentage: "68.8" },
+          { name: "Negative", value: 2.5, color: "#ef4444", percentage: "2.5" },
+        ];
+
+        // Top Sources
+        const cleanBrandDomain = displayName.toLowerCase().replace(/\s+/g, '');
+        const topSources = [
+          { rank: 1, domain: "g2.com", citations: 15 },
+          { rank: 2, domain: "capterra.com", citations: 14 },
+          { rank: 3, domain: "trustradius.com", citations: 10 },
+          { rank: 4, domain: `${cleanBrandDomain}.ai`, citations: 9 },
+          { rank: 5, domain: "hubspot.com", citations: 8 },
+        ];
+
+        // Insights / Recommendations
+        const mockInsights = {
+          actionable_recommendations: [
+            {
+              action: `Analyze the 1 negative sentiment mention to understand the cause and address the concerns immediately. Determine if it requires a public response or internal process change.`,
+              priority: 'Urgent',
+              focus_area: 'Branding',
+              details: `Understanding individual negative customer friction points on AI recommenders ensures quick resolution before it propagates into broader citation loss.`
+            },
+            {
+              action: `Conduct a competitive content gap analysis, specifically focusing on topics where HubSpot, Marketo, and Salesforce are highly visible but ${displayName} is not mentioned. Identify keywords and themes to target.`,
+              priority: 'High',
+              focus_area: 'Content',
+              details: `Analyze search categories where competitors have higher share of voice and target those gaps with focused documentation and authoritative articles.`
+            },
+            {
+              action: `Develop content directly comparing ${displayName}'s AI capabilities against HubSpot, Salesforce, Marketo, and ActiveCampaign. Highlight ${displayName}'s unique AI features and competitive advantages.`,
+              priority: 'High',
+              focus_area: 'Content',
+              details: `Comparative search queries are growing rapidly on conversational search models. Clear pages comparing features will help models cite your advantages.`
+            },
+            {
+              action: `Monitor mentions of competitors (HubSpot, Salesforce, Marketo, ActiveCampaign, Pardot) for opportunities to interject ${displayName} into relevant conversations and demonstrate value.`,
+              priority: 'Moderate',
+              focus_area: 'PR',
+              details: `Proactively participate in discussions and industry publications where direct competitors are referenced to earn high-quality citations.`
+            },
+            {
+              action: `Explore partnership opportunities with businesses that currently integrate with or recommend competing platforms (HubSpot, Salesforce, Marketo). Joint webinars or co-marketing campaigns can boost visibility.`,
+              priority: 'Moderate',
+              focus_area: 'Partnerships',
+              details: `Integrations and co-branding are highly weighted signals for AI platforms when recommending tools for complex workflows.`
+            }
+          ],
+          strengths_and_gaps: {
+            strengths: [
+              `100% Brand Visibility suggests high brand recognition in analyzed responses.`,
+              `100% Citation Share indicates strong authority within the analyzed sources.`,
+              `High Brand Mentions (50/50) indicates a consistent presence in the AI space.`,
+              `Predominantly Neutral Sentiment suggests a solid foundation for building positive perception.`
+            ],
+            gaps: [
+              `Over-reliance on neutral sentiment; need to actively cultivate more positive associations.`,
+              `High competitor visibility (especially HubSpot) indicates missed opportunities for ${displayName}.`,
+              `Limited knowledge of the context of the mentions, preventing a fully informed response strategy.`,
+              `Lack of granular information about the analyzed sources and demographic.`
+            ],
+            opportunity_topic: `Converting neutral mentions to positive sentiment by proactively addressing user needs and showcasing ${displayName}'s value proposition.`
+          },
+          content_ideas: [
+            {
+              title: `${displayName} vs. HubSpot: A Deep Dive into AI-Powered Solutions`,
+              description: `This comparison piece will highlight the strengths and weaknesses of both platforms, focusing on specific AI features and use cases where ${displayName} excels. Target audiences actively comparing the two solutions.`,
+              improves_topic: "Competitor Capture",
+              impact: "High Visibility"
+            },
+            {
+              title: `Unlocking the Power of AI: Use Cases Beyond Marketing Automation`,
+              description: `This blog post or whitepaper will showcase innovative AI applications beyond traditional marketing automation, demonstrating ${displayName}'s versatility and capabilities. It will address industry-specific challenges and solutions.`,
+              improves_topic: "AI Use Cases",
+              impact: "High Visibility"
+            },
+            {
+              title: `How to Leverage AI for Hyper-Personalization: A ${displayName} Guide`,
+              description: `This content will provide practical guidance on leveraging ${displayName}'s AI to deliver personalized experiences across the customer journey. Focus on specific tactics and real-world examples to drive engagement and conversions.`,
+              improves_topic: "Hyper-Personalization",
+              impact: "High Visibility"
+            }
+          ]
+        };
+
+        if (thisGen !== fetchGenRef.current) return;
+        
+        setLatestScanInsights(mockInsights);
+        setDashboardData({
+          isEmpty: false,
+          scanCount: competitorTrend.length,
+          brandVisibility: "100.0",
+          citationShare: "100.0",
+          brandRanking: 1,
+          closestCompetitor: {
+            name: "HubSpot",
+            visibility: 58.0,
+            mentions: 29
+          },
+          totalPrompts: 150,
+          totalBrandCitations: 50,
+          totalAllCitations: 50,
+          competitorTrend,
+          citationTrend,
+          sentimentData,
+          topSources,
+          competitorNames: cleanComps,
+          isMockData: true
+        });
+        
+        setIsDashboardLoading(false);
+        return;
+      }
+
       // 1. Brand Visibility KPI
       const brandVisibility = latestScan.visibility_score ? Number(latestScan.visibility_score).toFixed(1) : "0.0";
       const actualTotalPrompts = latestScan.total_prompts || latestScanData?.total_questions || 0;
@@ -1063,6 +1209,18 @@ const Dashboard = () => {
 
     if (!session?.user?.id) {
       toast.error("Not authenticated");
+      return;
+    }
+
+    // If no active subscription, show custom toast and redirect to pricing
+    if (subscriptionLimits && subscriptionLimits.planType === null) {
+      toast.info("Unlock custom scans! Upgrade to a paid plan to run scans on demand.", {
+        action: {
+          label: "View Plans",
+          onClick: () => navigate("/pricing"),
+        },
+      });
+      navigate("/pricing");
       return;
     }
 
@@ -1451,6 +1609,32 @@ const Dashboard = () => {
           <DashboardHeader />
           <main className="flex-1 overflow-auto bg-gray-50/50">
             <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8 lg:py-10">
+              {/* Interactive Demo Mode alert banner for unsubscribed demo accounts */}
+              {subscriptionLimits && subscriptionLimits.planType === null && (
+                <Alert className="mb-6 border-indigo-200 bg-gradient-to-r from-indigo-50/70 via-white to-emerald-50/40 shadow-sm rounded-xl overflow-hidden flex items-center justify-between p-4 py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="p-2 bg-indigo-50 border border-indigo-100 rounded-lg text-indigo-600 animate-pulse flex-shrink-0">
+                      <Sparkles className="h-4 w-4" />
+                    </div>
+                    <div>
+                      <h4 className="font-bold text-sm text-slate-800">
+                        Citero Interactive Demo Mode
+                      </h4>
+                      <p className="text-xs text-slate-500 font-medium">
+                        Previewing simulated AI search visibility insights for <span className="font-bold text-slate-700">{selectedBrandName || "your brand"}</span>.
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={() => navigate("/pricing")}
+                    size="sm" 
+                    className="ml-auto bg-indigo-600 hover:bg-indigo-700 text-white font-semibold shadow-sm transition-all text-xs"
+                  >
+                    Unlock Full Access
+                  </Button>
+                </Alert>
+              )}
+
               {/* Scan Progress Indicator */}
               {(currentScan?.status === 'running' || currentScan?.status === 'pending') && (
                 <Alert className="mb-6 border-blue-200/80 bg-gradient-to-r from-blue-50 to-blue-50/50 shadow-md rounded-xl overflow-hidden">
@@ -1500,11 +1684,16 @@ const Dashboard = () => {
                   {selectedBrandId && (
                     <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
                       {/* Scan Usage Info */}
-                      {subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && (
+                      {subscriptionLimits && (
                         <div className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white border border-gray-200 shadow-sm h-11">
                           <div className="text-[13px] font-medium text-gray-700">
-                            <span className="font-bold text-gray-900">{scanUsage}</span>
-                            <span className="text-gray-500"> / {subscriptionLimits.scansPerMonth} scans</span>
+                            <span className="font-bold text-gray-900">
+                              {subscriptionLimits.planType === null ? 13 : scanUsage}
+                            </span>
+                            <span className="text-gray-500">
+                              {" "}
+                              / {subscriptionLimits.planType === null ? 150 : subscriptionLimits.scansPerMonth} scans
+                            </span>
                           </div>
                         </div>
                       )}
@@ -1515,26 +1704,20 @@ const Dashboard = () => {
                           runningScan || 
                           currentScan?.status === 'running' || 
                           currentScan?.status === 'pending' || 
-                          (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth)
+                          (subscriptionLimits && subscriptionLimits.planType !== null && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth)
                         }
                         className="bg-white text-gray-800 border border-gray-300 hover:bg-gray-50 shadow-sm transition-all duration-200 h-11 px-6 font-semibold hover:scale-[1.02] active:scale-[0.98] rounded-xl"
                       >
                         <RefreshCw className={`h-4 w-4 mr-2 ${runningScan || currentScan?.status === 'running' || currentScan?.status === 'pending' ? 'animate-spin' : ''}`} />
                         {currentScan?.status === 'running' || currentScan?.status === 'pending' ? 'Scanning...' : 
-                         (subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth) ? 'Limit Reached' : 'Run GEO Scan'}
+                         (subscriptionLimits && subscriptionLimits.planType !== null && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth) ? 'Limit Reached' : 'Run GEO Scan'}
                       </Button>
                       
                       {/* Limit Warnings */}
-                      {subscriptionLimits && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth && (
+                      {subscriptionLimits && subscriptionLimits.planType !== null && subscriptionLimits.scansPerMonth !== Infinity && subscriptionLimits.scansPerMonth > 0 && scanUsage >= subscriptionLimits.scansPerMonth && (
                         <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
                           <AlertCircle className="h-4 w-4 text-amber-600" />
                           <span className="text-xs text-amber-700 font-medium">Monthly limit reached</span>
-                        </div>
-                      )}
-                      {subscriptionLimits && (!subscriptionLimits.planType || subscriptionLimits.scansPerMonth === 0) && (
-                        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-amber-50 border border-amber-200">
-                          <AlertCircle className="h-4 w-4 text-amber-600" />
-                          <span className="text-xs text-amber-700 font-medium">No active subscription</span>
                         </div>
                       )}
                     </div>

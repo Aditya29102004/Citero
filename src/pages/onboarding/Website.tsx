@@ -46,13 +46,7 @@ export default function WebsiteOnboarding() {
         if (brand.onboarding_completed === true) {
           toast.info("You've already completed onboarding");
           // Check subscription status to redirect appropriately
-          const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
-          const limits = await getUserSubscriptionLimits(session.user.id);
-          if (limits.planType !== null) {
-            navigate("/dashboard", { replace: true });
-          } else {
-            navigate("/pricing", { replace: true });
-          }
+          navigate("/dashboard", { replace: true });
           return;
         }
         // If brand exists but onboarding not marked complete, check if it has onboarding data
@@ -69,13 +63,7 @@ export default function WebsiteOnboarding() {
 
         if (hasOnboardingData || brandDetails?.onboarding_completed === true) {
           toast.info("You've already completed onboarding");
-          const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
-          const limits = await getUserSubscriptionLimits(session.user.id);
-          if (limits.planType !== null) {
-            navigate("/dashboard", { replace: true });
-          } else {
-            navigate("/pricing", { replace: true });
-          }
+          navigate("/dashboard", { replace: true });
           return;
         }
       }

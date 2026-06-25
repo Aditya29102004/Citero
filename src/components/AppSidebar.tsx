@@ -1,4 +1,4 @@
-import { Home, LogOut, GitCompare, Users, FileText, Search, TrendingUp, BarChart3, MessageSquare, BookOpen, Settings, ChevronLeft, ChevronRight, Zap, PenTool, UserCog, UserPlus } from "lucide-react";
+import { Home, LogOut, GitCompare, Users, FileText, Search, TrendingUp, BarChart3, MessageSquare, BookOpen, Settings, ChevronLeft, ChevronRight, Zap, PenTool, UserCog, UserPlus, Lock } from "lucide-react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
@@ -67,6 +67,20 @@ export function AppSidebar() {
     return () => subscription.unsubscribe();
   }, []);
 
+  const handleItemClick = (path: string, label: string) => {
+    if (!hasSubscription && path !== "/dashboard") {
+      toast.info(`"${label}" is a premium feature. Subscribe to unlock!`, {
+        action: {
+          label: "View Pricing",
+          onClick: () => navigate("/pricing"),
+        },
+      });
+      navigate("/pricing");
+      return;
+    }
+    navigate(path);
+  };
+
   const handleLogout = async () => {
     const { error } = await supabase.auth.signOut();
     if (error) {
@@ -95,17 +109,6 @@ export function AppSidebar() {
             <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/brands")}
-                  isActive={location.pathname === "/brands"}
-                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
-                >
-                  <FileText className="h-4 w-4" />
-                  {!collapsed && <span>Brands</span>}
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-              {hasSubscription && (
-              <SidebarMenuItem>
-                <SidebarMenuButton
                   onClick={() => navigate("/dashboard")}
                   isActive={location.pathname === "/dashboard"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
@@ -114,35 +117,64 @@ export function AppSidebar() {
                   {!collapsed && <span>Dashboard</span>}
                 </SidebarMenuButton>
               </SidebarMenuItem>
-              )}
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/competitors")}
+                  onClick={() => handleItemClick("/brands", "Brands")}
+                  isActive={location.pathname === "/brands"}
+                  className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
+                >
+                  <FileText className="h-4 w-4" />
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Brands</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  onClick={() => handleItemClick("/competitors", "Competitors")}
                   isActive={location.pathname === "/competitors"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <GitCompare className="h-4 w-4" />
-                  {!collapsed && <span>Competitors</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Competitors</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/sentiment")}
+                  onClick={() => handleItemClick("/sentiment", "Sentiment")}
                   isActive={location.pathname === "/sentiment"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <TrendingUp className="h-4 w-4" />
-                  {!collapsed && <span>Sentiment</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Sentiment</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/sources")}
+                  onClick={() => handleItemClick("/sources", "Sources")}
                   isActive={location.pathname === "/sources"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <BarChart3 className="h-4 w-4" />
-                  {!collapsed && <span>Sources</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Sources</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
 
@@ -159,38 +191,53 @@ export function AppSidebar() {
             <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/blogs")}
+                  onClick={() => handleItemClick("/blogs", "Blogs")}
                   isActive={location.pathname === "/blogs"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <FileText className="h-4 w-4" />
-                  {!collapsed && <span>Blogs</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Blogs</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/audits")}
+                  onClick={() => handleItemClick("/audits", "Audits")}
                   isActive={location.pathname === "/audits"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Search className="h-4 w-4" />
-                  {!collapsed && <span>Audits</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Audits</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/prompts")}
+                  onClick={() => handleItemClick("/prompts", "Prompt Simulator")}
                   isActive={location.pathname === "/prompts"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Zap className="h-4 w-4" />
-                  {!collapsed && <span>Prompt Simulator</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Prompt Simulator</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
-
+ 
         {/* Team Section */}
         <SidebarGroup className="p-0 m-0">
           <SidebarGroupLabel className="px-3 mb-1 mt-2 !h-auto text-[13px] font-medium text-gray-500 capitalize tracking-normal bg-transparent">
@@ -200,12 +247,17 @@ export function AppSidebar() {
             <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/team")}
+                  onClick={() => handleItemClick("/team", "Team Members")}
                   isActive={location.pathname === "/team"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Users className="h-4 w-4" />
-                  {!collapsed && <span>Team Members</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Team Members</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -264,12 +316,17 @@ export function AppSidebar() {
             <SidebarMenu className="gap-0.5">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/founders-note")}
+                  onClick={() => handleItemClick("/founders-note", "Founder's Note")}
                   isActive={location.pathname === "/founders-note"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  {!collapsed && <span>Founder's Note</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Founder's Note</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -290,12 +347,17 @@ export function AppSidebar() {
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  onClick={() => navigate("/settings")}
+                  onClick={() => handleItemClick("/settings", "Settings")}
                   isActive={location.pathname === "/settings"}
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Settings className="h-4 w-4" />
-                  {!collapsed && <span>Settings</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Settings</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>

@@ -1,0 +1,18 @@
+# Citero
+
+> Citero is a GEO (Generative Engine Optimization) and AI visibility tracking platform. We help brands track, analyze, and optimize their visibility, mentions, and citations across ChatGPT, Perplexity, Google Gemini, and Claude.
+
+## Core Features
+
+- [AI Visibility Tracking](https://citero.ai/brands) - Understand what AI models say about your brand and track brand mentions 24/7.
+- [Competitor Comparison](https://citero.ai/competitors) - Compare competitor citation share and find gaps to steal traffic and customers.
+- [Sentiment Analysis](https://citero.ai/sentiment) - Analyze brand sentiment, trust signals, and authority markers across AI engines.
+- [Source & Citation Identification](https://citero.ai/sources) - Discover which websites and documents AI engines use as primary references, so you can optimize them directly.
+- [Brand Audits](https://citero.ai/audits) - Weekly prioritized action items and brand audits showing how to rank higher in AI responses.
+- [Prompt Simulator](https://citero.ai/prompts) - See what AI says about your brand across different models and query contexts.
+
+## Contact & Pricing
+
+- [Pricing](https://citero.ai/pricing) - Choose the best plan for your brand's AI visibility needs (Basic, Pro, Enterprise).
+- [About Us](https://citero.ai/about) - Learn more about Citero and our mission.
+- [Contact Customer Support](https://citero.ai/contact) - Email us at hertofhelp@gmail.com for help.

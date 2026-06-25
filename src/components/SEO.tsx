@@ -67,7 +67,32 @@ export const SEO = ({
         document.head.appendChild(canonicalLink);
       }
       canonicalLink.setAttribute("href", canonical);
+
+      // Update or create markdown alternate link tag for crawlers
+      let markdownLink = document.querySelector('link[rel="alternate"][type="text/markdown"]') as HTMLLinkElement;
+      if (!markdownLink) {
+        markdownLink = document.createElement("link");
+        markdownLink.setAttribute("rel", "alternate");
+        markdownLink.setAttribute("type", "text/markdown");
+        document.head.appendChild(markdownLink);
+      }
+      markdownLink.setAttribute("href", "/llms.txt");
+
+      // Update or create hreflang link tags dynamically
+      const updateHreflang = (lang: string, href: string) => {
+        let linkElement = document.querySelector(`link[rel="alternate"][hreflang="${lang}"]`) as HTMLLinkElement;
+        if (!linkElement) {
+          linkElement = document.createElement("link");
+          linkElement.setAttribute("rel", "alternate");
+          linkElement.setAttribute("hreflang", lang);
+          document.head.appendChild(linkElement);
+        }
+        linkElement.setAttribute("href", href);
+      };
+      updateHreflang("en", canonical);
+      updateHreflang("x-default", canonical);
     }
+
 
     // Add structured data (JSON-LD) - handle both arrays and single objects
     if (structuredData) {

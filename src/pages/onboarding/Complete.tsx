@@ -115,13 +115,7 @@ export default function CompleteOnboarding() {
         
         if (existingBrand.onboarding_completed === true) {
           toast.info("You've already completed onboarding");
-          const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
-          const limits = await getUserSubscriptionLimits(session.user.id);
-          if (limits.planType !== null) {
-            navigate("/dashboard", { replace: true });
-          } else {
-            navigate("/pricing", { replace: true });
-          }
+          navigate("/dashboard", { replace: true });
           return;
         }
 
@@ -131,13 +125,7 @@ export default function CompleteOnboarding() {
 
         if (hasOnboardingData) {
           toast.info("You've already completed onboarding");
-          const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
-          const limits = await getUserSubscriptionLimits(session.user.id);
-          if (limits.planType !== null) {
-            navigate("/dashboard", { replace: true });
-          } else {
-            navigate("/pricing", { replace: true });
-          }
+          navigate("/dashboard", { replace: true });
           return;
         }
       }
@@ -244,10 +232,10 @@ export default function CompleteOnboarding() {
       setSaved(true);
       toast.success("Brand created successfully!");
       
-      // Auto-redirect to pricing after 10 seconds to allow review
+      // Auto-redirect to dashboard after 3 seconds to allow review
       setTimeout(() => {
-        navigate("/pricing", { replace: true });
-      }, 10000);
+        navigate("/dashboard", { replace: true });
+      }, 3000);
     } catch (error: any) {
       console.error("Error saving onboarding:", error);
       toast.error(error.message || "Failed to save. Please try again.");
@@ -255,8 +243,8 @@ export default function CompleteOnboarding() {
     }
   };
 
-  const handleGoToPricing = () => {
-    navigate("/pricing", { replace: true });
+  const handleGoToDashboard = () => {
+    navigate("/dashboard", { replace: true });
   };
 
   return (
@@ -398,15 +386,15 @@ export default function CompleteOnboarding() {
 
               <div className="space-y-3">
                 <Button
-                  onClick={handleGoToPricing}
+                  onClick={handleGoToDashboard}
                   className="w-full h-12 bg-slate-900 text-white hover:bg-slate-800 text-base font-semibold rounded-xl transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] shadow-sm shadow-slate-950/10"
                 >
-                  Activate & Subscribe to Continue
+                  Go to Dashboard
                   <ArrowRight className="h-4.5 w-4.5 ml-2" />
                 </Button>
 
                 <p className="text-[11px] text-slate-400 text-center font-mono">
-                  Auto-redirecting to plan selection in a few seconds...
+                  Auto-redirecting to your brand dashboard in a few seconds...
                 </p>
               </div>
             </div>

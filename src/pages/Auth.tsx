@@ -50,13 +50,8 @@ const Auth = () => {
       const { getUserSubscriptionLimits } = await import("@/lib/subscriptionLimits");
       const limits = await getUserSubscriptionLimits(session.user.id);
       
-      if (limits.planType !== null) {
-        // User has subscription - go to dashboard
-        navigate("/dashboard", { replace: true });
-      } else {
-        // User has no subscription - go to pricing
-        navigate("/pricing", { replace: true });
-      }
+      // Go directly to dashboard for demo preview
+      navigate("/dashboard", { replace: true });
     };
 
     const checkAuth = async () => {

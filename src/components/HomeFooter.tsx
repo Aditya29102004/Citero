@@ -67,8 +67,9 @@ export const HomeFooter = () => {
             </div>
           </div>
           <p className="text-center md:text-left text-sm text-gray-500 mt-6">
-            © {currentYear} citero — All Rights Reserved.
+            © {currentYear} citero — All Rights Reserved. <span className="mx-2 text-gray-300">•</span> Last updated: June 2026
           </p>
+
         </div>
       </div>
       

@@ -171,7 +171,7 @@ const Index = () => {
             "name": "citero",
             "applicationCategory": "BusinessApplication",
             "description": "Track and optimize your brand's AI visibility across ChatGPT, Gemini, Claude, and Perplexity. Get actionable insights to turn AI mentions into traffic and customers.",
-            "url": "https://citero.online",
+            "url": "https://citero.ai",
             "offers": {
               "@type": "Offer",
               "price": "99",
@@ -211,19 +211,39 @@ const Index = () => {
             "name": "citero",
             "url": "https://citero.ai",
             "description": "Track how ChatGPT, Perplexity, and Gemini describe your brand — and shows you how to increase your AI-driven traffic and visibility.",
+            "datePublished": "2025-01-20T08:00:00+00:00",
+            "dateModified": "2026-06-24T18:30:00+00:00",
             "potentialAction": {
               "@type": "SearchAction",
               "target": "https://citero.ai/search?q={search_term_string}",
               "query-input": "required name=search_term_string"
             }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "Organization",
+            "name": "citero",
+            "url": "https://citero.ai",
+            "logo": "https://citero.ai/logo.png",
+            "image": "https://citero.ai/logo.png",
+            "description": "Citero tracks how ChatGPT, Perplexity, Gemini, and Claude describe your brand — and shows you how to increase your AI-driven traffic and visibility. AI models increasingly decide which products users trust and discover.",
+            "contactPoint": {
+              "@type": "ContactPoint",
+              "contactType": "Customer Support",
+              "email": "hertofhelp@gmail.com"
+            },
+            "sameAs": [
+              "https://www.linkedin.com/company/citero"
+            ]
           }
         ]}
       />
       <ParticleBackground particleCount={typeof window !== 'undefined' && window.innerWidth < 768 ? 40 : 100} />
       <HomeHeader />
       
-      {/* Hero Section - Clean Lumina Style */}
-      <section className="pt-32 pb-20 px-3 lg:px-4 relative overflow-hidden bg-gradient-to-b from-transparent via-gray-50/20 to-transparent z-[2]">
+      <main id="main-content">
+        {/* Hero Section - Clean Lumina Style */}
+        <section className="pt-32 pb-20 px-3 lg:px-4 relative overflow-hidden bg-gradient-to-b from-transparent via-gray-50/20 to-transparent z-[2]">
         <div className="max-w-7xl mx-auto relative z-[2]">
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12 lg:gap-16 items-center">
             {/* Left Side - Marketing Content */}
@@ -235,12 +255,16 @@ const Index = () => {
             
               {/* Description */}
               <p className="text-lg md:text-xl text-gray-600 leading-relaxed max-w-xl lg:max-w-none">
-              Convert AI mentions on ChatGPT, Perplexity, and Google AI into real traffic and paying customers.
-            </p>
+                Convert AI mentions on ChatGPT, Perplexity, and Google AI into real traffic and paying customers.
+              </p>
+
+              <p className="text-base text-gray-500 leading-relaxed max-w-xl lg:max-w-none">
+                <strong>Citero is a GEO (Generative Engine Optimization) and AI visibility tracking platform</strong> that helps businesses increase their citation share in AI answers by up to 150%. We scan brand mentions across 4 major AI platforms in real-time, helping 150+ brands track and optimize their AI presence.
+              </p>
             
-            <p className="text-base text-gray-500 leading-relaxed max-w-xl lg:max-w-none">
-              Login to check score for free
-            </p>
+              <p className="text-sm text-gray-400 font-medium max-w-xl lg:max-w-none">
+                Login to check score for free
+              </p>
             
               {/* CTA Buttons */}
               <div className="flex flex-col sm:flex-row gap-3 lg:justify-start justify-center pt-2">
@@ -980,6 +1004,7 @@ const Index = () => {
           </div>
         </div>
       </section>
+      </main>
 
 
       <HomeFooter />
