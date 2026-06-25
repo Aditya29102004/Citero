@@ -15,7 +15,8 @@ import { runAudit, AuditResult } from "@/lib/audits/runAudit";
 import { extractCompetitors, extractTopics } from "@/lib/audits/extractBrandInfo";
 import { canRunAudit, getUserAuditUsage, getUserSubscriptionLimits } from "@/lib/subscriptionLimits";
 import { toast } from "sonner";
-import { FileText, Loader2 } from "lucide-react";
+import { FileText, Loader2, RefreshCw, Award, TrendingUp, BarChart3 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 const Audits = () => {
   const navigate = useNavigate();
@@ -30,6 +31,12 @@ const Audits = () => {
   const [topics, setTopics] = useState<string[]>([]);
   const [auditLimit, setAuditLimit] = useState<number>(5);
   const [auditUsage, setAuditUsage] = useState<number>(0);
+  const [onboardingSummary, setOnboardingSummary] = useState<{
+    brandScore?: number;
+    visibilityPotential?: string;
+    categoryRanking?: string;
+    brandId?: string | null;
+  } | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -68,6 +75,20 @@ const Audits = () => {
       fetchAuditLimits();
     }
   }, [session]);
+
+  useEffect(() => {
+    const raw = localStorage.getItem("citero_onboarding_summary");
+    if (raw) {
+      try {
+        const summary = JSON.parse(raw);
+        if (summary.brandScore || summary.visibilityPotential || summary.categoryRanking) {
+          setOnboardingSummary(summary);
+        }
+      } catch (e) {
+        console.error("Error loading onboarding summary:", e);
+      }
+    }
+  }, []);
 
   const fetchBrands = async () => {
     try {
@@ -407,13 +428,25 @@ const Audits = () => {
           <main className="flex-1 overflow-auto bg-gray-50/50">
             <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-12 py-8">
               {/* Header */}
-              <div className="mb-8">
-                <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
-                  Brand Audits
-                </h1>
-                <p className="text-gray-600 font-medium">
-                  Comprehensive analysis of your brand's AI visibility and messaging
-                </p>
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
+                <div>
+                  <h1 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-2 tracking-tight">
+                    Brand Audits
+                  </h1>
+                  <p className="text-gray-600 font-medium">
+                    Comprehensive analysis of your brand's AI visibility and messaging
+                  </p>
+                </div>
+                {selectedBrandId && (
+                  <Button
+                    onClick={handleRunAudit}
+                    disabled={running}
+                    className="bg-black hover:bg-black/90 text-white font-semibold shadow-md py-6 px-6 rounded-lg transition-all duration-200 border-none flex items-center gap-2 hover:scale-[1.02] text-sm"
+                  >
+                    <RefreshCw className={`h-4.5 w-4.5 ${running ? "animate-spin" : ""}`} />
+                    {running ? "Analyzing Brand..." : "Run Brand Audit"}
+                  </Button>
+                )}
               </div>
 
               {/* Brand Selector */}
@@ -518,6 +551,47 @@ const Audits = () => {
               {/* Audit Card */}
               {selectedBrandId && (
                 <>
+                  {/* Onboarding Summary Box */}
+                  {onboardingSummary && onboardingSummary.brandId === selectedBrandId && (
+                    <div className="mb-6 bg-gradient-to-r from-slate-50 to-slate-100/80 border border-slate-200 rounded-xl p-6 shadow-sm animate-fade-in">
+                      <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4 flex items-center gap-2 select-none">
+                        <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                        Initial Onboarding Diagnostics Summary
+                      </h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="bg-white border border-slate-150 p-4 rounded-lg flex items-center gap-3">
+                          <div className="p-2 bg-blue-50 rounded-lg">
+                            <Award className="h-5 w-5 text-blue-600" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Onboarding Score</p>
+                            <p className="text-xl font-extrabold text-slate-900">{onboardingSummary.brandScore}/100</p>
+                          </div>
+                        </div>
+                        
+                        <div className="bg-white border border-slate-150 p-4 rounded-lg flex items-center gap-3">
+                          <div className="p-2 bg-emerald-50 rounded-lg">
+                            <TrendingUp className="h-5 w-5 text-emerald-600 animate-pulse" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Visibility Potential</p>
+                            <p className="text-xl font-extrabold text-emerald-650">{onboardingSummary.visibilityPotential}</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-white border border-slate-150 p-4 rounded-lg flex items-center gap-3">
+                          <div className="p-2 bg-purple-50 rounded-lg">
+                            <BarChart3 className="h-5 w-5 text-purple-600" />
+                          </div>
+                          <div>
+                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Category Ranking</p>
+                            <p className="text-xl font-extrabold text-slate-900">{onboardingSummary.categoryRanking}</p>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   <AuditCard
                     overallScore={calculateOverallScore()}
                     onRerun={handleRunAudit}

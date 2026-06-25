@@ -14,7 +14,6 @@ const STEPS = [
   { id: "topics", label: "Topics", path: "/onboarding/topics" },
   { id: "competitors", label: "Competitors", path: "/onboarding/competitors" },
   { id: "analysis", label: "Analysis", path: "/onboarding/analysis" },
-  { id: "complete", label: "Complete", path: "/onboarding/complete" },
 ];
 
 export default function DescriptionOnboarding() {
