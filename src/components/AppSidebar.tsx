@@ -17,6 +17,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { getUserSubscriptionLimits } from "@/lib/subscriptionLimits";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 export function AppSidebar() {
   const navigate = useNavigate();
@@ -24,6 +31,8 @@ export function AppSidebar() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [hasSubscription, setHasSubscription] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [targetFeature, setTargetFeature] = useState("");
 
   useEffect(() => {
     const checkAdminStatus = async () => {
@@ -69,13 +78,8 @@ export function AppSidebar() {
 
   const handleItemClick = (path: string, label: string) => {
     if (!hasSubscription && path !== "/dashboard" && path !== "/audits") {
-      toast.info(`"${label}" is a premium feature. Subscribe to unlock!`, {
-        action: {
-          label: "View Pricing",
-          onClick: () => navigate("/pricing"),
-        },
-      });
-      navigate("/pricing");
+      setTargetFeature(label);
+      setShowUpgradeModal(true);
       return;
     }
     navigate(path);
@@ -382,6 +386,59 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
+      
+      <Dialog open={showUpgradeModal} onOpenChange={setShowUpgradeModal}>
+        <DialogContent className="max-w-md bg-white border border-gray-200 shadow-lg rounded-xl p-6">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-xl font-bold text-gray-900 tracking-tight">
+              Upgrade to Citero Pro
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 font-medium">
+              {targetFeature} is a premium feature. Upgrade your plan to access this tool.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3.5">
+            <div className="border-t border-gray-150 my-2"></div>
+            <div className="space-y-2.5 text-xs text-gray-650 font-medium">
+              <div className="flex items-start gap-2">
+                <span className="text-gray-900 font-bold">•</span>
+                <span>Automated daily scans across top generative engines</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-gray-900 font-bold">•</span>
+                <span>Deep competitor visibility share and gap benchmark</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-gray-900 font-bold">•</span>
+                <span>Comprehensive citation source discovery and tracking</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-gray-900 font-bold">•</span>
+                <span>AI-optimized article suggestions for content gaps</span>
+              </div>
+            </div>
+            <div className="border-t border-gray-150 my-2"></div>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <Button
+              onClick={() => {
+                setShowUpgradeModal(false);
+                navigate("/pricing");
+              }}
+              className="w-full bg-black hover:bg-black/90 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm transition-all border-none"
+            >
+              View Plans and Pricing
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowUpgradeModal(false)}
+              className="w-full border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-lg text-sm font-semibold"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }

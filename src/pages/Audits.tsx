@@ -13,10 +13,17 @@ import { AnimatedText } from "@/components/AnimatedText";
 import { ShimmerCard } from "@/components/ShimmerCard";
 import { runAudit, AuditResult } from "@/lib/audits/runAudit";
 import { extractCompetitors, extractTopics } from "@/lib/audits/extractBrandInfo";
-import { canRunAudit, getUserAuditUsage, getUserSubscriptionLimits } from "@/lib/subscriptionLimits";
+import { canRunAudit, getUserAuditUsage, getUserSubscriptionLimits, SubscriptionLimits } from "@/lib/subscriptionLimits";
 import { toast } from "sonner";
-import { FileText, Loader2, RefreshCw, Award, TrendingUp, BarChart3 } from "lucide-react";
+import { FileText, Loader2, RefreshCw, Award, TrendingUp, BarChart3, Lock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 const Audits = () => {
   const navigate = useNavigate();
@@ -37,6 +44,8 @@ const Audits = () => {
     categoryRanking?: string;
     brandId?: string | null;
   } | null>(null);
+  const [subscriptionLimits, setSubscriptionLimits] = useState<SubscriptionLimits | null>(null);
+  const [showLimitModal, setShowLimitModal] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -225,6 +234,7 @@ const Audits = () => {
     try {
       const limits = await getUserSubscriptionLimits(session.user.id);
       const usage = await getUserAuditUsage(session.user.id);
+      setSubscriptionLimits(limits);
       setAuditLimit(limits.auditsPerMonth || 5);
       setAuditUsage(usage);
     } catch (error) {
@@ -246,7 +256,7 @@ const Audits = () => {
     // Check if user can run audit
     const canRun = await canRunAudit(session.user.id);
     if (!canRun.allowed) {
-      toast.error(canRun.reason || "Cannot run audit");
+      setShowLimitModal(true);
       return;
     }
 
@@ -467,17 +477,37 @@ const Audits = () => {
 
                   {/* Audit Limit Display */}
                   <div className="mb-4 p-4 bg-white rounded-lg border border-gray-200 shadow-sm">
-                    <div className="flex items-center justify-between text-sm">
-                      <span className="text-gray-600 font-medium">Monthly Audit Usage:</span>
-                      <span className={`font-semibold ${auditUsage >= auditLimit ? 'text-gray-600' : 'text-gray-900'}`}>
+                    <div className="flex items-center justify-between text-sm mb-2.5">
+                      <div className="flex items-center gap-2">
+                        <span className="text-gray-700 font-semibold">Monthly Audit Usage</span>
+                        {subscriptionLimits?.planType === null && (
+                          <span className="text-[10px] bg-gray-100 text-gray-700 border border-gray-200 px-2 py-0.5 rounded-full font-bold">
+                            Free Trial
+                          </span>
+                        )}
+                      </div>
+                      <span className={`font-bold ${auditUsage >= auditLimit ? 'text-gray-950' : 'text-gray-900'}`}>
                         {auditUsage} / {auditLimit === Infinity ? '∞' : auditLimit}
                       </span>
                     </div>
-                    {auditUsage >= auditLimit && auditLimit !== Infinity && (
-                      <p className="text-xs text-gray-600 mt-2 font-medium">
-                        You've reached your monthly limit. Upgrade to Enterprise for unlimited audits.
+                    
+                    {subscriptionLimits?.planType === null && auditUsage >= auditLimit ? (
+                      <div className="pt-2 border-t border-gray-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                        <p className="text-xs text-gray-500 font-medium">
+                          Trial audit completed. Upgrade to Pro for unlimited audits and daily scans.
+                        </p>
+                        <button
+                          onClick={() => navigate("/pricing")}
+                          className="text-xs font-bold text-gray-900 hover:underline text-left"
+                        >
+                          Upgrade to Pro &rarr;
+                        </button>
+                      </div>
+                    ) : auditUsage >= auditLimit && auditLimit !== Infinity ? (
+                      <p className="text-xs text-gray-500 mt-2 font-medium">
+                        You have reached your monthly limit. Upgrade your subscription for more audits.
                       </p>
-                    )}
+                    ) : null}
                   </div>
 
                   {/* Display Competitors and Topics */}
@@ -607,7 +637,113 @@ const Audits = () => {
                         ))}
                       </div>
                     ) : audits.length > 0 ? (
-                      <AuditSection audits={audits} />
+                      <div className="space-y-8">
+                        <AuditSection audits={audits} />
+                        
+                        {subscriptionLimits?.planType === null && (
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-10">
+                            {/* Roadmap Stepper */}
+                            <div className="lg:col-span-7 bg-white border border-gray-200 rounded-xl p-6 shadow-sm">
+                              <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-5">
+                                AI Visibility Optimization Roadmap
+                              </h3>
+                              <div className="relative border-l border-gray-200 ml-3.5 pl-6 space-y-6 text-xs">
+                                {/* Step 1 */}
+                                <div className="relative">
+                                  <div className="absolute -left-10 top-0.5 bg-gray-900 rounded-full h-7 w-7 border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
+                                    ✓
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-gray-900">Step 1: Onboarding Diagnostic Scan</h4>
+                                    <p className="text-gray-500 mt-1">Setup completed and initial brand profile initialized.</p>
+                                  </div>
+                                </div>
+                                {/* Step 2 */}
+                                <div className="relative">
+                                  <div className="absolute -left-10 top-0.5 bg-gray-900 rounded-full h-7 w-7 border-2 border-white flex items-center justify-center text-[10px] font-bold text-white">
+                                    ✓
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-gray-900">Step 2: Deep Brand Audit</h4>
+                                    <p className="text-gray-500 mt-1">Completed trial audit analyzing generative engine presence.</p>
+                                  </div>
+                                </div>
+                                {/* Step 3 */}
+                                <div className="relative">
+                                  <div className="absolute -left-10 top-0.5 bg-white border border-gray-200 rounded-full h-7 w-7 flex items-center justify-center">
+                                    <Lock className="h-3 w-3 text-gray-400" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-gray-400">Step 3: Track AI Visibility & Competitors</h4>
+                                    <p className="text-gray-400 mt-1">Benchmark daily citation shares on Google, OpenAI, and Gemini.</p>
+                                  </div>
+                                </div>
+                                {/* Step 4 */}
+                                <div className="relative">
+                                  <div className="absolute -left-10 top-0.5 bg-white border border-gray-200 rounded-full h-7 w-7 flex items-center justify-center">
+                                    <Lock className="h-3 w-3 text-gray-400" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-gray-400">Step 4: Optimize Citation Source Gaps</h4>
+                                    <p className="text-gray-400 mt-1">Extract referencing sites to source mentions and drive search traffic.</p>
+                                  </div>
+                                </div>
+                                {/* Step 5 */}
+                                <div className="relative">
+                                  <div className="absolute -left-10 top-0.5 bg-white border border-gray-200 rounded-full h-7 w-7 flex items-center justify-center">
+                                    <Lock className="h-3 w-3 text-gray-400" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-gray-400">Step 5: Content Gap Strategy & Publishing</h4>
+                                    <p className="text-gray-400 mt-1">Generate search-engine optimized articles to populate model recommendations.</p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Pro Upgrade Panel */}
+                            <div className="lg:col-span-5 bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex flex-col justify-between">
+                              <div>
+                                <h3 className="text-sm font-bold text-gray-900 uppercase tracking-wider mb-2">
+                                  Boost Visibility Share
+                                </h3>
+                                <p className="text-xs text-gray-500 font-medium leading-relaxed mb-6">
+                                  Unlock Citero Pro to run daily tracking scans, benchmark competitor visibility, and generate optimized content to drive search recommendation traffic.
+                                </p>
+                                <div className="space-y-2.5 text-xs font-semibold text-gray-700">
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-gray-900" />
+                                    <span>Daily prompt tracking scans</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-gray-900" />
+                                    <span>Competitor footprint analysis</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-gray-900" />
+                                    <span>Citation source discovery</span>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <CheckCircle2 className="h-4 w-4 text-gray-900" />
+                                    <span>AI optimized blog writer</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="mt-8 space-y-3">
+                                <Button
+                                  onClick={() => navigate("/pricing")}
+                                  className="w-full bg-black hover:bg-black/90 text-white font-bold py-2.5 rounded-lg text-xs transition-all border-none"
+                                >
+                                  Upgrade to Pro
+                                </Button>
+                                <p className="text-[10px] text-gray-400 text-center font-mono font-medium">
+                                  Includes 150 scans/month and all major AI providers.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     ) : (
                       <Card className="p-12 text-center border border-gray-200 bg-white">
                         <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -632,6 +768,55 @@ const Audits = () => {
           </main>
         </div>
       </div>
+      
+      <Dialog open={showLimitModal} onOpenChange={setShowLimitModal}>
+        <DialogContent className="max-w-md bg-white border border-gray-200 shadow-lg rounded-xl p-6">
+          <DialogHeader className="space-y-2">
+            <DialogTitle className="text-xl font-bold text-gray-900 tracking-tight">
+              Audit Limit Reached
+            </DialogTitle>
+            <DialogDescription className="text-sm text-gray-500 font-medium">
+              You have completed your free trial brand audit. Upgrade your plan to run unlimited audits and daily tracking scans.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-3.5">
+            <div className="border-t border-gray-150 my-2"></div>
+            <div className="space-y-2.5 text-xs text-gray-650 font-medium">
+              <div className="flex items-start gap-2">
+                <span className="text-gray-900 font-bold">•</span>
+                <span>Unlimited audits across all brand categories</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-gray-900 font-bold">•</span>
+                <span>Track daily prompt ranking changes</span>
+              </div>
+              <div className="flex items-start gap-2">
+                <span className="text-gray-900 font-bold">•</span>
+                <span>Discover referencing sources to target</span>
+              </div>
+            </div>
+            <div className="border-t border-gray-150 my-2"></div>
+          </div>
+          <div className="flex flex-col gap-2.5">
+            <Button
+              onClick={() => {
+                setShowLimitModal(false);
+                navigate("/pricing");
+              }}
+              className="w-full bg-black hover:bg-black/90 text-white font-semibold py-2.5 rounded-lg text-sm shadow-sm transition-all border-none"
+            >
+              Upgrade to Pro
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => setShowLimitModal(false)}
+              className="w-full border-gray-200 text-gray-600 hover:bg-gray-50 py-2.5 rounded-lg text-sm font-semibold"
+            >
+              Cancel
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   );
 };

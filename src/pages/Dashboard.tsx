@@ -1800,33 +1800,39 @@ const Dashboard = () => {
                 )}
               </div>
 
-              {subscriptionLimits && subscriptionLimits.planType === null ? (
-                <div className="relative border border-slate-200 bg-white rounded-2xl p-12 text-center shadow-sm max-w-2xl mx-auto my-6 flex flex-col items-center justify-center animate-fade-in z-10">
-                  <div className="h-14 w-14 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4">
-                    <Lock className="h-6 w-6 text-indigo-650 animate-pulse" />
+              <div className="relative">
+                {/* Elegant Absolute Blur Overlay for Free Users */}
+                {subscriptionLimits && subscriptionLimits.planType === null && (
+                  <div className="absolute inset-0 z-20 flex items-center justify-center p-6 bg-slate-50/10 backdrop-blur-[2px]">
+                    <div className="border border-slate-200 bg-white/95 rounded-2xl p-10 text-center shadow-lg max-w-xl mx-auto my-auto flex flex-col items-center justify-center transition-all duration-300">
+                      <div className="h-12 w-12 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center mb-4">
+                        <Lock className="h-5 w-5 text-indigo-650 animate-pulse" />
+                      </div>
+                      <h2 className="text-xl font-extrabold text-slate-900 mb-2">GEO Tracking Dashboard Locked</h2>
+                      <p className="text-slate-500 text-xs max-w-sm mb-6 leading-relaxed font-medium text-center">
+                        You've successfully completed onboarding. Real-time AI search visibility indices, competitor gaps, and citation share tracking are locked. Upgrade to unlock.
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
+                        <Button 
+                          onClick={() => navigate("/pricing")}
+                          className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-4 px-6 rounded-xl shadow-sm hover:scale-[1.01] transition-all border-none text-xs"
+                        >
+                          Upgrade to Pro & Unlock
+                        </Button>
+                        <Button 
+                          variant="outline"
+                          onClick={() => navigate("/audits")}
+                          className="border-slate-200 text-slate-700 hover:bg-slate-50 py-4 px-6 rounded-xl font-semibold text-xs"
+                        >
+                          View Audits (1 Free)
+                        </Button>
+                      </div>
+                    </div>
                   </div>
-                  <h2 className="text-2xl font-bold text-slate-900 mb-2">GEO Tracking Dashboard Locked</h2>
-                  <p className="text-slate-500 text-sm max-w-md mb-8 leading-relaxed font-medium">
-                    You've successfully completed onboarding. Detailed search share-of-voice charts, daily citation tracking, and on-demand scans are locked. Upgrade to unlock full analytics.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3 w-full justify-center">
-                    <Button 
-                      onClick={() => navigate("/pricing")}
-                      className="bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-6 px-8 rounded-xl shadow-sm hover:scale-[1.01] transition-all border-none"
-                    >
-                      Upgrade to Paid Plan
-                    </Button>
-                    <Button 
-                      variant="outline"
-                      onClick={() => navigate("/audits")}
-                      className="border-slate-200 text-slate-700 hover:bg-slate-50 py-6 px-8 rounded-xl font-medium"
-                    >
-                      Go to Brand Audits (1 Free)
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <>
+                )}
+
+                {/* Dashboard Content Container - blurred for free users */}
+                <div className={subscriptionLimits && subscriptionLimits.planType === null ? "blur-[4px] select-none pointer-events-none opacity-45 pr-2 pl-2" : ""}>
                   {/* KPI Cards */}
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 mb-10">
                 {/* Brand Visibility */}
@@ -2399,13 +2405,13 @@ const Dashboard = () => {
                   </div>
                 </Card>
               )}
-            </>
-          )}
+            </div>
+          </div>
         </div>
       </main>
     </div>
-      </div>
-    </SidebarProvider>
+  </div>
+</SidebarProvider>
   );
 };
 
