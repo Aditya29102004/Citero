@@ -68,7 +68,7 @@ export function AppSidebar() {
   }, []);
 
   const handleItemClick = (path: string, label: string) => {
-    if (!hasSubscription && path !== "/dashboard") {
+    if (!hasSubscription && path !== "/dashboard" && path !== "/audits") {
       toast.info(`"${label}" is a premium feature. Subscribe to unlock!`, {
         action: {
           label: "View Pricing",
@@ -114,7 +114,12 @@ export function AppSidebar() {
                   className="!h-[34px] !py-1.5 !px-3 rounded-lg transition-all duration-200 text-[12px] font-medium text-[#555555] hover:bg-[#EBEBEB] hover:text-gray-900 data-[active=true]:bg-[#EAEAEA] data-[active=true]:text-gray-900 data-[active=true]:font-bold [&>svg]:size-[16px] [&>svg]:stroke-[1.5px] [&>svg]:mr-2 [&>svg]:text-[#555555] data-[active=true]:[&>svg]:text-gray-900"
                 >
                   <Home className="h-4 w-4" />
-                  {!collapsed && <span>Dashboard</span>}
+                  {!collapsed && (
+                    <div className="flex items-center justify-between w-full">
+                      <span>Dashboard</span>
+                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                    </div>
+                  )}
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
@@ -214,7 +219,11 @@ export function AppSidebar() {
                   {!collapsed && (
                     <div className="flex items-center justify-between w-full">
                       <span>Audits</span>
-                      {!hasSubscription && <Lock className="h-3 w-3 text-gray-400 ml-2" />}
+                      {!hasSubscription && (
+                        <span className="text-[10px] text-emerald-650 bg-emerald-50 border border-emerald-100 rounded-md px-1.5 py-0.5 font-bold ml-2">
+                          1 Free
+                        </span>
+                      )}
                     </div>
                   )}
                 </SidebarMenuButton>

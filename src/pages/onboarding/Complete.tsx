@@ -232,9 +232,9 @@ export default function CompleteOnboarding() {
       setSaved(true);
       toast.success("Brand created successfully!");
       
-      // Auto-redirect to dashboard after 3 seconds to allow review
+      // Auto-redirect to audits after 3 seconds to allow review
       setTimeout(() => {
-        navigate("/dashboard", { replace: true });
+        navigate("/audits", { replace: true });
       }, 3000);
     } catch (error: any) {
       console.error("Error saving onboarding:", error);
@@ -243,8 +243,8 @@ export default function CompleteOnboarding() {
     }
   };
 
-  const handleGoToDashboard = () => {
-    navigate("/dashboard", { replace: true });
+  const handleGoToAudits = () => {
+    navigate("/audits", { replace: true });
   };
 
   return (
@@ -386,15 +386,15 @@ export default function CompleteOnboarding() {
 
               <div className="space-y-3">
                 <Button
-                  onClick={handleGoToDashboard}
+                  onClick={handleGoToAudits}
                   className="w-full h-12 bg-slate-900 text-white hover:bg-slate-800 text-base font-semibold rounded-xl transition-all duration-200 hover:scale-[1.01] active:scale-[0.99] shadow-sm shadow-slate-950/10"
                 >
-                  Go to Dashboard
+                  Go to Audits
                   <ArrowRight className="h-4.5 w-4.5 ml-2" />
                 </Button>
 
                 <p className="text-[11px] text-slate-400 text-center font-mono">
-                  Auto-redirecting to your brand dashboard in a few seconds...
+                  Auto-redirecting to your brand audits page in a few seconds...
                 </p>
               </div>
             </div>

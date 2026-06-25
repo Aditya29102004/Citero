@@ -102,7 +102,7 @@ export async function getUserSubscriptionLimits(userId: string): Promise<Subscri
     console.log("No subscription found for user:", userId, "- returning free tier limits");
     return {
       planType: null,
-      auditsPerMonth: 0,
+      auditsPerMonth: 1,
       isFounder: false,
       scansPerMonth: 0,
       competitorComparisons: 0,
@@ -335,17 +335,22 @@ export async function getUserAuditUsage(userId: string): Promise<number> {
  */
 export async function canRunAudit(userId: string): Promise<{ allowed: boolean; reason?: string }> {
   const limits = await getUserSubscriptionLimits(userId);
+  const usage = await getUserAuditUsage(userId);
   
-  if (!limits.planType) {
-    return { allowed: false, reason: "No active subscription. Please subscribe to run audits." };
+  if (limits.planType === null) {
+    if (usage >= limits.auditsPerMonth) {
+      return { 
+        allowed: false, 
+        reason: "You've reached your limit of 1 free audit. Please subscribe to run more audits." 
+      };
+    }
+    return { allowed: true };
   }
 
   if (limits.auditsPerMonth === Infinity) {
     return { allowed: true };
   }
 
-  const usage = await getUserAuditUsage(userId);
-  
   if (usage >= limits.auditsPerMonth) {
     return {
       allowed: false,
