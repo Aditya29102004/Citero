@@ -688,6 +688,22 @@ const Index = () => {
                 height="54" 
               />
             </a>
+            <a 
+              href="https://launchpadly.co/startup/citero" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              data-launchpadly-badge="citero" 
+              data-launchpadly-badge-variant="icon"
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://launchpadly.co/embed/badges/startup/citero.svg?variant=icon" 
+                alt="Launchpadly Startup Directory" 
+                width="48" 
+                height="62" 
+                style={{ display: 'block', border: 0 }} 
+              />
+            </a>
             {/* Duplicate set for seamless loop */}
             <a 
               href="https://www.producthunt.com/products/citero-ai?embed=true&utm_source=badge-featured&utm_medium=badge&utm_source=badge-citero-ai" 
@@ -804,6 +820,22 @@ const Index = () => {
                 alt="citero on StartupTrusted" 
                 width="240" 
                 height="54" 
+              />
+            </a>
+            <a 
+              href="https://launchpadly.co/startup/citero" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              data-launchpadly-badge="citero" 
+              data-launchpadly-badge-variant="icon"
+              className="flex-shrink-0"
+            >
+              <img 
+                src="https://launchpadly.co/embed/badges/startup/citero.svg?variant=icon" 
+                alt="Launchpadly Startup Directory" 
+                width="48" 
+                height="62" 
+                style={{ display: 'block', border: 0 }} 
               />
             </a>
           </div>

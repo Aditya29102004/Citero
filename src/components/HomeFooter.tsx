@@ -141,6 +141,9 @@ export const HomeFooter = () => {
               alt="SimilarLabs Embed Badge" 
             />
           </a>
+          <a href="https://launchpadly.co/startup/citero" target="_blank" rel="noopener noreferrer" data-launchpadly-badge="citero" data-launchpadly-badge-variant="icon">
+            <img src="https://launchpadly.co/embed/badges/startup/citero.svg?variant=icon" alt="Launchpadly Startup Directory" width="48" height="62" style={{ display: 'block', border: 0 }} />
+          </a>
         </div>
       </div>
     </footer>
